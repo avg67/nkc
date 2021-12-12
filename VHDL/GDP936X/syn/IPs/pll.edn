@@ -1,0 +1,144 @@
+(edif pll
+  (edifVersion 2 0 0)
+  (edifLevel 0)
+  (keywordMap (keywordLevel 0))
+  (status
+    (written
+      (timestamp 2021 12 4 17 9 40)
+      (program "SCUBA" (version "Diamond (64-bit) 3.12.0.240.2"))))
+      (comment "C:\lscc\diamond\3.12\ispfpga\bin\nt64\scuba.exe -w -n pll -lang vhdl -synth synplify -arch mg5g00 -type pll -fin 40 -mdiv 1 -ndiv 2 -vdiv 6 -delay_cntl STATIC -fdel 0 -fb_mode CLOCKTREE -noclkos -kdiv 2 ")
+  (library ORCLIB
+    (edifLevel 0)
+    (technology
+      (numberDefinition))
+    (cell EHXPLLB
+      (cellType GENERIC)
+      (view view1
+        (viewType NETLIST)
+        (interface
+          (port RST
+            (direction INPUT))
+          (port CLKI
+            (direction INPUT))
+          (port CLKFB
+            (direction INPUT))
+          (port DDAMODE
+            (direction INPUT))
+          (port DDAIZR
+            (direction INPUT))
+          (port DDAILAG
+            (direction INPUT))
+          (port DDAIDEL0
+            (direction INPUT))
+          (port DDAIDEL1
+            (direction INPUT))
+          (port DDAIDEL2
+            (direction INPUT))
+          (port CLKOP
+            (direction OUTPUT))
+          (port CLKOK
+            (direction OUTPUT))
+          (port CLKOS
+            (direction OUTPUT))
+          (port LOCK
+            (direction OUTPUT))
+          (port DDAOZR
+            (direction OUTPUT))
+          (port DDAOLAG
+            (direction OUTPUT))
+          (port DDAODEL0
+            (direction OUTPUT))
+          (port DDAODEL1
+            (direction OUTPUT))
+          (port DDAODEL2
+            (direction OUTPUT)))))
+    (cell VLO
+      (cellType GENERIC)
+      (view view1
+        (viewType NETLIST)
+        (interface
+          (port Z
+            (direction OUTPUT)))))
+    (cell pll
+      (cellType GENERIC)
+      (view view1
+        (viewType NETLIST)
+        (interface
+          (port CLK
+            (direction INPUT))
+          (port RESET
+            (direction INPUT))
+          (port CLKOP
+            (direction OUTPUT))
+          (port CLKOK
+            (direction OUTPUT))
+          (port LOCK
+            (direction OUTPUT)))
+        (property NGD_DRC_MASK (integer 1))
+        (contents
+          (instance scuba_vlo_inst
+            (viewRef view1 
+              (cellRef VLO)))
+          (instance PLLBInst_0
+            (viewRef view1 
+              (cellRef EHXPLLB))
+            (property DELAY_CNTL
+              (string "STATIC"))
+            (property FDEL
+              (string "0"))
+            (property DUTY
+              (string "4"))
+            (property PHASEADJ
+              (string "0"))
+            (property FB_MODE
+              (string "CLOCKTREE"))
+            (property FREQUENCY_PIN_CLKOP
+              (string "80.000000"))
+            (property FREQUENCY_PIN_CLKI
+              (string "40.000000"))
+            (property FREQUENCY_PIN_CLKOK
+              (string "40.000000"))
+            (property CLKOK_DIV
+              (string "2"))
+            (property CLKOP_DIV
+              (string "6"))
+            (property CLKFB_DIV
+              (string "2"))
+            (property CLKI_DIV
+              (string "1"))
+            (property FIN
+              (string "40.000000")))
+          (net scuba_vlo
+            (joined
+              (portRef Z (instanceRef scuba_vlo_inst))
+              (portRef DDAIDEL2 (instanceRef PLLBInst_0))
+              (portRef DDAIDEL1 (instanceRef PLLBInst_0))
+              (portRef DDAIDEL0 (instanceRef PLLBInst_0))
+              (portRef DDAILAG (instanceRef PLLBInst_0))
+              (portRef DDAIZR (instanceRef PLLBInst_0))
+              (portRef DDAMODE (instanceRef PLLBInst_0))))
+          (net CLK_t
+            (joined
+              (portRef CLKI (instanceRef PLLBInst_0))
+              (portRef CLK)))
+          (net LOCK
+            (joined
+              (portRef LOCK)
+              (portRef LOCK (instanceRef PLLBInst_0))))
+          (net CLKOK
+            (joined
+              (portRef CLKOK)
+              (portRef CLKOK (instanceRef PLLBInst_0))))
+          (net CLKOP
+            (joined
+              (portRef CLKOP)
+              (portRef CLKFB (instanceRef PLLBInst_0))
+              (portRef CLKOP (instanceRef PLLBInst_0))))
+          (net RESET
+            (joined
+              (portRef RESET)
+              (portRef RST (instanceRef PLLBInst_0))))))))
+  (design pll
+    (cellRef pll
+      (libraryRef ORCLIB)))
+)

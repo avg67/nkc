@@ -1,0 +1,1 @@
+-inp "gdp_map.ncd" -dir "c:/hgb_work/nkc/gdp936x/syn/lattice" -prj "gdp" -gui -touch ngd -lpf "gdp.lpf" -prf "gdp.prf" -msg "Post-Map Design Floorplan"

@@ -1,0 +1,102 @@
+// Design: gdp_lattice_top
+// Package: TQFP144
+// ncd File: gdp.ncd
+// Version: ispLever_v61_PROD_Build (37)
+// Written on Fri Jul 13 19:13:43 2007
+// M: Minimum Speed Grade
+
+I/O Timing Report (in nsec)
+
+Worst Case Results across Speed Grades (M, 5, 4, 3):
+
+// Input Setup and Hold Times
+
+Port         Clock Edge  Setup Speed_Grade  Hold Speed_Grade
+----------------------------------------------------------------------
+Ps2Clk_io    clk_i R    -0.601      M       4.787     3
+Ps2Dat_io    clk_i R     1.415      3       0.271     3
+SRAM1_DB_0   clk_i R    -0.865      M       3.758     3
+SRAM1_DB_1   clk_i R    -0.733      M       3.557     3
+SRAM1_DB_2   clk_i R    -0.269      M       2.964     3
+SRAM1_DB_3   clk_i R    -0.678      M       3.239     3
+SRAM1_DB_4   clk_i R    -0.533      M       3.137     3
+SRAM1_DB_5   clk_i R    -0.696      M       3.551     3
+SRAM1_DB_6   clk_i R    -0.568      M       3.277     3
+SRAM1_DB_7   clk_i R    -0.435      M       3.338     3
+addr_sel_i   clk_i R     1.731      3       1.729     3
+nkc_ADDR_i_0 clk_i R    -0.524      M       2.782     3
+nkc_ADDR_i_1 clk_i R    -0.534      M       2.831     3
+nkc_ADDR_i_2 clk_i R    -0.601      M       4.787     3
+nkc_ADDR_i_3 clk_i R    -0.601      M       4.787     3
+nkc_ADDR_i_4 clk_i R    -0.601      M       4.787     3
+nkc_ADDR_i_5 clk_i R    -0.601      M       4.787     3
+nkc_ADDR_i_6 clk_i R    -0.601      M       4.787     3
+nkc_ADDR_i_7 clk_i R    -0.601      M       4.787     3
+nkc_DB_0     clk_i R    -0.601      M       4.787     3
+nkc_DB_1     clk_i R    -0.601      M       4.787     3
+nkc_DB_2     clk_i R    -0.601      M       4.787     3
+nkc_DB_3     clk_i R    -0.601      M       4.787     3
+nkc_DB_4     clk_i R    -0.601      M       4.787     3
+nkc_DB_5     clk_i R    -0.601      M       4.787     3
+nkc_DB_6     clk_i R    -0.601      M       4.787     3
+nkc_DB_7     clk_i R    -0.601      M       4.787     3
+nkc_nIORQ_i  clk_i R    -0.601      M       4.787     3
+nkc_nRD_i    clk_i R    -0.725      M       3.233     3
+nkc_nWR_i    clk_i R    -0.698      M       3.137     3
+reset_n_i    clk_i R    -0.601      M       4.787     3
+
+
+// Clock to Output Delay
+
+Port         Clock Edge  Max_Delay Speed_Grade  Min_Delay Speed_Grade
+------------------------------------------------------------------------
+Blue_o_0     clk_i R    12.299         3        3.743          M
+Blue_o_1     clk_i R    12.299         3        3.743          M
+Blue_o_2     clk_i R    12.406         3        3.784          M
+Green_o_0    clk_i R    12.299         3        3.743          M
+Green_o_1    clk_i R    11.813         3        3.595          M
+Green_o_2    clk_i R    11.813         3        3.595          M
+Hsync_o      clk_i R    10.790         3        3.495          M
+Ps2Clk_io    clk_i R    15.074         3        4.519          M
+Ps2Dat_io    clk_i R     9.749         3        2.980          M
+Red_o_0      clk_i R    12.888         3        3.931          M
+Red_o_1      clk_i R    12.888         3        3.931          M
+Red_o_2      clk_i R    12.299         3        3.743          M
+SRAM1_ADR_0  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_1  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_10 clk_i R     9.790         3        3.019          M
+SRAM1_ADR_11 clk_i R     9.790         3        3.019          M
+SRAM1_ADR_12 clk_i R     9.790         3        3.019          M
+SRAM1_ADR_13 clk_i R     9.790         3        3.019          M
+SRAM1_ADR_14 clk_i R     9.790         3        3.019          M
+SRAM1_ADR_15 clk_i R     9.790         3        3.019          M
+SRAM1_ADR_2  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_3  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_4  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_5  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_6  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_7  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_8  clk_i R     9.790         3        3.019          M
+SRAM1_ADR_9  clk_i R     9.790         3        3.019          M
+SRAM1_DB_0   clk_i R    13.467         3        3.012          M
+SRAM1_DB_1   clk_i R    13.479         3        3.012          M
+SRAM1_DB_2   clk_i R    13.979         3        3.012          M
+SRAM1_DB_3   clk_i R    13.979         3        3.012          M
+SRAM1_DB_4   clk_i R    13.979         3        3.012          M
+SRAM1_DB_5   clk_i R    13.979         3        3.012          M
+SRAM1_DB_6   clk_i R    13.479         3        3.012          M
+SRAM1_DB_7   clk_i R    13.467         3        3.012          M
+SRAM1_nCS    clk_i R     9.790         3        3.019          M
+SRAM1_nOE    clk_i R    13.721         3        3.953          M
+SRAM1_nWR    clk_i R    14.669         3        4.427          M
+Vsync_o      clk_i R    13.423         3        4.083          M
+driver_DIR_o clk_i R    11.975         3        3.652          M
+driver_nEN_o clk_i R    13.412         3        4.060          M
+nkc_DB_0     clk_i R    23.728         3        4.283          M
+nkc_DB_1     clk_i R    25.711         3        4.284          M
+nkc_DB_2     clk_i R    26.026         3        4.284          M
+nkc_DB_3     clk_i R    25.290         3        4.151          M
+nkc_DB_4     clk_i R    24.763         3        4.148          M
+nkc_DB_5     clk_i R    24.666         3        4.004          M
+nkc_DB_6     clk_i R    24.299         3        4.000          M
+nkc_DB_7     clk_i R    24.174         3        4.072          M

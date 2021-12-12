@@ -1,0 +1,4 @@
+Part Number: LFXP6C-3T144C
+C:/ispTOOLS7_1_STRT/ispcpld/bin/ispdfw -dev LFXP6C-XXT144 -if gdp.bit -oft -jed -of gdp.jed -comment gdp.alt 
+Invoke process : C:/ispTOOLS7_1_STRT/ispcpld/bin/ispdfw -dev LFXP6C-XXT144 -if gdp.bit -oft -jed -of gdp.jed -comment gdp.alt 
+Data file is generated successfully

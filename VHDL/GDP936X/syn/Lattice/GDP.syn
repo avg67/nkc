@@ -1,0 +1,42 @@
+JDF B
+// Created by Version 7.1 
+PROJECT GDP
+DESIGN gdp Normal
+DEVKIT LFXP6C-3T144C
+ENTRY Schematic/VHDL
+MODULE ..\..\..\vhdl\rtl\sound\dac.vhd
+MODULE ..\..\vhdl\rtl\gdp_global-p.vhd
+MODSTYLE ../../vhdl/rtl/gdp_global-p.vhd Normal
+MODULE ..\..\vhdl\rtl\gdp_top.vhd
+MODULE ..\..\vhdl\rtl\gdp_decoder.vhd
+MODULE ..\..\..\vhdl\rtl\SPI_Interface.vhd
+MODULE ..\..\..\vhdl\rtl\PS2_Interface.vhd
+MODULE ..\..\..\vhdl\rtl\PS2_Decoder.vhd
+MODULE ..\..\..\vhdl\rtl\Timer.vhd
+MODULE ..\..\..\vhdl\rtl\sound\wf2149ip_pkg.vhd
+MODSTYLE ../../../vhdl/rtl/sound/wf2149ip_pkg.vhd Normal
+MODULE ..\..\..\vhdl\rtl\Ser1.vhd
+MODULE ..\..\..\vhdl\rtl\fdc\wf1772ip_pkg.vhd
+MODSTYLE ../../../vhdl/rtl/fdc/wf1772ip_pkg.vhd Normal
+MODULE ..\..\vhdl\rtl\dffdecl-p.vhd
+MODSTYLE ../../vhdl/rtl/dffdecl-p.vhd Normal
+MODULE ..\..\vhdl\rtl\gdp_kernel.vhd
+MODULE ..\..\vhdl\rtl\InputSync-a.vhd
+MODULE ..\..\vhdl\rtl\InputSync-e.vhd
+MODULE ..\..\..\vhdl\rtl\fpga\ps2_fifo.vhd
+MODULE ..\..\vhdl\rtl\gdp_vram.vhd
+MODULE ..\..\vhdl\rtl\gdp_clut.vhd
+MODULE ..\..\vhdl\rtl\gdp_video.vhd
+MODULE ..\..\vhdl\rtl\gdp_lattice_top_woflo.vhd
+MODULE ..\..\vhdl\rtl\gdp_bi.vhd
+MODULE ..\..\vhdl\rtl\gdp_bresenham.vhd
+MODULE ..\..\..\vhdl\rtl\sound\wf2149ip_top_soc.vhd
+MODULE ..\..\vhdl\rtl\gdp_font_ram.vhd
+MODULE ..\..\..\vhdl\rtl\SPI_Vdip.vhd
+MODULE ..\..\..\vhdl\rtl\PS2Keyboard.vhd
+MODULE ..\..\..\vhdl\rtl\sound\wf2149ip_wave.vhd
+MODULE ..\..\..\vhdl\rtl\PS2Mouse.vhd
+MODULE ..\..\vhdl\rtl\gdp_character.vhd
+MODULE ..\..\..\vhdl\rtl\GPIO_Interface.vhd
+SYNTHESIS_TOOL Synplify
+SIMULATOR_TOOL Active-HDL

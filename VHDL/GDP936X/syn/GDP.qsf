@@ -1,0 +1,182 @@
+# Copyright (C) 1991-2007 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+
+
+# The default values for assignments are stored in the file
+#		GDP_assignment_defaults.qdf
+# If this file doesn't exist, and for assignments not listed, see file
+#		assignment_defaults.qdf
+
+# Altera recommends that you do not modify this file. This
+# file is updated automatically by the Quartus II software
+# and any changes you make may be lost or overwritten.
+
+
+set_global_assignment -name DEVICE EP1C12F256C6
+set_global_assignment -name FAMILY Cyclone
+set_global_assignment -name TOP_LEVEL_ENTITY nkc_top
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 7.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "18:17:48  APRIL 15, 2007"
+set_global_assignment -name LAST_QUARTUS_VERSION 7.1
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS "AS INPUT TRI-STATED"
+set_global_assignment -name RESERVE_ASDO_AFTER_CONFIGURATION "AS INPUT TRI-STATED"
+set_global_assignment -name RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND "AS INPUT TRI-STATED"
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_instance_assignment -name PARTITION_HIERARCHY no_file_for_top_partition -to | -section_id Top
+set_location_assignment PIN_E11 -to Blue_o[0]
+set_location_assignment PIN_D11 -to Blue_o[1]
+set_location_assignment PIN_G16 -to clk_i
+set_location_assignment PIN_C10 -to Green_o[0]
+set_location_assignment PIN_B10 -to Green_o[1]
+set_location_assignment PIN_C9 -to Hsync_o
+set_location_assignment PIN_D9 -to Red_o[0]
+set_location_assignment PIN_D10 -to Red_o[1]
+set_location_assignment PIN_T15 -to reset_i
+set_location_assignment PIN_B9 -to SRAM1_ADR[0]
+set_location_assignment PIN_B8 -to SRAM1_ADR[1]
+set_location_assignment PIN_A4 -to SRAM1_ADR[2]
+set_location_assignment PIN_A6 -to SRAM1_ADR[3]
+set_location_assignment PIN_B7 -to SRAM1_ADR[4]
+set_location_assignment PIN_D7 -to SRAM1_ADR[5]
+set_location_assignment PIN_C6 -to SRAM1_ADR[6]
+set_location_assignment PIN_E7 -to SRAM1_ADR[7]
+set_location_assignment PIN_B1 -to SRAM1_ADR[8]
+set_location_assignment PIN_D6 -to SRAM1_ADR[9]
+set_location_assignment PIN_E6 -to SRAM1_ADR[10]
+set_location_assignment PIN_E9 -to SRAM1_ADR[11]
+set_location_assignment PIN_B2 -to SRAM1_ADR[12]
+set_location_assignment PIN_C4 -to SRAM1_ADR[13]
+set_location_assignment PIN_E10 -to SRAM1_ADR[14]
+set_location_assignment PIN_F3 -to SRAM1_ADR[15]
+set_location_assignment PIN_F4 -to SRAM1_ADR[16]
+set_location_assignment PIN_F5 -to SRAM1_ADR[17]
+set_location_assignment PIN_D8 -to SRAM1_DB[0]
+set_location_assignment PIN_C8 -to SRAM1_DB[1]
+set_location_assignment PIN_A8 -to SRAM1_DB[2]
+set_location_assignment PIN_A9 -to SRAM1_DB[3]
+set_location_assignment PIN_B6 -to SRAM1_DB[4]
+set_location_assignment PIN_B5 -to SRAM1_DB[5]
+set_location_assignment PIN_E8 -to SRAM1_DB[6]
+set_location_assignment PIN_B4 -to SRAM1_DB[7]
+set_location_assignment PIN_E1 -to SRAM1_nBE[0]
+set_location_assignment PIN_E3 -to SRAM1_nBE[1]
+set_location_assignment PIN_C7 -to SRAM1_nCS
+set_location_assignment PIN_E2 -to SRAM1_nOE
+set_location_assignment PIN_B3 -to SRAM1_nWR
+set_location_assignment PIN_C11 -to Vsync_o
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SRAM1_DB
+set_location_assignment PIN_G12 -to RxD_i
+set_global_assignment -name ENABLE_DRC_SETTINGS ON
+set_global_assignment -name FMAX_REQUIREMENT "40 MHz" -section_id clk40
+set_global_assignment -name ENABLE_CLOCK_LATENCY ON
+set_global_assignment -name FMAX_REQUIREMENT "16 MHz" -section_id clk_16
+set_instance_assignment -name CLOCK_SETTINGS clk_16 -to "clk_gate:clkgate2|clk_o"
+set_instance_assignment -name CLOCK_SETTINGS clk40 -to "clk_gate:clkgate1|clk_o"
+set_location_assignment PIN_C14 -to FDD_DIRCn -comment LED5
+set_location_assignment PIN_A15 -to FDD_DSELn[0] -comment LED1
+set_location_assignment PIN_D14 -to FDD_DSELn[1] -comment LED2
+set_location_assignment PIN_N12 -to FDD_DSELn[2] -comment LED3
+set_location_assignment PIN_P12 -to FDD_DSELn[3] -comment LED4
+set_location_assignment PIN_B11 -to FDD_IPn -comment DIP3
+set_location_assignment PIN_B15 -to FDD_MOn -comment LED7
+set_location_assignment PIN_A11 -to FDD_RDn -comment DIP2
+set_location_assignment PIN_B16 -to FDD_SDSEL -comment NC
+set_location_assignment PIN_C15 -to FDD_SIDE -comment NC
+set_location_assignment PIN_E14 -to FDD_STEPn -comment LED6
+set_location_assignment PIN_E12 -to FDD_TR00n -comment DIP0
+set_location_assignment PIN_D15 -to FDD_WDn -comment NC
+set_location_assignment PIN_D16 -to FDD_WGn -comment NC
+set_location_assignment PIN_D12 -to FDD_WPRTn -comment DIP1
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to FDD_DIRCn
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to FDD_MOn
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to FDD_SIDE
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to FDD_STEPn
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to FDD_WDn
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to FDD_WGn
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_pkg.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_transceiver.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_am_detector.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_control.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_crc_logic.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_digital_pll.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_registers.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/FDC/wf1772ip_top_soc.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/flo2_top.vhd
+set_global_assignment -name VHDL_FILE "../../vhdl/rtl/clk_gate-fpga.vhd"
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/pll_80MHz.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/src/ControlPath.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/src/DataPathRx.vhd
+set_global_assignment -name VHDL_FILE "../../vhdl/rtl/src/InputSync-a.vhd"
+set_global_assignment -name VHDL_FILE "../../vhdl/rtl/src/InputSync-e.vhd"
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/src/BaudRateRX.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/src/Receiver.vhd
+set_global_assignment -name VHDL_FILE ../../../ARCADE_Cores/t80/rtl/vhdl/T80_Pack.vhd
+set_global_assignment -name VHDL_FILE ../../../ARCADE_Cores/t80/rtl/vhdl/T80_ALU.vhd
+set_global_assignment -name VHDL_FILE ../../../ARCADE_Cores/t80/rtl/vhdl/T80_MCode.vhd
+set_global_assignment -name VHDL_FILE ../../../ARCADE_Cores/t80/rtl/vhdl/T80_Reg.vhd
+set_global_assignment -name VHDL_FILE ../../../ARCADE_Cores/t80/rtl/vhdl/T80.vhd
+set_global_assignment -name VHDL_FILE ../../../ARCADE_Cores/t80/rtl/vhdl/T80se.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/RAM.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/flomon.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/gru.vhd
+set_global_assignment -name VHDL_FILE "../vhdl/rtl/Dffdecl-p.vhd"
+set_global_assignment -name VHDL_FILE "../vhdl/rtl/gdp_global-p.vhd"
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_bresenham.vhd
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_font_array.vhd
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_character.vhd
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_decoder.vhd
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_vram.vhd
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_kernel.vhd
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_video.vhd
+set_global_assignment -name VHDL_FILE ../vhdl/rtl/gdp_top.vhd
+set_global_assignment -name VHDL_FILE ../../vhdl/rtl/nkc_top.vhd
+set_global_assignment -name MIF_FILE ../../grund.mif
+set_global_assignment -name HEX_FILE ../../grund.hex
+set_location_assignment PIN_P7 -to FLASH_nCE
+set_location_assignment PIN_N7 -to FLASH_nOE
+set_location_assignment PIN_R7 -to FLASH_nWE
+set_location_assignment PIN_M1 -to SRAM2_ADR[0]
+set_location_assignment PIN_M2 -to SRAM2_ADR[1]
+set_location_assignment PIN_M3 -to SRAM2_ADR[2]
+set_location_assignment PIN_M4 -to SRAM2_ADR[3]
+set_location_assignment PIN_N1 -to SRAM2_ADR[4]
+set_location_assignment PIN_K1 -to SRAM2_ADR[5]
+set_location_assignment PIN_K5 -to SRAM2_ADR[6]
+set_location_assignment PIN_H5 -to SRAM2_ADR[7]
+set_location_assignment PIN_G2 -to SRAM2_ADR[8]
+set_location_assignment PIN_G3 -to SRAM2_ADR[9]
+set_location_assignment PIN_N2 -to SRAM2_ADR[10]
+set_location_assignment PIN_N4 -to SRAM2_ADR[11]
+set_location_assignment PIN_P2 -to SRAM2_ADR[12]
+set_location_assignment PIN_R1 -to SRAM2_ADR[13]
+set_location_assignment PIN_R2 -to SRAM2_ADR[14]
+set_location_assignment PIN_P6 -to SRAM2_ADR[15]
+set_location_assignment PIN_T6 -to SRAM2_ADR[16]
+set_location_assignment PIN_M7 -to SRAM2_ADR[17]
+set_location_assignment PIN_N3 -to SRAM2_DB[0]
+set_location_assignment PIN_F1 -to SRAM2_DB[1]
+set_location_assignment PIN_G5 -to SRAM2_DB[2]
+set_location_assignment PIN_F2 -to SRAM2_DB[3]
+set_location_assignment PIN_L5 -to SRAM2_DB[4]
+set_location_assignment PIN_L3 -to SRAM2_DB[5]
+set_location_assignment PIN_L4 -to SRAM2_DB[6]
+set_location_assignment PIN_L2 -to SRAM2_DB[7]
+set_location_assignment PIN_R4 -to SRAM2_nBE[0]
+set_location_assignment PIN_T4 -to SRAM2_nBE[1]
+set_location_assignment PIN_M5 -to SRAM2_nCS
+set_location_assignment PIN_R5 -to SRAM2_nOE
+set_location_assignment PIN_L1 -to SRAM2_nWR
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to SRAM2_DB
+set_instance_assignment -name SLOW_SLEW_RATE ON -to Hsync_o
+set_instance_assignment -name SLOW_SLEW_RATE ON -to Vsync_o

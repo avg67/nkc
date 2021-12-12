@@ -1,0 +1,84 @@
+#-- Lattice Semiconductor Corporation Ltd.
+#-- Synplify OEM project file c:/hgb_work/nkc/gdp936x/syn/lattice\work.gdp_lattice_top.prj
+#-- Written on Tue Dec 25 15:38:45 2012
+
+
+#device options
+set_option -technology LATTICE-XP
+set_option -part LFXP6C
+set_option -speed_grade -3
+
+#compilation/mapping options
+set_option -default_enum_encoding default
+set_option -symbolic_fsm_compiler true
+set_option -resource_sharing true
+
+#use verilog 2001 standard option
+set_option -vlog_std v2001
+
+#map options
+set_option -frequency 200
+set_option -fanout_limit 100
+set_option -auto_constrain_io true
+set_option -disable_io_insertion false
+set_option -retiming false
+set_option -pipe false
+set_option -force_gsr auto
+set_option -compiler_compatible true
+set_option -dup false
+
+#simulation options
+set_option -write_verilog true
+set_option -write_vhdl true
+
+#timing analysis options
+set_option -num_critical_paths 3
+set_option -num_startend_points 0
+
+#automatic place and route (vendor) options
+set_option -write_apr_constraint 0
+
+#-- add_file options
+add_file -vhdl -lib work "C:/ispTOOLS7_1_STRT/ispcpld/../cae_library/synthesis/vhdl/XP.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/sound/dac.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_global-p.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_top.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_decoder.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/SPI_Interface.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/PS2_Interface.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/PS2_Decoder.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/Timer.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/sound/wf2149ip_pkg.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/Ser1.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/fdc/wf1772ip_pkg.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/dffdecl-p.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_kernel.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/InputSync-a.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/InputSync-e.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/fpga/ps2_fifo.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_vram.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_clut.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_video.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_lattice_top_woflo.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_bi.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_bresenham.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/sound/wf2149ip_top_soc.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_font_ram.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/SPI_Vdip.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/PS2Keyboard.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/sound/wf2149ip_wave.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/PS2Mouse.vhd"
+add_file -vhdl -lib work "../../vhdl/rtl/gdp_character.vhd"
+add_file -vhdl -lib work "../../../vhdl/rtl/GPIO_Interface.vhd"
+
+#-- top module name
+set_option -top_module work.gdp_lattice_top
+
+#-- set result format/file last
+project -result_file "gdp_lattice_top.edi"
+
+#-- error message log file
+project -log_file gdp_lattice_top.srf
+
+#-- run Synplify with 'arrange VHDL file'
+project -run

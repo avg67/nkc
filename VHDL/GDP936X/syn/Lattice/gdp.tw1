@@ -1,0 +1,107 @@
+--------------------------------------------------------------------------------
+Lattice TRACE Report - Setup, Version ispLever_v71_SP1_Build (32)
+Tue Dec 25 15:42:25 2012
+
+Copyright (c) 1991-1994 by NeoCAD Inc. All rights reserved.
+Copyright (c) 1995 AT&T Corp.   All rights reserved.
+Copyright (c) 1995-2001 Lucent Technologies Inc.  All rights reserved.
+Copyright (c) 2001 Agere Systems   All rights reserved.
+Copyright (c) 2002-2008 Lattice Semiconductor Corporation,  All rights reserved.
+
+Report Information
+------------------
+Command line:    trce -v 1 -gt -o checkpnt.twr gdp_map.ncd gdp.prf 
+Design file:     gdp_map.ncd
+Preference file: gdp.prf
+Device,speed:    LFXP6C,3
+Report level:    verbose report, limited to 1 item per preference
+--------------------------------------------------------------------------------
+
+BLOCK ASYNCPATHS
+BLOCK RESETPATHS
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+Preference: FREQUENCY NET "clk_i_c" 40.000000 MHz ;
+            4096 items scored, 0 timing errors detected.
+--------------------------------------------------------------------------------
+
+
+Passed:  The following path meets requirements by 11.234ns
+         The internal maximum frequency of the following component is 72.643 MHz
+
+ Logical Details:  Cell type  Pin type       Component name
+
+   Source:         SP8KA      Clock          GDP/kernel/char/use_int_rom_char_rom/iram_iram_0_0
+   Destination:    SP8KA      Data in        GDP/kernel/char/use_int_rom_char_rom/iram_iram_0_0
+
+   Delay:              13.766ns -- based on Minimum Pulse Width
+
+
+Passed:  The following path meets requirements by 14.715ns
+
+ Logical Details:  Cell type  Pin type       Cell/ASIC name  (clock net +/-)
+
+   Source:         PDP8KA     Port           impl_key2_kbd/PS2dec/p_lookup_LookupData_1_0_0(ASIC)  (from clk_i_c +)
+   Destination:    FF         Data in        impl_key2_kbd/PS2dec/LookupAddress_8  (to clk_i_c +)
+
+   Delay:              10.100ns  (100.0% logic, 0.0% route), 9 logic levels.
+
+ Constraint Details:
+
+      10.100ns physical path delay impl_key2_kbd/PS2dec/p_lookup_LookupData_1_0_0 to impl_key2_kbd/PS2dec/SLICE_1786 meets
+      25.000ns delay constraint less
+       0.185ns M_SET requirement (totaling 24.815ns) by 14.715ns
+
+ Physical Path Details:
+
+   Name    Fanout   Delay (ns)          Site               Resource
+C2Q_DEL     ---     6.020 *ta_1_0_0.CLKR to *ata_1_0_0.DO7 impl_key2_kbd/PS2dec/p_lookup_LookupData_1_0_0 (from clk_i_c)
+ROUTE         6   e 0.000 *ata_1_0_0.DO7 to *SLICE_1034.C0 impl_key2_kbd/PS2dec/LookupData_7
+CTOF_DEL    ---     0.382 *SLICE_1034.C0 to *SLICE_1034.F0 impl_key2_kbd/PS2dec/SLICE_1034
+ROUTE         9   e 0.000 *SLICE_1034.F0 to *SLICE_1233.B0 impl_key2_kbd/PS2dec/nkccode_v_1_sqmuxa
+CTOF_DEL    ---     0.382 *SLICE_1233.B0 to *SLICE_1233.F0 impl_key2_kbd/PS2dec/SLICE_1233
+ROUTE         1   e 0.000 *SLICE_1233.F0 to *SLICE_1233.D1 impl_key2_kbd/PS2dec/nkccode_v_5_4
+CTOF_DEL    ---     0.382 *SLICE_1233.D1 to *SLICE_1233.F1 impl_key2_kbd/PS2dec/SLICE_1233
+ROUTE         1   e 0.000 *SLICE_1233.F1 to *SLICE_1585.C0 impl_key2_kbd/PS2dec/un1_nkccode_v_iv_0_3
+CTOF_DEL    ---     0.382 *SLICE_1585.C0 to *SLICE_1585.F0 impl_key2_kbd/PS2dec/SLICE_1585
+ROUTE         1   e 0.000 *SLICE_1585.F0 to *SLICE_1036.D1 impl_key2_kbd/PS2dec/un1_nkccode_v_iv_1_3
+CTOF_DEL    ---     0.382 *SLICE_1036.D1 to *SLICE_1036.F1 impl_key2_kbd/PS2dec/SLICE_1036
+ROUTE         1   e 0.000 *SLICE_1036.F1 to */SLICE_104.C1 impl_key2_kbd/PS2dec/next_LookupAddress_19_0_5
+C1TOFCO_DE  ---     0.787 */SLICE_104.C1 to *SLICE_104.FCO impl_key2_kbd/PS2dec/SLICE_104
+ROUTE         1   e 0.000 *SLICE_104.FCO to *SLICE_103.FCI impl_key2_kbd/PS2dec/next_LookupAddress_19_cry_5
+FCITOFCO_D  ---     0.145 *SLICE_103.FCI to *SLICE_103.FCO impl_key2_kbd/PS2dec/SLICE_103
+ROUTE         1   e 0.000 *SLICE_103.FCO to *SLICE_102.FCI impl_key2_kbd/PS2dec/next_LookupAddress_19_cry_7
+TLATCH_DEL  ---     1.238 *SLICE_102.FCI to */SLICE_102.Q0 impl_key2_kbd/PS2dec/SLICE_102
+ROUTE         2   e 0.000 */SLICE_102.Q0 to *SLICE_1786.M0 impl_key2_kbd/PS2dec/next_LookupAddress_19_8 (to clk_i_c)
+                  --------
+                   10.100   (100.0% logic, 0.0% route), 9 logic levels.
+
+Report:   72.643MHz is the maximum frequency for this preference.
+
+Report Summary
+--------------
+----------------------------------------------------------------------------
+Preference                              |   Constraint|       Actual|Levels
+----------------------------------------------------------------------------
+                                        |             |             |
+FREQUENCY NET "clk_i_c" 40.000000 MHz ; |   40.000 MHz|   72.643 MHz|   9  
+                                        |             |             |
+----------------------------------------------------------------------------
+
+
+All preferences were met.
+
+
+Timing summary:
+---------------
+
+Timing errors: 0  Score: 0
+Cumulative negative slack: 0
+
+Constraints cover 406168 paths, 2 nets, and 10803 connections (88.8% coverage)
+
+--------------------------------------------------------------------------------
+

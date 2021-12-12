@@ -1,0 +1,1 @@
+-inp "gdp.ngd" -dir "c:/hgb_work/nkc/gdp936x/syn/lattice" -prj "gdp" -gui -touch ngd -a LatticeXP -p LFXP6C -t TQFP144 -lpf "gdp.lpf" -msg "Pre-Map Design Floorplan"

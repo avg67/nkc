@@ -1,0 +1,35 @@
+#
+#
+# Precision RTL Synthesis 2006a.401OEM_Lattice (Production Release) Sun Nov 19 20:24:16 PST 2006
+# 
+# Copyright (c) Mentor Graphics Corporation, 1996-2006, All Rights Reserved.
+#            Portions copyright 1991-2004 Compuware Corporation
+#                      UNPUBLISHED, LICENSED SOFTWARE.
+#           CONFIDENTIAL AND PROPRIETARY INFORMATION WHICH IS THE
+#         PROPERTY OF MENTOR GRAPHICS CORPORATION OR ITS LICENSORS
+# 
+# Running on Windows XP Andreas Voggeneder@LAPI Service Pack 2 5.01.2600 i686
+# 
+#                                  NOTICE
+#
+# This source code belongs to Mentor Graphics Corporation.  It is considered
+# trade secret and is not to be divulged or used by parties who have not
+# received written authorization from the owner.
+#
+#
+# Date : Sun Jun 10 21:54:36 2007
+# Designer : Andreas Voggeneder
+#
+#<PROJFILE format='0'>
+error "Error: This file can only be used with Precision version 2003c or later." "load_project failed" E_NEW_PROJECT
+#</PROJFILE>
+#<OBJ name='project' version='0'>
+#  <PROP key='defimpl' type='VT_STRING' value='gdp_lattice_top_impl' />
+#  <PROP key='usetempdir' type='VT_BOOL' value='true' />
+#  <OBJ name='impl' version='0'>
+#    <PROP key='name' type='VT_STRING' value='gdp_lattice_top_impl' />
+#    <PROP key='comment' type='VT_STRING' value='' />
+#    <PROP key='basename' type='VT_STRING' value='gdp_lattice_top' />
+#    <PROP key='impltype' type='VT_STRING' value='default' />
+#  </OBJ>
+#</OBJ>

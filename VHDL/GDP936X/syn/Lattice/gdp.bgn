@@ -1,0 +1,65 @@
+BITGEN: Bitstream Generator ispLever_v71_PROD_Build (58)
+Copyright (c) 1991-1994 by NeoCAD Inc. All rights reserved.
+Copyright (c) 1995 AT&T Corp.   All rights reserved.
+Copyright (c) 1995-2001 Lucent Technologies Inc.  All rights reserved.
+Copyright (c) 2001 Agere Systems   All rights reserved.
+Copyright (c) 2002-2008 Lattice Semiconductor Corporation,  All rights reserved.
+
+Command: bitgen -g CfgMode:Disable -g ReadBack:Flash -g ReadCapture:Disable -g RamCfg:Reset -g ES:No -w gdp.ncd gdp.prf 
+
+Loading design for application Bitgen from file gdp.ncd.
+Design name: gdp_lattice_top
+NCD version: 3.2
+Vendor:      LATTICE
+Device:      LFXP6C
+Package:     TQFP144
+Speed:       3
+Loading device for application Bitgen from file 'mg5g27x32.nph' in
+environment C:/ispTOOLS7_1_STRT/ispfpga.
+Package: Version 1.27, Status: FINAL
+Speed Hardware Data: version 1.206 
+
+Running DRC.
+INFO: Design contains pre-loadable EBR during configuration that has a
+requirement: Since the GSR is disabled for the EBR, make sure write enable
+and chip enable are inactive during wake-up, so that the pre-loaded
+initialization values will not be corrupted during wake-up state.
+DRC detected 0 errors and 0 warnings.
+Reading Preference File from gdp.prf...
+
+Preference Summary:
++---------------------------------+---------------------------------+
+|  Preference                     |  Current Setting                |
++---------------------------------+---------------------------------+
+|                       ReadBack  |                        FLASH**  |
++---------------------------------+---------------------------------+
+|                    ReadCapture  |                      Disable**  |
++---------------------------------+---------------------------------+
+|                         RamCfg  |                        Reset**  |
++---------------------------------+---------------------------------+
+|                        CfgMode  |                      Disable**  |
++---------------------------------+---------------------------------+
+|                        DONE_EX  |                          OFF**  |
++---------------------------------+---------------------------------+
+|                        DONE_OD  |                           ON**  |
++---------------------------------+---------------------------------+
+|                     MCCLK_FREQ  |                          2.5**  |
++---------------------------------+---------------------------------+
+|                  CONFIG_SECURE  |                          OFF**  |
++---------------------------------+---------------------------------+
+|                    CONFIG_MODE  |                         JTAG**  |
++---------------------------------+---------------------------------+
+|                        WAKE_UP  |                           21**  |
++---------------------------------+---------------------------------+
+|                     PERSISTENT  |                          OFF**  |
++---------------------------------+---------------------------------+
+|                          INBUF  |                           ON**  |
++---------------------------------+---------------------------------+
+|                             ES  |                           No**  |
++---------------------------------+---------------------------------+
+ *  Default setting.
+ ** The specified setting matches the default setting.
+
+
+Creating bit map...
+Saving bit stream in "gdp.bit".

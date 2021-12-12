@@ -1,0 +1,5 @@
+-g CfgMode:Disable
+-g ReadBack:Flash
+-g ReadCapture:Disable
+-g RamCfg:Reset
+-g ES:No

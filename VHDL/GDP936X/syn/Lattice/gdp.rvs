@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Project Date="Sun Mar 30 20:15:35 CEST 2008" ModBy="Inserter" Name="gdp.rvl">
+<Token/>
+<Core Name="gdp_lattice_top_LA0">
+<Setting>
+<Capture SamplesPerTrig="0" NumTrigsCap=""/>
+<Event CntEnableRun="" EventCnt=""/>
+<TrigSetting PreTrgSamples="" PostTrgSamples="" AND_ALL="" TURadix="0"/>
+</Setting>
+<Dataset Name="Base">
+<Trace>
+<Sig Name="gdp/video/enable_i"/>
+<Sig Name="gdp/video/hsync_o"/>
+<Sig Name="gdp/video/vsync_o"/>
+<Bus Name="gdp/video/q" Radix="0">
+<Sig Name="gdp/video/q:0"/>
+<Sig Name="gdp/video/q:1"/>
+<Sig Name="gdp/video/q:2"/>
+<Sig Name="gdp/video/q:3"/>
+<Sig Name="gdp/video/q:4"/>
+<Sig Name="gdp/video/q:5"/>
+<Sig Name="gdp/video/q:6"/>
+<Sig Name="gdp/video/q:7"/>
+<Sig Name="gdp/video/q:8"/>
+<Sig Name="gdp/video/q:9"/>
+<Sig Name="gdp/video/q:10"/>
+</Bus>
+<Bus Name="gdp/video/line" Radix="0">
+<Sig Name="gdp/video/line:0"/>
+<Sig Name="gdp/video/line:1"/>
+<Sig Name="gdp/video/line:2"/>
+<Sig Name="gdp/video/line:3"/>
+<Sig Name="gdp/video/line:4"/>
+<Sig Name="gdp/video/line:5"/>
+<Sig Name="gdp/video/line:6"/>
+<Sig Name="gdp/video/line:7"/>
+<Sig Name="gdp/video/line:8"/>
+<Sig Name="gdp/video/line:9"/>
+<Sig Name="gdp/video/line:10"/>
+</Bus>
+<Sig Name="gdp/video/viden"/>
+</Trace>
+<Trigger>
+<TU ID="1" Name="TU1" Operator="6" Radix="0" Value="0"/>
+<TE ID="1" Name="TE1" Enable="1" Expression="TU1"/>
+</Trigger>
+</Dataset>
+</Core>
+</Project>

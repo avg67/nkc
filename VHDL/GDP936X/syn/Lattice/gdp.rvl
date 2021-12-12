@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Project Name="gdp.rvl" SigType="0" Date="Sun Mar 30 20:15:35 CEST 2008" ModBy="Inserter">
+<IP Version="1_0_061507"/>
+<Design DesignName="gdp" DesignEntry="Schematic/VHDL" DeviceFamily="LatticeXP"/>
+<LPF>gdp.lpf</LPF>
+<Core ID="0" Name="gdp_lattice_top_LA0" Insert="1" InsertDataset="0" Reveal_sig="1623016419">
+<Setting>
+<Clock SampleClk="gdp/video/clk_i" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
+<TraceBuffer BufferDepth="1024" Implementation="0" IncTrigSig="0"/>
+<Capture Mode="0" MinSamplesPerTrig="8"/>
+<Event CntEnable="0" MaxEventCnt="8"/>
+<TrigOut EnableTrigOut="0" TrigOutNet="reveal_debug_gdp_lattice_top_LA0_net" TrigOutNetType="1"/>
+</Setting>
+<Dataset Name="Base">
+<Trace>
+<Sig Name="gdp/video/enable_i" Type="SIG"/>
+<Sig Name="gdp/video/hsync_o" Type="SIG"/>
+<Sig Name="gdp/video/vsync_o" Type="SIG"/>
+<Bus Name="gdp/video/q">
+<Sig Name="gdp/video/q:0" Type="SIG"/>
+<Sig Name="gdp/video/q:1" Type="SIG"/>
+<Sig Name="gdp/video/q:2" Type="SIG"/>
+<Sig Name="gdp/video/q:3" Type="SIG"/>
+<Sig Name="gdp/video/q:4" Type="SIG"/>
+<Sig Name="gdp/video/q:5" Type="SIG"/>
+<Sig Name="gdp/video/q:6" Type="SIG"/>
+<Sig Name="gdp/video/q:7" Type="SIG"/>
+<Sig Name="gdp/video/q:8" Type="SIG"/>
+<Sig Name="gdp/video/q:9" Type="SIG"/>
+<Sig Name="gdp/video/q:10" Type="SIG"/>
+</Bus>
+<Bus Name="gdp/video/line">
+<Sig Name="gdp/video/line:0" Type="SIG"/>
+<Sig Name="gdp/video/line:1" Type="SIG"/>
+<Sig Name="gdp/video/line:2" Type="SIG"/>
+<Sig Name="gdp/video/line:3" Type="SIG"/>
+<Sig Name="gdp/video/line:4" Type="SIG"/>
+<Sig Name="gdp/video/line:5" Type="SIG"/>
+<Sig Name="gdp/video/line:6" Type="SIG"/>
+<Sig Name="gdp/video/line:7" Type="SIG"/>
+<Sig Name="gdp/video/line:8" Type="SIG"/>
+<Sig Name="gdp/video/line:9" Type="SIG"/>
+<Sig Name="gdp/video/line:10" Type="SIG"/>
+</Bus>
+<Sig Name="gdp/video/viden" Type="SIG"/>
+</Trace>
+<Trigger>
+<TU ID="1" Type="0" Serialbits="0" Sig="gdp/video/enable_i,"/>
+<TE ID="1" Resource="1" MaxSequence="1" MaxEvnCnt="1"/>
+</Trigger>
+</Dataset>
+</Core>
+</Project>

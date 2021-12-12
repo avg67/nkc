@@ -1,0 +1,125 @@
+--------------------------------------------------------------------------------
+Lattice TRACE Report - Setup, Version ispLever_v71_SP1_Build (32)
+Tue Dec 25 15:46:29 2012
+
+Copyright (c) 1991-1994 by NeoCAD Inc. All rights reserved.
+Copyright (c) 1995 AT&T Corp.   All rights reserved.
+Copyright (c) 1995-2001 Lucent Technologies Inc.  All rights reserved.
+Copyright (c) 2001 Agere Systems   All rights reserved.
+Copyright (c) 2002-2008 Lattice Semiconductor Corporation,  All rights reserved.
+
+Report Information
+------------------
+Command line:    trce -v 1 -o checkpnt.twr gdp.ncd gdp.prf 
+Design file:     gdp.ncd
+Preference file: gdp.prf
+Device,speed:    LFXP6C,3
+Report level:    verbose report, limited to 1 item per preference
+--------------------------------------------------------------------------------
+
+BLOCK ASYNCPATHS
+BLOCK RESETPATHS
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+Preference: FREQUENCY NET "clk_i_c" 40.000000 MHz ;
+            4096 items scored, 0 timing errors detected.
+--------------------------------------------------------------------------------
+
+
+Passed:  The following path meets requirements by 4.274ns
+
+ Logical Details:  Cell type  Pin type       Cell/ASIC name  (clock net +/-)
+
+   Source:         FF         Q              GDP/kernel/bres/posy_9  (from clk_i_c +)
+   Destination:    FF         Unknown        GDP_vram_ram_addressio_14  (to clk_i_c +)
+
+   Delay:              20.657ns  (34.0% logic, 66.0% route), 18 logic levels.
+
+ Constraint Details:
+
+      20.657ns physical path delay GDP/kernel/bres/SLICE_213 to SRAM1_ADR_14_MGIOL meets
+      25.000ns delay constraint less
+       0.186ns skew and 
+      -0.117ns ONEG0_SET requirement (totaling 24.931ns) by 4.274ns
+
+ Physical Path Details:
+
+   Name    Fanout   Delay (ns)          Site               Resource
+REG_DEL     ---     0.576    R12C26B.CLK to     R12C26B.Q0 GDP/kernel/bres/SLICE_213 (from clk_i_c)
+ROUTE         3     1.685     R12C26B.Q0 to      R8C27A.D0 GDP/kernel/bres_posy_9
+CTOF_DEL    ---     0.382      R8C27A.D0 to      R8C27A.F0 GDP/kernel/SLICE_1400
+ROUTE         1     0.643      R8C27A.F0 to      R8C27A.D1 GDP/kernel/N_139
+CTOF_DEL    ---     0.382      R8C27A.D1 to      R8C27A.F1 GDP/kernel/SLICE_1400
+ROUTE         1     0.643      R8C27A.F1 to      R8C27D.D1 GDP/kernel/N_130
+CTOF_DEL    ---     0.382      R8C27D.D1 to      R8C27D.F1 GDP/kernel/SLICE_1399
+ROUTE         2     1.296      R8C27D.F1 to      R8C25B.C0 GDP/kernel/issue_wr_req_p_un15_wr_req_i_0_o3_0_0
+CTOF_DEL    ---     0.382      R8C25B.C0 to      R8C25B.F0 GDP/kernel/SLICE_1427
+ROUTE         2     0.659      R8C25B.F0 to      R8C25A.D1 GDP/kernel/issue_wr_req_p_un15_wr_req_i_0_o3_0
+CTOF_DEL    ---     0.382      R8C25A.D1 to      R8C25A.F1 GDP/kernel/SLICE_1324
+ROUTE         4     1.221      R8C25A.F1 to      R6C24B.D1 GDP/kernel/issue_wr_req_p_un15_wr_req_i_0_o3
+CTOF_DEL    ---     0.382      R6C24B.D1 to      R6C24B.F1 GDP/kernel/SLICE_1394
+ROUTE        34     1.407      R6C24B.F1 to      R6C21A.D1 GDP/kernel/un1_kernel_addr_0_sqmuxa_i
+CTOF_DEL    ---     0.382      R6C21A.D1 to      R6C21A.F1 GDP/kernel/SLICE_1422
+ROUTE         1     1.485      R6C21A.F1 to      R7C24B.C0 GDP/kernel/N_1004
+CTOF_DEL    ---     0.382      R7C24B.C0 to      R7C24B.F0 GDP/kernel/SLICE_1432
+ROUTE         2     1.123      R7C24B.F0 to      R7C22A.B0 GDP/kernel/N_885_i
+B0TOFCO_DE  ---     0.907      R7C22A.B0 to     R7C22A.FCO GDP/kernel/SLICE_240
+ROUTE         1     0.000     R7C22A.FCO to     R7C22B.FCI GDP/kernel/kernel_addr_o_cry_1
+FCITOFCO_D  ---     0.145     R7C22B.FCI to     R7C22B.FCO GDP/kernel/SLICE_239
+ROUTE         1     0.000     R7C22B.FCO to     R7C22C.FCI GDP/kernel/kernel_addr_o_cry_3
+FCITOFCO_D  ---     0.145     R7C22C.FCI to     R7C22C.FCO GDP/kernel/SLICE_238
+ROUTE         1     0.000     R7C22C.FCO to     R7C22D.FCI GDP/kernel/kernel_addr_o_cry_5
+FCITOFCO_D  ---     0.145     R7C22D.FCI to     R7C22D.FCO GDP/kernel/SLICE_237
+ROUTE         1     0.000     R7C22D.FCO to     R7C23A.FCI GDP/kernel/kernel_addr_o_cry_7
+FCITOFCO_D  ---     0.145     R7C23A.FCI to     R7C23A.FCO GDP/kernel/SLICE_236
+ROUTE         1     0.000     R7C23A.FCO to     R7C23B.FCI GDP/kernel/kernel_addr_o_cry_9
+FCITOFCO_D  ---     0.145     R7C23B.FCI to     R7C23B.FCO GDP/kernel/SLICE_235
+ROUTE         1     0.000     R7C23B.FCO to     R7C23C.FCI GDP/kernel/kernel_addr_o_cry_11
+FCITOFCO_D  ---     0.145     R7C23C.FCI to     R7C23C.FCO GDP/kernel/SLICE_234
+ROUTE         1     0.000     R7C23C.FCO to     R7C23D.FCI GDP/kernel/kernel_addr_o_cry_13
+TLATCH_DEL  ---     1.238     R7C23D.FCI to      R7C23D.Q0 GDP/kernel/SLICE_233
+ROUTE         2     1.679      R7C23D.Q0 to      R3C24A.D0 GDP/kernel_addr1_14
+CTOF_DEL    ---     0.382      R3C24A.D0 to      R3C24A.F0 GDP/vram/SLICE_1807
+ROUTE         1     1.787      R3C24A.F0 to IOL_T18A.ONEG0 GDP_vram_ram_address_5_14 (to clk_i_c)
+                  --------
+                   20.657   (34.0% logic, 66.0% route), 18 logic levels.
+
+ Clock Skew Details: 
+
+ Source Clock: 
+           Delay              Connection
+          3.326ns         24.PADDI to R12C26B.CLK     
+
+ Destination Clock :
+           Delay              Connection
+          3.140ns         24.PADDI to IOL_T18A.CLK    
+
+Report:   48.249MHz is the maximum frequency for this preference.
+
+Report Summary
+--------------
+----------------------------------------------------------------------------
+Preference                              |   Constraint|       Actual|Levels
+----------------------------------------------------------------------------
+                                        |             |             |
+FREQUENCY NET "clk_i_c" 40.000000 MHz ; |   40.000 MHz|   48.249 MHz|  18  
+                                        |             |             |
+----------------------------------------------------------------------------
+
+
+All preferences were met.
+
+
+Timing summary:
+---------------
+
+Timing errors: 0  Score: 0
+Cumulative negative slack: 0
+
+Constraints cover 406168 paths, 2 nets, and 11619 connections (95.5% coverage)
+
+--------------------------------------------------------------------------------
+
