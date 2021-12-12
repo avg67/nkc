@@ -17,7 +17,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use work.DffGlobal.all;
- 
+
 entity gdp_bi is
   port(reset_n_i     : in  std_ulogic;
        clk_i         : in  std_ulogic;
