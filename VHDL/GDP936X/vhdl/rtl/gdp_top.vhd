@@ -86,7 +86,14 @@ architecture rtl of gdp_top is
       pixel_green_o : out std_ulogic_vector(2 downto 0);
       pixel_blue_o  : out std_ulogic_vector(2 downto 0);
       Hsync_o       : out std_ulogic;
-      Vsync_o       : out std_ulogic
+      Vsync_o       : out std_ulogic;
+      blank_o       : out std_ulogic;
+      hwcuren_i     : in std_ulogic; -- hardware cursor enable ( CTRL2.6)
+      curcol_i      : in std_ulogic_vector(3 downto 0); -- current FG color
+      cx1_i         : in std_ulogic_vector(11 downto 0);
+      cx2_i         : in std_ulogic_vector(11 downto 0);
+      cy1_i         : in std_ulogic_vector(11 downto 0);
+      cy2_i         : in std_ulogic_vector(11 downto 0)
     );
   end component;
 
@@ -119,6 +126,14 @@ architecture rtl of gdp_top is
       chr_rom_data_i  : in  std_ulogic_vector(7 downto 0);
       chr_rom_ena_o   : out std_ulogic;
       chr_rom_busy_i  : in  std_ulogic;
+     ------------------------------------------------------------------------
+      -- Hardware-Cursor (to VIDEO section)
+      ------------------------------------------------------------------------
+      hwcuren_o      : out std_ulogic; -- hardware cursor enable ( CTRL2.6 )     
+      cx1_o       : out std_ulogic_vector(11 downto 0);
+      cx2_o       : out std_ulogic_vector(11 downto 0);
+      cy1_o       : out std_ulogic_vector(11 downto 0);
+      cy2_o       : out std_ulogic_vector(11 downto 0);
       monitoring_o    : out std_ulogic_vector(nr_mon_sigs_c-1 downto 0)
     );
   end component;
@@ -193,6 +208,15 @@ architecture rtl of gdp_top is
   signal pixel_red       : std_ulogic_vector(2 downto 0);
   signal pixel_green     : std_ulogic_vector(2 downto 0);
   signal pixel_blue      : std_ulogic_vector(2 downto 0);
+  ------------------------------------------------------------------------
+  -- Hardware-Cursor (to VIDEO section)
+  ------------------------------------------------------------------------
+  signal hwcuren     : std_ulogic; -- hardware cursor enable ( CTRL1
+  signal cx1         : std_ulogic_vector(11 downto 0);
+  signal cx2         : std_ulogic_vector(11 downto 0);
+  signal cy1         : std_ulogic_vector(11 downto 0);
+  signal cy2         : std_ulogic_vector(11 downto 0);
+  signal blank       : std_ulogic;
 begin
 
  video : gdp_video
@@ -221,7 +245,20 @@ begin
     pixel_green_o => pixel_green,
     pixel_blue_o  => pixel_blue, 
     Hsync_o       => Hsync,
-    Vsync_o       => Vsync
+    Vsync_o       => Vsync,
+   ------------------------------------------------------------------------
+    -- Hardware-Cursor (to VIDEO section)
+    ------------------------------------------------------------------------
+   hwcuren_i      => hwcuren, -- hardware cursor enable ( CTRL1
+   curcol_i    => color_reg(3 downto 0),
+   cx1_i       => cx1,
+   cx2_i       => cx2,
+   cy1_i       => cy1,
+   cy2_i       => cy2,
+   ------------------------------
+   blank_o     => blank
+   ------------------------------
+ --  monitoring_o    => open
   );
   
   Hsync_o       <= Hsync;
@@ -263,7 +300,15 @@ begin
       chr_rom_data_i => chr_rom_data,
       chr_rom_ena_o  => chr_rom_ena,
       chr_rom_busy_i => chr_rom_busy,
-      monitoring_o   => monitoring
+     ------------------------------------------------------------------------
+       -- Hardware-Cursor (to VIDEO section)
+       ------------------------------------------------------------------------
+      hwcuren_o   => hwcuren, -- hardware cursor enable ( CTRL1
+      cx1_o    => cx1,
+      cx2_o    => cx2,
+      cy1_o    => cy1,
+      cy2_o    => cy2,
+      monitoring_o   => open
     );
   
   monitoring_o   <= vid_rd_req &

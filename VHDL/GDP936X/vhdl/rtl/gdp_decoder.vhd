@@ -36,6 +36,7 @@ entity gdp_decoder is
        scaleX_o      : out scale_t;
        scaleY_o      : out scale_t;
        raster_bg_o   : out std_ulogic;
+       color_mode_o  : out std_ulogic;
        drawCmd_o     : out drawCmd_t;
        drawCmd_stb_o : out std_ulogic;
        drawBusy_i    : in  std_ulogic;
@@ -50,6 +51,8 @@ entity gdp_decoder is
        irqEn_o       : out std_ulogic_vector(2 downto 0);
        vsync_i       : in  std_ulogic;
        hsync_i       : in  std_ulogic;
+	   
+	   hwcuren_o	 : out std_ulogic; -- hardware cursor enable (CTRL2.6)
        --------------------------
        -- internal data bus
        --------------------------
@@ -68,10 +71,10 @@ architecture rtl of gdp_decoder is
   signal Status_Reg   : std_ulogic_vector(7 downto 0);
   signal Cmd_Reg      : std_ulogic_vector(7 downto 0);
   signal Ctrl1_Reg    : std_ulogic_vector(6 downto 0);
-  signal Ctrl2_Reg    : std_ulogic_vector(5 downto 0);
+  signal Ctrl2_Reg    : std_ulogic_vector(7 downto 0);
   signal CSize_Reg    : std_ulogic_vector(7 downto 0);
-  signal DeltaX_Reg   : std_ulogic_vector(7 downto 0);
-  signal DeltaY_Reg   : std_ulogic_vector(7 downto 0);
+  signal DeltaX_Reg   : std_ulogic_vector(8 downto 0);
+  signal DeltaY_Reg   : std_ulogic_vector(8 downto 0);
   signal XPos_Reg     : std_ulogic_vector(11 downto 0);
   signal YPos_Reg     : std_ulogic_vector(11 downto 0);
 
@@ -91,18 +94,20 @@ begin
  -- Lesen der Register (kombinatorisch)
 
   with to_integer(unsigned(Adr_i(3 downto 0))) select
-    next_DataOut_s <=  Status_Reg                     when 0,
-                       "0"&Ctrl1_Reg                  when 1,
-                       "00"&Ctrl2_Reg                 when 2,
-                       CSize_Reg                      when 3,
-                       DeltaX_Reg                     when 5,
-                       DeltaY_Reg                     when 7,
-                       "0000"&XPos_Reg(11 downto 8)   when 8,
-                       XPos_Reg(7 downto 0)           when 9,
-                       "0000"&YPos_Reg(11 downto 8)   when 10,
-                       YPos_Reg(7 downto 0)           when 11,
-                       Status_Reg                     when 15,
-                       (others => '0')                when others;
+    next_DataOut_s <=  Status_Reg                       when 0,
+                       "0"&Ctrl1_Reg                    when 1,
+                       Ctrl2_Reg                        when 2,
+                       CSize_Reg                        when 3,
+                       "0000000"&DeltaX_Reg(8)          when 4, 
+                       DeltaX_Reg(7 downto 0)           when 5,
+                       "0000000"&DeltaY_Reg(8)          when 6,
+                       DeltaY_Reg(7 downto 0)           when 7,
+                       "0000"&XPos_Reg(11 downto 8)     when 8,
+                       XPos_Reg(7 downto 0)             when 9,
+                       "0000"&YPos_Reg(11 downto 8)     when 10,
+                       YPos_Reg(7 downto 0)             when 11,
+                       Status_Reg                       when 15,
+                       (others => '0')                  when others;
 
 
 --  process(clk_i)
@@ -127,7 +132,7 @@ begin
       YPos_Reg   <= (others => '0');
       fillScreen <= '0';
     end Reset_regs_p;
-    variable delta_v : std_ulogic_vector(7 downto 0);
+    variable delta_v : std_ulogic_vector(DeltaX_Reg'range);
     variable size_v  : natural range 1 to 16;
 
     function calc_delta_f(delta : in natural; sign: in std_ulogic) return delta_t is
@@ -205,27 +210,31 @@ begin
             when 0  =>
               -- only accept new commands if decoder is IDLE
               if Status_Reg(2) ='1' then
-                Cmd_Reg             <= DataIn_i;
-                CMD_stb             <= '1';
-              end if;
-            when 1  =>
-              Ctrl1_Reg             <= DataIn_i(Ctrl1_Reg'range);
-            when 2  =>
-              Ctrl2_Reg             <= DataIn_i(Ctrl2_Reg'range);
-            when 3  =>
-              CSize_Reg             <= DataIn_i;
-            when 5  =>
-              DeltaX_Reg            <= DataIn_i;
-            when 7  =>
-              DeltaY_Reg            <= DataIn_i;
-            when 8  =>
-              XPos_Reg(11 downto 8) <= DataIn_i(3 downto 0);
-            when 9  =>
-              XPos_Reg(7 downto 0)  <= DataIn_i(7 downto 0);
-            when 10 =>
-              YPos_Reg(11 downto 8) <= DataIn_i(3 downto 0);
-            when 11 =>
-              YPos_Reg(7 downto 0)  <= DataIn_i(7 downto 0);
+                Cmd_Reg                       <= DataIn_i;
+                CMD_stb                       <= '1';
+              end if;                         
+            when 1  =>                        
+              Ctrl1_Reg                       <= DataIn_i(Ctrl1_Reg'range);
+            when 2  =>                        
+              Ctrl2_Reg                       <= DataIn_i(Ctrl2_Reg'range);
+            when 3  =>                        
+              CSize_Reg                       <= DataIn_i;
+            when 4  =>                        
+              DeltaX_Reg(8)                   <= DataIn_i(0);
+            when 5  =>                        
+              DeltaX_Reg(7 downto 0)          <= DataIn_i;
+            when 6  =>                        
+              DeltaY_Reg(8)                   <= DataIn_i(0);
+            when 7  =>                        
+              DeltaY_Reg(7 downto 0)          <= DataIn_i;
+            when 8  =>                        
+              XPos_Reg(11 downto 8)           <= DataIn_i(3 downto 0);
+            when 9  =>                        
+              XPos_Reg(7 downto 0)            <= DataIn_i(7 downto 0);
+            when 10 =>                        
+              YPos_Reg(11 downto 8)           <= DataIn_i(3 downto 0);
+            when 11 =>                        
+              YPos_Reg(7 downto 0)            <= DataIn_i(7 downto 0);
             when 14 =>
               XPos_Reg(char_rom_addr_o'range) <= std_ulogic_vector(unsigned(XPos_Reg(char_rom_addr_o'range)) +1);
             when others  => null;
@@ -422,8 +431,8 @@ begin
   posStartY_o   <= YPos_Reg(posStartY_o'range);
   deltaX_o      <= deltaX;
   deltaY_o      <= deltaY;
-  lineStyle_o   <= Ctrl2_Reg(1 downto 0);
-  symbolStyle_o <= Ctrl2_Reg(3 downto 2);
+  lineStyle_o   <= Ctrl2_Reg(1 downto 0); -- 
+  symbolStyle_o <= Ctrl2_Reg(3 downto 2); -- 2=1 (kusiv), 3=1(vertikal)
   drawCmd_o     <= drawCmd;
   drawCmd_stb_o <= drawCmd_stb when drawCmd=clearScreen_e else
                    drawCmd_stb and Ctrl1_Reg(0);
@@ -436,6 +445,9 @@ begin
   char_rom_addr_o <= XPos_Reg(char_rom_addr_o'range);
   char_rom_we_o   <= (CS_i and Wr_i) when Adr_i(3 downto 0)=X"E" else
                      '0';
-  char_rom_page_o <= Ctrl2_Reg(4);
-  raster_bg_o     <= Ctrl2_Reg(5);
+  char_rom_page_o <= Ctrl2_Reg(4); -- 1=USER-Zeichensatz
+  raster_bg_o     <= Ctrl2_Reg(5); -- 1=Transparent Mode
+  hwcuren_o       <= Ctrl2_Reg(6); -- 1=hardware cursor enable
+  color_mode_o    <= Ctrl2_Reg(7); -- 1=256 color mode
+  
 end rtl;

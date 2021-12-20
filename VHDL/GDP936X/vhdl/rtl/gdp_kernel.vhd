@@ -59,6 +59,14 @@ entity gdp_kernel is
        chr_rom_data_i    : in  std_ulogic_vector(7 downto 0);
        chr_rom_ena_o     : out std_ulogic;
        chr_rom_busy_i    : in  std_ulogic;
+	   ------------------------------------------------------------------------
+       -- Hardware-Cursor (to VIDEO section)
+       ------------------------------------------------------------------------
+	   hwcuren_o		: out std_ulogic; -- hardware cursor enable ( CTRL2.6 )
+	   cx1_o			: out std_ulogic_vector(11 downto 0);
+	   cx2_o			: out std_ulogic_vector(11 downto 0);
+	   cy1_o			: out std_ulogic_vector(11 downto 0);
+	   cy2_o			: out std_ulogic_vector(11 downto 0);
        --------------------------
        -- Monitoring (Debug) signals
        --------------------------
@@ -154,6 +162,7 @@ architecture rtl of gdp_kernel is
       irqEn_o         : out std_ulogic_vector(2 downto 0);
       vsync_i         : in  std_ulogic;
       hsync_i         : in  std_ulogic;
+	  hwcuren_o	 : out std_ulogic; -- hardware cursor enable (CTRL2.7)
       Adr_i           : in  std_ulogic_vector(3 downto 0);
       CS_i            : in  std_ulogic;
       DataIn_i        : in  std_ulogic_vector(7 downto 0);
@@ -219,6 +228,11 @@ architecture rtl of gdp_kernel is
   signal char_rom_we           : std_ulogic;
   signal char_rom_addr         : std_ulogic_vector(8 downto 0);
   signal char_rom_page         : std_ulogic;
+  
+  signal cdx : coord_t;
+  signal cdy : coord_t;
+  signal hwcuren : std_ulogic;
+  signal q : std_ulogic_vector(31 downto 0);
 begin
 
   enable <= '1';
@@ -249,6 +263,7 @@ begin
       irqEn_o         => open,
       vsync_i         => vsync_i,
       hsync_i         => hsync_i,
+	  hwcuren_o	 	  => hwcuren, -- hardware cursor enable (CTRL2.7)
       Adr_i           => Adr_i,
       CS_i            => CS_i,
       DataIn_i        => DataIn_i,
@@ -341,6 +356,75 @@ begin
   wr_pixel <= bres_wr_pixel when drawCmd = drawLine_e else
               char_wr_pixel;
 
+  ----------------------------------------------------------
+  -- enable hardware cursor (ctrl2.6):
+  
+  process(clk_i)
+   variable tmp : unsigned(q'range);
+	begin    
+    if (clk_i'event and clk_i = '1') then      
+	   tmp := unsigned(q) + 1;
+	   q <= std_ulogic_vector(tmp);
+	  end if;	  
+   end process;
+  
+  hwcuren_o <= hwcuren when q(24) = '1' else '0'; -- cursor blink, i have put that here (not in gdp_video), so it could be changed by register settings
+  -- hwcuren_o <= hwcuren; -- no blink
+  -- calculate hardware cursor area:
+
+  process (posStartX,posStartY,cdx,cdy)
+   variable tmpx1 : unsigned(posStartX'range);
+   variable tmpx2 : unsigned(posStartX'range);
+   variable tmpy1 : unsigned(posStartY'range);
+   variable tmpy2 : unsigned(posStartY'range);
+  begin
+   tmpx1 := unsigned(posStartX) - 1;
+   tmpx2 := tmpx1 + unsigned(cdx);
+   tmpy1 := YRES_c-unsigned(posStartY) - unsigned(cdy);
+   tmpy2 := YRES_c-unsigned(posStartY);
+   cx1_o <= std_ulogic_vector(tmpx1);
+   cx2_o <= std_ulogic_vector(tmpx2);
+   cy1_o <= std_ulogic_vector(shift_left(tmpy1,1)); -- video ist 512(x) x 256(y), but gdp_video actually uses 512(y) pixel (2 pixel per pixel)
+   cy2_o <= std_ulogic_vector(shift_left(tmpy2,1));
+  end process;
+  
+  with ScaleX select
+	  cdx <= "000000000101" when "0001",
+			 "000000001010" when "0010",
+			 "000000001111" when "0011",
+			 "000000010100" when "0100",
+			 "000000011001" when "0101",
+			 "000000011110" when "0110",
+			 "000000100011" when "0111",
+			 "000000101000" when "1000",
+			 "000000101101" when "1001",
+			 "000000110010" when "1010",
+			 "000000110111" when "1011",
+			 "000000111100" when "1100",
+			 "000001000001" when "1101",
+			 "000001000110" when "1110",
+			 "000001001011" when "1111",
+			 "000001010000" when others;
+			 
+  with ScaleY select
+	  cdy <= "000000001000" when "0001",
+			 "000000010000" when "0010",
+			 "000000011000" when "0011",
+			 "000000100000" when "0100",
+			 "000000101000" when "0101",
+			 "000000110000" when "0110",
+			 "000000111000" when "0111",
+			 "000001000000" when "1000",
+			 "000001001000" when "1001",
+			 "000001010000" when "1010",
+			 "000001011000" when "1011",
+			 "000001100000" when "1100",
+			 "000001101000" when "1101",
+			 "000001110000" when "1110",
+			 "000001111000" when "1111",
+			 "000010000000" when others;
+  ----------------------------------------------------------			 
+  
   process(posx1,posy1,neverLeave)
     variable andx_v,andy_v : coord_t;
   begin
