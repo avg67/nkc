@@ -41,13 +41,14 @@ entity gdp_kernel is
        hsync_i     : in  std_ulogic;
        vidEnable_o : out std_ulogic;
        DMAData_o   : out std_ulogic_vector(7 downto 0);
-       color_reg_i : in  std_ulogic_vector(7 downto 0);
+       color_reg_i : in  std_ulogic_vector(15 downto 0);
+       color_mode_o: out std_ulogic;
        --------------------------
        -- Interface to VRAM
        --------------------------
        kernel_req_o      : out std_ulogic;
        kernel_wr_o       : out std_ulogic;
-       kernel_addr_o     : out std_ulogic_vector(15 downto 0);
+       kernel_addr_o     : out std_ulogic_vector(17 downto 0);
        kernel_data_o     : out std_ulogic_vector(7 downto 0);
        kernel_data_i     : in  std_ulogic_vector(7 downto 0);
        kernel_busy_i     : in  std_ulogic;
@@ -151,6 +152,7 @@ architecture rtl of gdp_kernel is
       scaleX_o        : out scale_t;
       scaleY_o        : out scale_t;
       raster_bg_o     : out std_ulogic;
+      color_mode_o    : out std_ulogic;
       drawCmd_o       : out drawCmd_t;
       drawCmd_stb_o   : out std_ulogic;
       drawBusy_i      : in  std_ulogic;
@@ -172,8 +174,9 @@ architecture rtl of gdp_kernel is
     );
   end component;
 
-  constant XRES_c : natural := 512;
-  constant YRES_c : natural := 256;
+  constant XRES_c  : natural := 512;
+  constant YRES_c  : natural := 256; -- 4bit color 512x256
+  constant YRES1_c : natural := 512; -- 8bit color 512x512
 
   type state_t is(idle_e, vram_busy_e, modify_write_e,  clear_screen_e, dma_e);
 
@@ -190,6 +193,7 @@ architecture rtl of gdp_kernel is
   signal scaleX                : scale_t;
   signal scaleY                : scale_t;
   signal raster_bg             : std_ulogic;
+  signal color_mode            : std_ulogic;
   signal drawCmd               : drawCmd_t;
   signal drawCmd_stb           : std_ulogic;
   signal drawBusy              : std_ulogic;
@@ -215,8 +219,8 @@ architecture rtl of gdp_kernel is
   signal kernel_req            : std_ulogic;
   signal kernel_wr             : std_ulogic;
   signal stored_kernel_wr      : std_ulogic;
-  signal cached_kernel_addr    : std_ulogic_vector(15 downto 0);
-  signal kernel_addr           : std_ulogic_vector(15 downto 0);
+  signal cached_kernel_addr    : std_ulogic_vector(17 downto 0);
+  signal kernel_addr           : std_ulogic_vector(17 downto 0);
   signal kernel_wr_data        : std_ulogic_vector(7 downto 0);
   signal kernel_rd_data        : std_ulogic_vector(7 downto 0);
   signal vram_busy             : std_ulogic;
@@ -252,6 +256,7 @@ begin
       scaleX_o        => scaleX,
       scaleY_o        => scaleY,
       raster_bg_o     => raster_bg,
+      color_mode_o    => color_mode,
       drawCmd_o       => drawCmd,
       drawCmd_stb_o   => drawCmd_stb,
       drawBusy_i      => drawBusy,
@@ -270,6 +275,8 @@ begin
       Rd_i            => Rd_i,
       Wr_i            => Wr_i,
       DataOut_o       => DataOut_o);
+      
+    color_mode_o    <= color_mode;
 
   bres: gdp_bresenham
     port map (
@@ -372,7 +379,7 @@ begin
   -- hwcuren_o <= hwcuren; -- no blink
   -- calculate hardware cursor area:
 
-  process (posStartX,posStartY,cdx,cdy)
+  process (posStartX,posStartY,cdx,cdy, color_mode)
    variable tmpx1 : unsigned(posStartX'range);
    variable tmpx2 : unsigned(posStartX'range);
    variable tmpy1 : unsigned(posStartY'range);
@@ -380,8 +387,14 @@ begin
   begin
    tmpx1 := unsigned(posStartX) - 1;
    tmpx2 := tmpx1 + unsigned(cdx);
-   tmpy1 := YRES_c-unsigned(posStartY) - unsigned(cdy);
-   tmpy2 := YRES_c-unsigned(posStartY);
+   if color_mode='1' then
+      tmpy1 := YRES1_c-unsigned(posStartY) - unsigned(cdy);
+      tmpy2 := YRES1_c-unsigned(posStartY);
+   else
+      tmpy1 := YRES_c-unsigned(posStartY) - unsigned(cdy);
+      tmpy2 := YRES_c-unsigned(posStartY);
+   end if;
+   
    cx1_o <= std_ulogic_vector(tmpx1);
    cx2_o <= std_ulogic_vector(tmpx2);
    cy1_o <= std_ulogic_vector(shift_left(tmpy1,1)); -- video ist 512(x) x 256(y), but gdp_video actually uses 512(y) pixel (2 pixel per pixel)
@@ -441,42 +454,64 @@ begin
 
 
   process(state, wr_req, wr_pixel, cached_kernel_addr, posx, posy, vram_busy, kernel_rd_data,
-          drawCmd_stb, drawCmd, clrscr_busy, rmw_mode_i, stored_kernel_wr, color, color_reg_i
+          drawCmd_stb, drawCmd, clrscr_busy, rmw_mode_i, stored_kernel_wr, color, color_reg_i, color_mode
          )
     variable cache_hit_v : boolean;
     variable idx_v       : natural;
-    variable and_mask_v  : std_ulogic_vector(3 downto 0);
-    variable pixel_v     : std_ulogic_vector(3 downto 0);
+    variable and_mask_v  : std_ulogic_vector(7 downto 0);
+    variable pixel_v     : std_ulogic_vector(7 downto 0);
+    variable yres_v      : natural;
     
     procedure calc_addr_p is
       variable tmp_v : unsigned(kernel_addr'range);
     begin
-    if not color_support_c then
+      if not color_support_c then
         -- addr = posy*(512/8)+posx/8
         tmp_v            := "00" & resize(unsigned(posy),tmp_v'length-2);
         tmp_v            := shift_left(tmp_v,9 - 3);
         tmp_v            := tmp_v + shift_right(unsigned(posx),3);
         kernel_addr      <= "00" & std_ulogic_vector(tmp_v(kernel_addr'high-2 downto 0));
-      else
-        -- addr = posy*(512/2)+posx/2
+      elsif color_mode = '0' then
+        -- 4 bit / Pixel
+        -- addr = posy*(512/2) + posx/2
         tmp_v            := resize(unsigned(posy),tmp_v'length);
         tmp_v            := shift_left(tmp_v,9 - 1);
         tmp_v            := tmp_v + shift_right(unsigned(posx),1);
+        kernel_addr      <= std_ulogic_vector(tmp_v);
+      else
+        -- 8 bit / Pixel
+        -- addr = posy*(512)+posx/2
+        tmp_v            := resize(unsigned(posy),tmp_v'length);
+        tmp_v            := shift_left(tmp_v,9 - 1);
+        tmp_v            := tmp_v + unsigned(posx);
         kernel_addr      <= std_ulogic_vector(tmp_v);
       end if;
       cache_hit_v      := (std_ulogic_vector(tmp_v) = cached_kernel_addr);
     end procedure;
     
-    procedure issue_wr_req_p is
+    procedure issue_wr_req_p(yres : natural) is
     begin
-      if unsigned(posx) < XRES_c and unsigned(posy) < YRES_c then
+      if unsigned(posx) < XRES_c and unsigned(posy) < yres then
         if vram_busy = '0' then
           calc_addr_p;
-    --      if not cache_hit_v then
-              kernel_req <= '1';
-              kernel_wr  <= '0';
-    --      end if;
-          next_state <= modify_write_e;
+          if color_mode ='0' or rmw_mode_i = '1' then
+            -- 4 bit / pixel
+       --      if not cache_hit_v then
+                 kernel_req <= '1';
+                 kernel_wr  <= '0';
+       --      end if;
+             next_state <= modify_write_e;
+          else
+            -- 8 bit / pixel
+            kernel_req     <= '1';
+            kernel_wr      <= '1';
+            next_wr_ack    <= '1';
+            if wr_pixel='1' then
+               kernel_wr_data <= color_reg_i(7 downto 0);   -- fg color
+            else
+               kernel_wr_data <= color_reg_i(15 downto 8);   -- bg color
+            end if;
+          end if;
         else
           next_state <= vram_busy_e;
         end if;
@@ -497,6 +532,11 @@ begin
     clip             <= '0';
     set_DMAData      <= '0';
     next_DMAData     <= (others => '-');
+    yres_v           := YRES_c;
+    if color_mode='1' then
+      yres_v         := YRES1_c;
+    end if;
+    
 -- pragma translate_off
     for i in kernel_rd_data'range loop
       if is_x(kernel_rd_data(i)) then
@@ -508,7 +548,7 @@ begin
     case state is
       when idle_e =>
         if wr_req = '1' then
-          issue_wr_req_p;
+          issue_wr_req_p(yres_v);
         elsif drawCmd_stb = '1' and drawCmd = clearScreen_e then
           next_state     <= clear_screen_e;
           kernel_addr    <= (others => '0');
@@ -538,41 +578,45 @@ begin
           next_wr_ack    <= '1';
           -- when xor mode is active xor old color with new one
           if wr_pixel='1' then
+            -- draw FG color
             -- xor mode only when write pen is active
+            and_mask_v := (others => rmw_mode_i);
+            pixel_v    := (others => '0');
             if not color_support_c then
               kernel_wr_data(to_integer(unsigned(not posx(2 downto 0)))) <= wr_pixel xor
                 (kernel_rd_data(to_integer(unsigned(not posx(2 downto 0)))) and rmw_mode_i);
-            else
+            elsif color_mode = '0' then
+              -- 4 bit / Pixel
               idx_v      := to_integer(unsigned(not posx(0 downto 0)));
-              and_mask_v := (others => rmw_mode_i);
-              pixel_v    := kernel_rd_data(3 downto 0);
+              
+              pixel_v(3 downto 0)    := kernel_rd_data(3 downto 0);
               if idx_v =1 then
-                pixel_v  := kernel_rd_data(7 downto 4);
+                pixel_v(3 downto 0)  := kernel_rd_data(7 downto 4);
               end if;
               if idx_v=0 then
-                kernel_wr_data(3 downto 0) <= color_reg_i(3 downto 0) xor (pixel_v and and_mask_v);
+                kernel_wr_data(3 downto 0) <= color_reg_i(3 downto 0) xor (pixel_v(3 downto 0) and and_mask_v(3 downto 0));
               else
-                kernel_wr_data(7 downto 4) <= color_reg_i(3 downto 0) xor (pixel_v and and_mask_v);
+                kernel_wr_data(7 downto 4) <= color_reg_i(3 downto 0) xor (pixel_v(3 downto 0) and and_mask_v(3 downto 0));
               end if;
---              if idx_v=0 then 
---                kernel_wr_data(3 downto 0) <= color_reg_i(3 downto 0) xor 
---                 (kernel_rd_data(3 downto 0) and and_mask_v);
---              else
---                kernel_wr_data(7 downto 4) <= color_reg_i(3 downto 0) xor 
---                 (kernel_rd_data(7 downto 4) and and_mask_v);
---              end if;
+            else
+               -- 8 bit / Pixel and XOR mode active
+               pixel_v        := kernel_rd_data;
+               kernel_wr_data <= color_reg_i(7 downto 0) xor (pixel_v and and_mask_v);
             end if;
           else
+            -- draw BG color
             if not color_support_c then
               -- clear pen always without XOR-mode
               kernel_wr_data(to_integer(unsigned(not posx(2 downto 0)))) <= wr_pixel;
-            else
+            elsif color_mode = '0' then
               idx_v      := to_integer(unsigned(not posx(0 downto 0)));
               if idx_v=0 then 
-                kernel_wr_data(3 downto 0) <= color_reg_i(7 downto 4);
+                kernel_wr_data(3 downto 0) <= color_reg_i(11 downto 8);
               else
-                kernel_wr_data(7 downto 4) <= color_reg_i(7 downto 4);
+                kernel_wr_data(7 downto 4) <= color_reg_i(11 downto 8);
               end if;
+            else
+               kernel_wr_data <= color_reg_i(15 downto 8);
             end if;
           end if;
           next_state  <= idle_e;
@@ -586,20 +630,25 @@ begin
         kernel_wr <= '1';
         if vram_busy = '0' then
           kernel_req  <= '1';
-          if color_support_c then
+          if not color_support_c then
+            kernel_wr_data <= (others => color);
+          elsif color_mode = '0' then 
+            -- 4 bit / Pixel
             if color ='1' then
               -- fill with fg color
               kernel_wr_data <= color_reg_i(3 downto 0) & color_reg_i(3 downto 0);
             else
               -- fill with bg color
-              kernel_wr_data <= color_reg_i(7 downto 4) & color_reg_i(7 downto 4);
+              kernel_wr_data <= color_reg_i(11 downto 8) & color_reg_i(11 downto 8);
             end if;
           else
-            kernel_wr_data <= (others => color);
+            -- 8 bit / Pixel
+            kernel_wr_data <= (others => '0');
           end if;
 --          kernel_wr_data <= cached_kernel_addr(7 downto 0);
-          if (not color_support_c and unsigned(cached_kernel_addr(13 downto 0)) = (YRES_c * XRES_c/8)-1) or
-             (    color_support_c and unsigned(cached_kernel_addr)              = (YRES_c * XRES_c/2)-1) then
+          if (not color_support_c and                       unsigned(cached_kernel_addr(13 downto 0)) = (yres_v * XRES_c/8)-1) or
+             (    color_support_c and color_mode = '0'  and unsigned(cached_kernel_addr)              = (yres_v * XRES_c/2)-1) or 
+             (    color_support_c and color_mode = '1'  and unsigned(cached_kernel_addr)              = (yres_v * XRES_c)-1)then
             next_state       <= idle_e;
             next_clrscr_busy <= '0';
           else
@@ -649,7 +698,7 @@ begin
   
   kernel_req_o   <= kernel_req;    
   kernel_wr_o    <= kernel_wr;    
-  kernel_addr_o  <= kernel_addr;
+  kernel_addr_o  <= kernel_addr(kernel_addr_o'range); -- fixme
   kernel_data_o  <= kernel_wr_data;
   kernel_rd_data <= kernel_data_i;
   vram_busy      <= kernel_busy_i;

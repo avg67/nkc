@@ -71,12 +71,13 @@ architecture rtl of gdp_decoder is
   signal Status_Reg   : std_ulogic_vector(7 downto 0);
   signal Cmd_Reg      : std_ulogic_vector(7 downto 0);
   signal Ctrl1_Reg    : std_ulogic_vector(6 downto 0);
-  signal Ctrl2_Reg    : std_ulogic_vector(7 downto 0);
+  signal Ctrl2_Reg    : std_ulogic_vector(6 downto 0);
   signal CSize_Reg    : std_ulogic_vector(7 downto 0);
   signal DeltaX_Reg   : std_ulogic_vector(8 downto 0);
   signal DeltaY_Reg   : std_ulogic_vector(8 downto 0);
   signal XPos_Reg     : std_ulogic_vector(11 downto 0);
   signal YPos_Reg     : std_ulogic_vector(11 downto 0);
+  signal ColorMode_Reg: std_ulogic;
 
   -- signals
   signal next_DataOut_s : std_ulogic_vector(7 downto 0);
@@ -96,7 +97,7 @@ begin
   with to_integer(unsigned(Adr_i(3 downto 0))) select
     next_DataOut_s <=  Status_Reg                       when 0,
                        "0"&Ctrl1_Reg                    when 1,
-                       Ctrl2_Reg                        when 2,
+                       "0"&Ctrl2_Reg                    when 2,
                        CSize_Reg                        when 3,
                        "0000000"&DeltaX_Reg(8)          when 4, 
                        DeltaX_Reg(7 downto 0)           when 5,
@@ -188,6 +189,7 @@ begin
   begin
     if reset_n_i = ResetActive_c then
       Reset_regs_p;
+      ColorMode_Reg <= '0';
 --      Cmd_Reg       <= "0000"&cmd_CLRS_CLRXY_c;
 --      CMD_stb       <= '1';
       Cmd_Reg       <= (others => '0');
@@ -237,6 +239,8 @@ begin
               YPos_Reg(7 downto 0)            <= DataIn_i(7 downto 0);
             when 14 =>
               XPos_Reg(char_rom_addr_o'range) <= std_ulogic_vector(unsigned(XPos_Reg(char_rom_addr_o'range)) +1);
+            when 15 =>
+               ColorMode_Reg                  <= DataIn_i(0);
             when others  => null;
           end case;
         else
@@ -278,6 +282,7 @@ begin
                 when cmd_CLRS_CLRALL_c => -- 7
                   -- Clear Screen, reset all registers
                   Reset_regs_p;
+                  --Ctrl2_Reg(7)  <= Ctrl2_Reg(7); -- preserve color-mode
                   drawCmd       <= clearScreen_e;
                   drawCmd_stb   <= '1';
                 when cmd_PEN_WHITE_c => -- 8
@@ -448,6 +453,6 @@ begin
   char_rom_page_o <= Ctrl2_Reg(4); -- 1=USER-Zeichensatz
   raster_bg_o     <= Ctrl2_Reg(5); -- 1=Transparent Mode
   hwcuren_o       <= Ctrl2_Reg(6); -- 1=hardware cursor enable
-  color_mode_o    <= Ctrl2_Reg(7); -- 1=256 color mode
+  color_mode_o    <= ColorMode_Reg; -- 1=256 color mode
   
 end rtl;

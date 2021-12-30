@@ -158,9 +158,12 @@ begin
         next_rd_ack  <= '1';
         set_rd_data  <= '1';
         next_rd_data <= sram_data_i;
-        if ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
+        if (rd_req_i)='1' then
+          do_vid_rd_p;
+        elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
           do_kernel_acc_p;
         end if;
+        
 
       when kernel_read_e =>
         next_state   <= idle_e;

@@ -73,6 +73,9 @@ architecture beh of gdp_lattice_tb is
 --  signal VDIP_MISO      : std_ulogic;
 --  signal vdip_data      : std_ulogic_vector(7 downto 0);
   signal gpio           : std_logic_vector(7 downto 0);
+  
+  constant CTRL2_REG_c     : bit_vector(7 downto 0):= X"72";
+  constant COL_MODE_REG_c  : bit_vector(7 downto 0):= X"7F";
 begin  -- beh
   
   
@@ -143,7 +146,8 @@ begin  -- beh
     generic map(
       dump_offset => 0,
       size        => 2**17,
-      adr_width   => 17
+      adr_width   => 17,
+      clear_on_power_up => true
     )
     port map(
       dump => do_dump,
@@ -158,7 +162,8 @@ begin  -- beh
     generic map(
       dump_offset => 2,
       size        => 2**17,
-      adr_width   => 17
+      adr_width   => 17,
+      clear_on_power_up => true
     )
     port map(
       dump => do_dump,
@@ -488,28 +493,22 @@ begin  -- beh
 
     reset_n_i  <= '0', '1' after 50 ns;
     wait for 100 ns;
+    --wait for 10 ms;
     wait until CPU_Clk'event and CPU_Clk='1';
     
-    -- VDIP
---    write_bus(X"20",X"11");
---    write_bus(X"21",X"A5");
---    wait_vdip_done;
---    -- Read back
---    write_bus(X"20",X"1b");
---    wait_vdip_done;
---    read_bus(X"21",read_data);
---    write_bus(X"20",X"1b");
---    wait_vdip_done;
---    read_bus(X"21",read_data);
---    
---    write_bus(X"20",X"15");
---    write_bus(X"21",X"5A");
---    wait_vdip_done;
---    -- read back
---    write_bus(X"20",X"1D");
---    wait_vdip_done;
---    read_bus(X"21",read_data);
-
+    write_bus(COL_MODE_REG_c, X"01");  -- switch to 8bit color mode
+    write_bus(X"70",X"07");  -- Clear Screen
+    wait_ready;
+    write_bus(X"75",X"04");  -- dx = 5
+    write_bus(X"71",X"03");  --  CTRL1 = 3
+    write_bus(X"70",X"10");  -- x+=5
+    wait_ready;
+    
+    
+    wait for 10 ms;
+    write_bus(COL_MODE_REG_c, X"00");  -- switch to 4bit color mode
+    
+    
     read_bus(X"04",read_data);
     write_bus(X"05",X"ff");
     write_bus(X"04",X"55");

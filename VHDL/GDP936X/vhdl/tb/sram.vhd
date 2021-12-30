@@ -97,6 +97,7 @@ USE std.textio.all;
 LIBRARY IEEE;
 USE IEEE.std_logic_1164.all;
 USE IEEE.std_logic_unsigned.all;
+use ieee.std_logic_arith.all;
 USE IEEE.std_logic_textio.all;
 use work.gdp_global.all;
 use work.gdp_bitmap.all;
@@ -273,9 +274,10 @@ BEGIN
         init_value := 'X'; 
       END IF;
       FOR add IN low_address TO high_address LOOP
-        FOR j IN (width-1) DOWNTO 0 LOOP
-          mem(add)(j) := init_value;
-        END LOOP;
+        --FOR j IN (width-1) DOWNTO 0 LOOP
+        --  mem(add)(j) := init_value;
+        --END LOOP;
+        mem(add) := std_logic_vector(conv_unsigned(add+1,width));
       END LOOP; 
 
     END power_up;

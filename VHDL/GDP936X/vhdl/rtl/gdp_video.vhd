@@ -28,13 +28,14 @@ entity gdp_video is
        -- interface to VRAM
        -----------------------------
        rd_req_o   : out std_ulogic;
-       rd_addr_o  : out std_ulogic_vector(15 downto 0);
+       rd_addr_o  : out std_ulogic_vector(17 downto 0);
        rd_data_i  : in  std_ulogic_vector(7 downto 0);
        rd_ack_i   : in  std_ulogic;
        rd_busy_i  : in  std_ulogic;
        -----------------------------
-       scroll_i   : in  std_ulogic_vector(6 downto 0);
-       enable_i   : in  std_ulogic;
+       scroll_i      : in  std_ulogic_vector(6 downto 0);
+       color_mode_i  : in  std_ulogic :='0';
+       enable_i      : in  std_ulogic;
        -----------------------------
        clut_we_i     : in  std_ulogic;
        clut_addr_i   : in  std_ulogic_vector(3 downto 0);
@@ -50,7 +51,7 @@ entity gdp_video is
        -- Hardware-Cursor (to VIDEO section)
        ------------------------------------------------------------------------
        hwcuren_i     : in std_ulogic; -- hardware cursor enable ( CTRL2.6)
-       curcol_i         : in std_ulogic_vector(3 downto 0); -- current FG color
+       curcol_i      : in std_ulogic_vector(7 downto 0); -- current FG color
        cx1_i         : in std_ulogic_vector(11 downto 0);
        cx2_i         : in std_ulogic_vector(11 downto 0);
        cy1_i         : in std_ulogic_vector(11 downto 0);
@@ -87,19 +88,20 @@ architecture rtl of gdp_video is
   constant VSYNC_c           : natural := 4;
   constant VMAX_c            : natural := VFRONT_PORCH_c+VSYNC_c+VBACK_PORCH_c+600; -- 40 + 4 + 23 + 600 = 667
   
-  type rd_state_t is(idle_e, wait_ack_e, s1_e, s2_e);
+  type rd_state_t is(idle_e, wait_ack_e, s1_e, s1a_e, s2_e);
   
   signal q                   : unsigned(Stages_c-1 downto 0); -- Pixel-Takt-Zähler
   signal Line                : unsigned(Stages_c-1 downto 0);
   signal HSYNC, VSYNC, VidEn : std_ulogic;
-  signal Pixel               : std_ulogic_vector(3 downto 0);
+  signal VidEn1              : std_ulogic;
+  signal Pixel               : std_ulogic_vector(7 downto 0);
 --  signal Pixel_count         : unsigned(2 downto 0);
 --  signal next_Pixel_count    : unsigned(2 downto 0);
   signal rd_data,next_rd_data: std_ulogic_vector(7 downto 0);
   signal set_rd_data         : std_ulogic; 
 
   signal rd_state,next_rd_state       : rd_state_t;
-  signal rd_address                   : unsigned(15 downto 0);
+  signal rd_address                   : unsigned(17 downto 0);
   signal wait_not_busy,rd_req         : std_ulogic;
   signal frame_start                  : std_ulogic;
   signal rgb_pixel                    : std_ulogic_vector(8 downto 0);
@@ -144,7 +146,9 @@ begin
 --           else '0';
   VidEn <= '1' when q < 512 and Line < 512 else
            '0';
-  -- blank generation 
+  VidEn1 <= '1' when (q = to_unsigned(HMAX_c-1, Stages_c) or q < 511) and Line < 512 else
+            '0'; 
+ -- blank generation 
   -- blank_o <= '1' when (Line > 515 and Line < VMAX_c - 2) or (q > 515 and q < HMAX_c - 2) else '0';
   --blank_o <= '1' when (Line > 513 and Line < 627) or (q > 513 and q < 1055) else '0';
   blank_o <= '1' when (Line > 556 and Line < 561) else '0';
@@ -218,8 +222,8 @@ begin
 
 
   RD_FSM_COMB: process(rd_state,rd_data_i,rd_address, rd_data,
-                       rd_ack_i,rd_busy_i, VidEn, q, frame_start, 
-                       HSYNC,VSYNC,enable_i)
+                       rd_ack_i,rd_busy_i, VidEn, VidEn1, q, frame_start, 
+                       HSYNC,VSYNC,enable_i, color_mode_i)
   begin
     next_rd_state       <= rd_state;
 --    next_Pixel_count    <= Pixel_count;
@@ -246,11 +250,22 @@ begin
         
       when s1_e => 
         rd_req           <= '1';
-        next_rd_state    <= s2_e;
+        if color_mode_i='0' then
+          next_rd_state    <= s2_e;
+        else
+          next_rd_state    <= s1a_e;
+        end if;
+        
+      when s1a_e => 
+        if VidEn1 ='1' then
+          rd_req           <= '1';
+          next_rd_state    <= s2_e;
+        end if;
         
       when s2_e =>  
         -- process odd pixel (15 downto 8)      
-        if VidEn = '1' then
+        if VidEn ='1' then
+        --if ((VidEn and not color_mode_i) or (VidEn1 and color_mode_i))='1' then
           if (not HSYNC and not VSYNC) = '1' then
             if not color_support_c then
               if unsigned(q(2 downto 0)) = 7 then
@@ -261,7 +276,8 @@ begin
                 set_rd_data     <= '1';
                 next_rd_data    <= std_ulogic_vector(shift_left(unsigned(rd_data),1)); -- 8 pixel per byte 
               end if;
-            else
+            elsif color_mode_i = '0' then
+              -- 4bit / Pixel
               if q(0)='1' then
                 set_rd_data      <= '1';
                 next_rd_data     <= rd_data_i;
@@ -270,8 +286,17 @@ begin
                 set_rd_data              <= '1';
                 next_rd_data(7 downto 4) <= rd_data(3 downto 0); -- 2 pixel per Byte
               end if;
+            else
+               -- 8 bit/Pixel
+               set_rd_data      <= '1';
+               next_rd_data     <= rd_data_i;
+               if VidEn1='1' then
+                  rd_req           <= '1';
+               end if;
             end if;
           end if;
+        elsif color_mode_i='1' then
+          next_rd_state    <= s1a_e;
         end if;     
         if VSYNC = '1' then
           next_rd_state   <= idle_e;
@@ -290,10 +315,14 @@ begin
   begin
     if reset_n_i ='0' then
       rd_state       <= idle_e;
-      if color_support_c then
+      if not color_support_c then
+        rd_address     <= to_unsigned(255*512/8,rd_address'length); -- last line
+      elsif color_mode_i = '0' then
+        -- 4 bit / Pixel
         rd_address     <= to_unsigned(255*512/2,rd_address'length); -- last line
       else
-        rd_address     <= to_unsigned(255*512/8,rd_address'length); -- last line
+         -- 8 bit / Pixel
+        rd_address     <= to_unsigned(511*512,rd_address'length); -- last line
       end if;
       rd_data        <= (others => '0');
 --      Pixel_count    <= (others => '0');
@@ -311,14 +340,25 @@ begin
           if rd_req='1' then
             wait_not_busy<='1';
             if color_support_c then
-              if rd_address(7 downto 0) = "11111111" then
-                rd_address(7 downto 0) <= "00000000";
-                if Line(0) = '1' then
-                  rd_address(rd_address'high downto 8) <= rd_address(rd_address'high downto 8) - 1;
-                end if;
-              else
-                rd_address(7 downto 0) <= rd_address(7 downto 0) + 1;
-              end if;
+               if color_mode_i = '0' then
+                  -- 4 bit / Pixel
+                  if rd_address(7 downto 0) = "11111111" then
+                     rd_address(7 downto 0) <= "00000000";
+                     if Line(0) = '1' then
+                        rd_address(rd_address'high downto 8) <= rd_address(rd_address'high downto 8) - 1;
+                     end if;
+                  else
+                     rd_address(7 downto 0) <= rd_address(7 downto 0) + 1;
+                  end if;
+               else
+                  -- 8 bit / Pixel
+                  if rd_address(8 downto 0) = "111111111" then
+                     rd_address(8 downto 0) <= "000000000";
+                     rd_address(rd_address'high downto 9) <= rd_address(rd_address'high downto 9) - 1;
+                  else
+                     rd_address(8 downto 0) <= rd_address(8 downto 0) + 1;
+                  end if;
+               end if;
             end if;
           elsif wait_not_busy='1' and rd_busy_i='0' then
             wait_not_busy <='0';
@@ -342,21 +382,29 @@ begin
 --              end if;
             end if;
           elsif wait_not_busy='0' and rd_req='0' and rd_busy_i='0' and VSYNC='1' then
-            if color_support_c then
+            if not color_support_c then
+              rd_address     <= to_unsigned(255*512/8,rd_address'length); -- last line
+            elsif color_mode_i = '0' then
+              -- 4 bit / Pixel
               rd_address     <= to_unsigned(255*512/2,rd_address'length); -- last line
             else
-              rd_address     <= to_unsigned(255*512/8,rd_address'length); -- last line
+               -- 8 bit / Pixel
+               rd_address     <= to_unsigned(511*512,rd_address'length); -- last line
             end if;
     --        rd_address <= (others => '0');
           end if;
         else
           wait_not_busy <= '0';
-          if color_support_c then
-            rd_address          <= to_unsigned(255*512/2,rd_address'length); -- last line
-            rd_data(7 downto 4) <= "0000";
-          else
+          if not color_support_c then
             rd_address <= to_unsigned(255*512/8,rd_address'length); -- last line
             rd_data(7) <= '0';
+          elsif color_mode_i = '0' then
+            -- 4 bit / Pixel
+            rd_address <= to_unsigned(255*512/2,rd_address'length); -- last line
+            rd_data    <= (others => '0');
+          else
+            rd_address <= to_unsigned(511*512,rd_address'length); -- last line
+            rd_data    <= (others => '0');
           end if;
         end if;
       end if;
@@ -364,18 +412,19 @@ begin
   end process;
   
   color_pixel: if color_support_c generate
-  Pixel    <= rd_data(7 downto 4) when isCursor = '0' else
-            curcol_i;           
+  Pixel    <= "0000" & rd_data(7 downto 4) when isCursor = '0' and color_mode_i = '0' else
+              rd_data(7 downto 0) when isCursor = '0' and color_mode_i = '1' else
+              curcol_i;
   end generate;
   
   no_color_pixel: if not color_support_c generate
-  Pixel    <= "000" & rd_data(7) when isCursor = '0' else
-              "0001";
+  Pixel    <= "0000000" & rd_data(7) when isCursor = '0' else
+              "00000001";
   end generate;
            
   rd_req_o <= rd_req;
   rd_addr_o<= std_ulogic_vector(rd_address + (unsigned(scroll_i) & "000000000")) when color_support_c else
-              "00" & std_ulogic_vector(rd_address(13 downto 0) + (unsigned(scroll_i) & "0000000"));
+              "0000" & std_ulogic_vector(rd_address(13 downto 0) + (unsigned(scroll_i) & "0000000"));
 
   no_clut: if not use_clut_c or not color_support_c generate
     process(clk_i)
@@ -414,7 +463,11 @@ begin
       if rising_edge(clk_i) then
         if clk_en_i = '1' then
           if VidEn='1' then
-            rgb_pixel <= lookup(Pixel);
+            if color_mode_i = '0' then
+               rgb_pixel <= lookup(Pixel(3 downto 0));
+            else
+               rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 3) & Pixel(3) & Pixel(2 downto 0);
+            end if;
           else
             rgb_pixel <= (others => '0');
           end if;
@@ -431,7 +484,11 @@ begin
       if rising_edge(clk_i) then
         if clk_en_i = '1' then
           if (VidEn and enable_i)='1' then
-            rgb_pixel <= std_ulogic_vector(clut_q);
+            if color_mode_i = '0' then
+               rgb_pixel <= std_ulogic_vector(clut_q);
+            else
+               rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 3) & Pixel(3) & Pixel(2 downto 0);
+            end if;
           else
             rgb_pixel <= (others => '0');
           end if;
@@ -449,7 +506,7 @@ begin
         WrAddress_i => clut_addr_i,
         Data_i      => clut_data_i,
         WE_i        => clut_we_i,
-        RdAddress_i => Pixel,
+        RdAddress_i => Pixel(3 downto 0),
         Data_o      => clut_q
       );
   end generate;  

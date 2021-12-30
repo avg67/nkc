@@ -73,11 +73,12 @@ architecture rtl of gdp_top is
       clk_i         : in  std_ulogic;
       clk_en_i      : in  std_ulogic;
       rd_req_o      : out std_ulogic;
-      rd_addr_o     : out std_ulogic_vector(15 downto 0);
+      rd_addr_o     : out std_ulogic_vector(17 downto 0);
       rd_data_i     : in  std_ulogic_vector(7 downto 0);
       rd_ack_i      : in  std_ulogic;
       rd_busy_i     : in  std_ulogic;
       scroll_i      : in  std_ulogic_vector(6 downto 0);
+      color_mode_i  : in  std_ulogic;
       enable_i      : in  std_ulogic;
       clut_we_i     : in  std_ulogic;
       clut_addr_i   : in  std_ulogic_vector(3 downto 0);
@@ -89,7 +90,7 @@ architecture rtl of gdp_top is
       Vsync_o       : out std_ulogic;
       blank_o       : out std_ulogic;
       hwcuren_i     : in std_ulogic; -- hardware cursor enable ( CTRL2.6)
-      curcol_i      : in std_ulogic_vector(3 downto 0); -- current FG color
+      curcol_i      : in std_ulogic_vector(7 downto 0); -- current FG color
       cx1_i         : in std_ulogic_vector(11 downto 0);
       cx2_i         : in std_ulogic_vector(11 downto 0);
       cy1_i         : in std_ulogic_vector(11 downto 0);
@@ -114,10 +115,11 @@ architecture rtl of gdp_top is
       hsync_i         : in  std_ulogic;
       vidEnable_o     : out std_ulogic;
       DMAData_o       : out std_ulogic_vector(7 downto 0);
-      color_reg_i     : in  std_ulogic_vector(7 downto 0);
+      color_reg_i     : in  std_ulogic_vector(15 downto 0);
+      color_mode_o    : out std_ulogic;
       kernel_req_o    : out std_ulogic;
       kernel_wr_o     : out std_ulogic;
-      kernel_addr_o   : out std_ulogic_vector(15 downto 0);
+      kernel_addr_o   : out std_ulogic_vector(17 downto 0);
       kernel_data_o   : out std_ulogic_vector(7 downto 0);
       kernel_data_i   : in  std_ulogic_vector(7 downto 0);
       kernel_busy_i   : in  std_ulogic;
@@ -177,7 +179,7 @@ architecture rtl of gdp_top is
   signal kernel_req      : std_ulogic;
   signal kernel_wr       : std_ulogic;
   signal kernel_addr     : std_ulogic_vector(17 downto 0);
-  signal kernel_addr1    : std_ulogic_vector(15 downto 0);
+  signal kernel_addr1    : std_ulogic_vector(17 downto 0);
   signal kernel_rd_data  : std_ulogic_vector(7 downto 0);
   signal kernel_wr_data  : std_ulogic_vector(7 downto 0);
   signal kernel_busy     : std_ulogic;
@@ -185,7 +187,7 @@ architecture rtl of gdp_top is
 
   signal vid_rd_req      : std_ulogic;
   signal vid_rd_addr     : std_ulogic_vector(17 downto 0);
-  signal vid_rd_addr1    : std_ulogic_vector(15 downto 0);
+  signal vid_rd_addr1    : std_ulogic_vector(17 downto 0);
   signal vid_rd_data     : std_ulogic_vector(7 downto 0);
   signal vid_rd_busy     : std_ulogic;
   signal vid_rd_ack      : std_ulogic;
@@ -200,7 +202,8 @@ architecture rtl of gdp_top is
   signal chr_rom_data    : std_ulogic_vector(7 downto 0);
   signal chr_rom_ena     : std_ulogic;
   signal chr_rom_busy    : std_ulogic;
-  signal color_reg       : std_ulogic_vector(7 downto 0):= X"00";
+  signal color_reg       : std_ulogic_vector(15 downto 0):= X"0000";
+  signal color_mode      : std_ulogic;
   signal clut_addr       : std_ulogic_vector(3 downto 0):= X"0";
   signal temp_reg        : std_ulogic:= '0';
   signal clut_we         : std_ulogic;
@@ -233,8 +236,9 @@ begin
     rd_ack_i   => vid_rd_ack ,
     rd_busy_i  => vid_rd_busy,
     -----------------------------
-    scroll_i   => scroll_reg,
-    enable_i   => vid_enable,
+    scroll_i      => scroll_reg,
+    color_mode_i  => color_mode,
+    enable_i      => vid_enable,
     -----------------------------
     clut_we_i     => clut_we,
     clut_addr_i   => clut_addr,
@@ -250,7 +254,7 @@ begin
     -- Hardware-Cursor (to VIDEO section)
     ------------------------------------------------------------------------
    hwcuren_i      => hwcuren, -- hardware cursor enable ( CTRL1
-   curcol_i    => color_reg(3 downto 0),
+   curcol_i    => color_reg(7 downto 0),
    cx1_i       => cx1,
    cx2_i       => cx2,
    cy1_i       => cy1,
@@ -268,7 +272,8 @@ begin
   pixel_blue_o  <= pixel_blue;
 
 --  vid_rd_addr(15 downto 14) <= page_reg(2 downto 1); -- read bank
-  vid_rd_addr <= page_reg(2 downto 1) & vid_rd_addr1 when color_support_c else
+  vid_rd_addr <= page_reg(2 downto 1) & vid_rd_addr1(15 downto 0) when color_support_c and color_mode = '0' else
+                 vid_rd_addr1 when color_support_c and color_mode = '1' else
                  "00"&page_reg(2 downto 1) & vid_rd_addr1(13 downto 0);
 
   kernel: gdp_kernel
@@ -289,6 +294,7 @@ begin
       vidEnable_o    => vid_enable,
       DMAData_o      => dma_data,
       color_reg_i    => color_reg, --X"65", --
+      color_mode_o   => color_mode,
       kernel_req_o   => kernel_req, 
       kernel_wr_o    => kernel_wr,  
       kernel_addr_o  => kernel_addr1,
@@ -322,7 +328,8 @@ begin
                     monitoring(7 downto 0);
   
 --  kernel_addr(15 downto 14) <= page_reg(4 downto 3); -- write bank
-  kernel_addr <= page_reg(4 downto 3) & kernel_addr1 when color_support_c else
+  kernel_addr <= page_reg(4 downto 3) & kernel_addr1(15 downto 0) when color_support_c and color_mode ='0' else
+                 kernel_addr1 when color_support_c and color_mode ='1' else
                  "00"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
   
   vram : gdp_vram
@@ -368,7 +375,7 @@ begin
       page_reg   <= (others => '0');
       scroll_reg <= (others => '0');
       if color_support_c then
-        color_reg <= X"01"; -- bg: black, fg: white
+        color_reg <= X"0001"; -- bg: black, fg: white
         if use_clut_c then
           clut_addr <= (others => '0');
           temp_reg  <= '0';
@@ -393,15 +400,15 @@ begin
           case to_integer(unsigned(Adr_i(0 downto 0))) is
             when 0  =>
               -- 0xA0: FG Color
-              color_reg(3 downto 0) <= DataIn_i(3 downto 0);
-              if DataIn_i(3 downto 0)=X"0" and color_reg(7 downto 4)=X"0" then
+              color_reg(7 downto 0) <= DataIn_i(7 downto 0);
+              if color_mode = '0' and DataIn_i(3 downto 0)=X"0" and color_reg(11 downto 8)=X"0" then
                 -- don't allow black on black !
                 color_reg(3 downto 0) <= X"1";
               end if;
             when 1  =>
               -- 0xA1: BG Color
-              color_reg(7 downto 4) <= DataIn_i(3 downto 0);
-              if DataIn_i(3 downto 0)=X"0" and color_reg(3 downto 0)=X"0" then
+              color_reg(15 downto 8) <= DataIn_i(7 downto 0);
+              if color_mode = '0' and DataIn_i(3 downto 0)=X"0" and color_reg(3 downto 0)=X"0" then
                 -- don't allow black on black !
                 color_reg(3 downto 0) <= X"1";
               end if;
@@ -448,10 +455,18 @@ begin
           case to_integer(unsigned(Adr_i(0 downto 0))) is
             when 0  =>
               -- 0xA0: FG Color
-              DataOut_o <= "0000" & color_reg(3 downto 0);
+              if color_mode = '0' then
+                DataOut_o <= "0000" & color_reg(3 downto 0);
+               else
+                DataOut_o <= color_reg(7 downto 0);
+               end if;
             when 1  =>
               -- 0xA1: BG Color
-              DataOut_o <= "0000" & color_reg(7 downto 4);
+              if color_mode = '0' then
+               DataOut_o <= "0000" & color_reg(11 downto 8);
+              else
+               DataOut_o <= color_reg(15 downto 8);
+              end if;
             when others => null;
           end case;
         elsif color_support_c and use_clut_c and 
