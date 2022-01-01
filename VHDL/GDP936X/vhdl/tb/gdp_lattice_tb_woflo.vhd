@@ -166,7 +166,7 @@ begin  -- beh
       clear_on_power_up => true
     )
     port map(
-      dump => do_dump,
+      dump => false, --do_dump,
       nCE => SRAM_nCE1,
       nWE => SRAM_nWR,
       nOE => SRAM_nOE,
@@ -497,15 +497,63 @@ begin  -- beh
     wait until CPU_Clk'event and CPU_Clk='1';
     
     write_bus(COL_MODE_REG_c, X"01");  -- switch to 8bit color mode
+    write_bus(X"A0",X"55"); -- fg
+    write_bus(X"A1",X"AA"); -- bg
     write_bus(X"70",X"07");  -- Clear Screen
     wait_ready;
-    write_bus(X"75",X"04");  -- dx = 5
     write_bus(X"71",X"03");  --  CTRL1 = 3
-    write_bus(X"70",X"10");  -- x+=5
-    wait_ready;
+    write_bus(X"73",X"44");  -- CSIZE
+    line(511,0,511,511);
+    write_bus(X"70",X"05");  -- Home
+    for color in 0 to 31 loop
     
+      write_bus(X"A0", color);  -- write fg color
+      write_bus(X"70",X"0b");  -- Draw 4x4
+      wait_ready;
+    end loop;
+--    write_bus(X"75",X"04");  -- dx = 5
+--    write_bus(X"71",X"03");  --  CTRL1 = 3
+--    write_bus(X"70",X"10");  -- x+=5
+--    wait_ready;
+----    write_bus(X"70",X"05");  -- x,y=0
+----    write_bus(X"73",X"11");  -- CSIZE = 0x22
+----    write_bus(X"72",X"20");  -- Raster also bg
+----    write_bus(X"A1",X"05");
+----    write_bus(X"70",X"21");  --wait_ready;
+----    write_bus(X"70",X"7f");  --
+----    wait_ready;
+----    write_bus(X"72",X"00");  -- Raster only fg
+----    write_bus(X"70",X"41");  --
+----    wait_ready;
+----    write_bus(X"70",X"0B");  -- 4x4
+----    wait_ready;
+----    write_bus(X"70",X"0A");  -- 5x8
+----    wait_ready;
+----    write_bus(X"72",X"00");  --
+----    write_bus(X"79",X"64");  -- x=100
+----    write_bus(X"7B",X"64");  -- y=100
+----    write_bus(X"70",X"E0");  -- x+=4 draw marker
+----    wait_ready;
+--    write_bus(X"A0",X"80"); -- fg
+--    line(100,65,94,79);
+--    line(94,79, 94,70);
+--    line(0,0,511,0);
+--    line(0,0,0,255);
+--    --line(100,2,105,-5);
+--    --line(511,0,511,255);
+--
+--    write_bus(X"A0",X"E0"); -- fg
+--    write_bus(X"A1",X"07"); -- bg
+--    line(1,1,510,1);
+--    write_bus(X"A0",X"18"); -- fg
+--    line(1,1,1,254);
+--    write_bus(X"A0",X"07"); -- fg
+--    line(510,1,510,254);
     
-    wait for 10 ms;
+    do_dump <= true;
+    wait for 1 us;
+    assert false report "End of simulation" severity failure;
+    wait; -- for 10 ms;
     write_bus(COL_MODE_REG_c, X"00");  -- switch to 4bit color mode
     
     
@@ -603,6 +651,7 @@ begin  -- beh
     write_bus(X"51",8);
     write_bus(X"50",X"0B");
     write_bus(X"51",X"0F");
+    
     
 --    read_bus(X"60",read_data);
 

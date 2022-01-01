@@ -261,6 +261,10 @@ begin
           rd_req           <= '1';
           next_rd_state    <= s2_e;
         end if;
+        if VSYNC = '1' then
+          next_rd_state   <= idle_e;
+          rd_req          <= '0';
+        end if;
         
       when s2_e =>  
         -- process odd pixel (15 downto 8)      
@@ -487,7 +491,8 @@ begin
             if color_mode_i = '0' then
                rgb_pixel <= std_ulogic_vector(clut_q);
             else
-               rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 3) & Pixel(3) & Pixel(2 downto 0);
+               --           R                   G                   B
+               rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 2) & Pixel(1 downto 0) & Pixel(0);
             end if;
           else
             rgb_pixel <= (others => '0');

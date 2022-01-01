@@ -482,7 +482,7 @@ begin
         -- 8 bit / Pixel
         -- addr = posy*(512)+posx/2
         tmp_v            := resize(unsigned(posy),tmp_v'length);
-        tmp_v            := shift_left(tmp_v,9 - 1);
+        tmp_v            := shift_left(tmp_v,9);
         tmp_v            := tmp_v + unsigned(posx);
         kernel_addr      <= std_ulogic_vector(tmp_v);
       end if;

@@ -657,9 +657,9 @@ begin
 
 --  gdp_cs <= (not nIORQ and not nIORQ_d) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
   gdp_cs <= IORQ when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
-                                          (Addr(7 downto 1) = sfr_base(7 downto 1)) or
-                                          (Addr(7 downto 1) = COL_BASE_c(7 downto 1) and color_support_c) or -- SFRs
-                                          (Addr(7 downto 2) = CLUT_BASE_c(7 downto 2) and color_support_c) else
+                       (Addr(7 downto 1) = sfr_base(7 downto 1)) or
+                       (Addr(7 downto 1) = COL_BASE_c(7 downto 1) and color_support_c) or -- SFRs
+                       (Addr(7 downto 2) = CLUT_BASE_c(7 downto 2) and color_support_c) else
             '0';
   
   gdp_en <= gdp_cs when Addr(7 downto 4) = gdp_base(7 downto 4) else

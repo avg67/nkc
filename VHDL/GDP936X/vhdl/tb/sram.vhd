@@ -369,7 +369,7 @@ BEGIN
     END do_dump;  -- PROCEDURE
 
 
-    procedure Dump_Frame(frame_Nr : integer; page_Nr : integer) is
+    procedure Dump_Frame(frame_Nr : integer; page_Nr : integer; col256 : boolean) is
       variable xres,yres : integer;
       variable add,xbytes: integer;
       variable fn        : string(1 to output_file_c'length+2);
@@ -393,18 +393,22 @@ BEGIN
       file_open(fh, fn, write_mode);
       write_hdr(fh,xres,yres,color_support_c);
 --      ytmp:=(others=>'0');
-      if color_support_c then
+      if not color_support_c then
+        add    :=page_Nr * 16384;
+        xbytes := xres/8;
+      elsif not col256 then
         add :=page_Nr * 16384*4;
         xbytes := xres/2;
       else
-        add    :=page_Nr * 16384;
-        xbytes := xres/8;
+        add :=0;
+        xbytes := xres;
       end if;
       for y in 0 to yres-1 loop
         for x in 0 to xbytes-1 loop
 --          ch  := character'val(conv_integer(mem(add)));
 --          write(fh, ch);
-          write_byte(fh,mem(add),color_support_c);
+          --write_byte(fh,mem(add),color_support_c);
+          write_byte(fh,mem(add),color_8bit);
           add := add +1;
         end loop;
         ch := 'A'; 
@@ -448,17 +452,19 @@ BEGIN
       ELSE
         read_data <= undef_vec;
       END IF;
---      IF dump AND dump'EVENT THEN do_dump(mem, dump_start, dump_end, dump_filename);
       IF dump AND dump'EVENT THEN 
-        if color_support_c then
-          Dump_Frame(dump_offset+1,0);
-          Dump_Frame(dump_offset+2,1);
-        else
-          Dump_Frame(dump_offset+1,0);
-          Dump_Frame(dump_offset+2,1);
-          Dump_Frame(dump_offset+3,2);
-          Dump_Frame(dump_offset+4,3);
-        end if;
+         do_dump(mem, dump_start, dump_end, dump_filename);
+        --if not color_support_c then
+        --  Dump_Frame(dump_offset+1,0,false);
+        --  Dump_Frame(dump_offset+2,1,false);
+        --  Dump_Frame(dump_offset+3,2,false);
+        --  Dump_Frame(dump_offset+4,3,false);
+        --
+        --else
+        --  Dump_Frame(dump_offset+1,0,false);
+        --  Dump_Frame(dump_offset+2,1,false);          
+        --end if;
+        Dump_Frame(dump_offset,1,true);
       END IF;
       IF download AND download'EVENT THEN load(mem, download_filename);
       END IF;

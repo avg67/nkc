@@ -73,7 +73,7 @@ package gdp_bitmap is
 
 --Destination File for RGB-Display (Framenumber will be added to this Name)
   constant output_file_c : string := "Frame.bmp";
-
+  type color_mode_t is (color_4bit, color_8bit);
   type     video_Ramfile_t is file of character;
 --  subtype rgb_color_t is std_ulogic_vector(23 downto 0);
 --  subtype blueRange_t is natural range 7 downto 0;
@@ -87,7 +87,7 @@ package gdp_bitmap is
 --  procedure write_RGB555(file bmp_File : video_Ramfile_t; Pixel : std_ulogic_vector(31 downto 0));
 --  procedure write_RGB888(file bmp_File : video_Ramfile_t; Pixel : std_ulogic_vector(31 downto 0));
 --  procedure WriteEOL(file bmp_File : video_Ramfile_t;xres : integer);
-  procedure write_byte(file bmp_File: video_Ramfile_t; byte : std_logic_vector; color : boolean);  
+  procedure write_byte(file bmp_File: video_Ramfile_t; byte : std_logic_vector; color : color_mode_t);  
 end package gdp_bitmap;
 
 
@@ -277,18 +277,27 @@ package body gdp_bitmap is
       end if;  
       return tmp;
     end;
+    
+    function lookup8bit(color : in std_logic_vector(7 downto 0)) return std_logic_vector is
+      variable tmp : std_logic_vector(8 downto 0);
+    begin
+        tmp(8 downto 6) := color(7 downto 5);               -- red
+        tmp(5 downto 3) := color(4 downto 2);               -- green
+        tmp(2 downto 0) := color(1 downto 0) & color(0);    -- blue
+      return tmp;
+    end;
 
 
   
 
-  procedure write_byte(file bmp_File: video_Ramfile_t; byte : std_logic_vector; color : boolean) is
+  procedure write_byte(file bmp_File: video_Ramfile_t; byte : std_logic_vector; color : color_mode_t) is
 --    variable tmp   : std_ulogic_vector(3 downto 0);
     variable r,g,b : std_logic_vector(7 downto 0);
     variable tmp1  : std_logic_vector(8 downto 0);
     variable ch    : character;
     variable by    : std_logic_vector(7 downto 0);
   begin
-    if color then
+    if color=color_4bit then
       by:= byte;
       for i in 0 to 1 loop
         r := (others => '0');
@@ -307,7 +316,23 @@ package body gdp_bitmap is
         
         by(7 downto 4) := by(3 downto 0);
       end loop;
-      
+    elsif color=color_8bit then
+      by:= byte;
+      r := (others => '0');
+      g := (others => '0');
+      b := (others => '0');
+      tmp1 := lookup8bit(by(7 downto 0));
+      r(7 downto 5) := tmp1(8 downto 6);
+      g(7 downto 5) := tmp1(5 downto 3);
+      b(7 downto 5) := tmp1(2 downto 0);
+      ch  := character'val(to_integer(unsigned(b)));
+      write(bmp_File, ch);
+      ch  := character'val(to_integer(unsigned(g)));
+      write(bmp_File, ch);
+      ch  := character'val(to_integer(unsigned(r)));
+      write(bmp_File, ch);
+
+      by(7 downto 4) := by(3 downto 0);
     else
       ch  := character'val(to_integer(unsigned(byte)));
       write(bmp_File, ch);
