@@ -438,20 +438,24 @@ begin
 			 "000010000000" when others;
   ----------------------------------------------------------			 
   
-  process(posx1,posy1,neverLeave)
+  process(posx1,posy1,neverLeave,color_mode)
     variable andx_v,andy_v : coord_t;
   begin
     andx_v := (others => '1');
     andy_v := (others => '1');
     if neverLeave = '1' then
       andx_v(posWidth_c-1 downto 9) := (others => '0'); -- 0 - 511
-      andy_v(posWidth_c-1 downto 8) := (others => '0'); -- 0 - 255
+      if color_mode='0' then
+         -- 256 pixel vertical
+         andy_v(posWidth_c-1 downto 8) := (others => '0'); -- 0 - 255
+      else
+      -- 512 pixel vertical
+         andy_v(posWidth_c-1 downto 9) := (others => '0'); -- 0 - 511
+      end if;
     end if;
     posx <= posx1 and andx_v;
     posy <= posy1 and andy_v;
   end process;
-  
-
 
   process(state, wr_req, wr_pixel, cached_kernel_addr, posx, posy, vram_busy, kernel_rd_data,
           drawCmd_stb, drawCmd, clrscr_busy, rmw_mode_i, stored_kernel_wr, color, color_reg_i, color_mode
@@ -643,7 +647,14 @@ begin
             end if;
           else
             -- 8 bit / Pixel
-            kernel_wr_data <= (others => '0');
+            --kernel_wr_data <= (others => '0');
+            if color ='1' then
+              -- fill with fg color
+              kernel_wr_data <= color_reg_i(7 downto 0);
+            else
+              -- fill with bg color
+              kernel_wr_data <= color_reg_i(15 downto 8);
+            end if;
           end if;
 --          kernel_wr_data <= cached_kernel_addr(7 downto 0);
           if (not color_support_c and                       unsigned(cached_kernel_addr(13 downto 0)) = (yres_v * XRES_c/8)-1) or

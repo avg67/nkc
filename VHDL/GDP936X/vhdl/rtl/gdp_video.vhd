@@ -492,7 +492,10 @@ begin
                rgb_pixel <= std_ulogic_vector(clut_q);
             else
                --           R                   G                   B
-               rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 2) & Pixel(1 downto 0) & Pixel(0);
+               rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 2) & Pixel(1 downto 0) & "0";
+               if Pixel(1 downto 0) ="11" then
+                  rgb_pixel(0) <= '1';
+               end if;
             end if;
           else
             rgb_pixel <= (others => '0');

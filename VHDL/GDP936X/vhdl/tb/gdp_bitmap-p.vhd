@@ -283,7 +283,10 @@ package body gdp_bitmap is
     begin
         tmp(8 downto 6) := color(7 downto 5);               -- red
         tmp(5 downto 3) := color(4 downto 2);               -- green
-        tmp(2 downto 0) := color(1 downto 0) & color(0);    -- blue
+        tmp(2 downto 0) := color(1 downto 0) & "0";         -- blue
+        if color(1 downto 0)="11" then
+            tmp(0) := '1';
+        end if;
       return tmp;
     end;
 

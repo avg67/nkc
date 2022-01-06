@@ -498,57 +498,164 @@ begin  -- beh
     
     write_bus(COL_MODE_REG_c, X"01");  -- switch to 8bit color mode
     write_bus(X"A0",X"55"); -- fg
-    write_bus(X"A1",X"AA"); -- bg
+    write_bus(X"A1","01001001"); -- bg
     write_bus(X"70",X"07");  -- Clear Screen
     wait_ready;
     write_bus(X"71",X"03");  --  CTRL1 = 3
     write_bus(X"73",X"44");  -- CSIZE
-    line(511,0,511,511);
+    --line(511,0,511,511);
     write_bus(X"70",X"05");  -- Home
-    for color in 0 to 31 loop
-    
-      write_bus(X"A0", color);  -- write fg color
-      write_bus(X"70",X"0b");  -- Draw 4x4
-      wait_ready;
+    wait_ready;
+    for i in 0 to 7 loop
+       write_bus(X"78",0);         -- X-h
+       write_bus(X"79",0);         -- X-l
+       write_bus(X"7A",(100+i*16)/256);  -- Y-h
+       write_bus(X"7B",100+i*16);  -- Y-l
+       for color in 0 to 31 loop
+       
+         write_bus(X"A0", i*32+color);  -- write fg color
+         write_bus(X"70",X"0b");  -- Draw 4x4
+         wait_ready;
+       end loop;
     end loop;
---    write_bus(X"75",X"04");  -- dx = 5
---    write_bus(X"71",X"03");  --  CTRL1 = 3
---    write_bus(X"70",X"10");  -- x+=5
+
+    write_bus(X"A0",X"55"); -- fg
+    write_bus(X"A1",X"AA"); -- bg    
+    write_bus(X"75",X"04");  -- dx = 5
+    write_bus(X"71",X"03");  --  CTRL1 = 3
+--    write_bus(X"72",X"01");  --  CTRL2 = 1
+--    write_bus(X"70",X"00");
+--    write_bus(X"70",X"02");
+--    write_bus(X"70",X"11");
+    write_bus(X"70",X"10");  -- x+=5
+    wait_ready;
+    write_bus(X"70",X"E6");  -- x-=4
+    wait_ready;
+    write_bus(X"70",X"A6");  -- x-=2
+    wait_ready;
+    write_bus(X"70",X"80");  -- x+=1
+    wait_ready;
+--    write_bus(X"70",X"F9");  -- x+=4, Y+=4
+    write_bus(X"75",X"ff");  -- dx = 255
+--    write_bus(X"70",X"19");  -- x+=255
+    wait_ready;
+
+    write_bus(X"70",X"05");  -- x,y=0
+    write_bus(X"73",X"11");  -- CSIZE = 0x22
+    write_bus(X"72",X"20");  -- Raster also bg
+    write_bus(X"A1",X"05");
+    write_bus(X"70",X"21");  --
+    wait_ready;
+    write_bus(X"70",X"7f");  --
+    wait_ready;
+    write_bus(X"72",X"00");  -- Raster only fg
+    write_bus(X"70",X"41");  --
+    wait_ready;
+    write_bus(X"70",X"0B");  -- 4x4
+    wait_ready;
+    write_bus(X"70",X"0A");  -- 5x8
+    wait_ready;
+    write_bus(X"72",X"00");  --
+    write_bus(X"79",X"64");  -- x=100
+    write_bus(X"7B",X"64");  -- y=100
+    write_bus(X"70",X"E0");  -- x+=4 draw marker
+    wait_ready;
+    write_bus(X"79",X"64");  -- x=100
+    write_bus(X"70",X"9C");  -- y-=4 draw marker
+    wait_ready;
+    write_bus(X"79",X"32");  -- x=50
+    write_bus(X"7B",X"32");  -- y=50
+    write_bus(X"72",X"04");  --
+    write_bus(X"70",X"41");  --
+    wait_ready;
+    write_bus(X"79",X"32");  -- x=50
+    wait_ready;
+    write_bus(X"72",X"0C");  --
+    write_bus(X"79",X"64");  -- x=100
+    write_bus(X"7B",X"64");  -- y=100
+    write_bus(X"70",X"41");  --
+    wait_ready;
+    
+--    write_bus(X"71",X"0B");  --  CTRL1 = b, neverLeave=1
+    write_bus(X"79",X"A0");  -- 
+    write_bus(X"78",X"01");  -- x=0x1A0
+    write_bus(X"7B",X"64");  -- y=100
+    write_bus(X"77",X"10");  -- dy = 10
+    write_bus(X"70",X"11");  -- x+=255, y+=10
+    wait_ready;
+    write_bus(X"70",X"0E");  -- y = 0
+    write_bus(X"70",X"0D");  -- x = 0
+    wait_ready;
+    write_bus(X"72",X"00");  -- CTRL2 = 0
+    write_bus(X"79",X"16");  -- x=22
+    write_bus(X"70",X"01");  -- Löschstift
+    write_bus(X"70",X"0B");  -- 4x4
+    wait_ready;
+    write_bus(X"79",X"20");  -- x=32
+    write_bus(X"70",X"00");  -- Schreibstift
+    write_bus(X"70",X"0B");  -- 4x4
+    wait_ready;
+    write_bus(X"72",X"04");  -- CTRL2 = 4
+    write_bus(X"79",X"28");  -- x=40
+    write_bus(X"70",X"0B");  -- 4x4
+    wait_ready;
+    write_bus(X"60",X"01");  -- XOR Mode
+    write_bus(X"79",X"05");   -- x=5
+    write_bus(X"72",X"00");  -- CTRL2 = 0
+    write_bus(X"70",X"0B");  -- 4x4
+    wait_ready;
+--    line(47,75,30,88);
+    write_bus(X"A0",X"E0"); -- fg red
+    write_bus(X"A1",X"29"); -- bg light grey
+    line(100,65,94,79);
+    line(94,79, 94,70);
+    line(0,0,511,0);
+    line(0,0,0,255);
+    line(100,2,105,-5);
+    line(511,0,511,255);
+
+    write_bus(X"A0","01101100"); -- fg red + green
+    write_bus(X"A1",X"29"); -- bg light grey
+    line(1,1,510,1);
+    line(1,1,1,254);
+    line(510,1,510,254);
+    
+    
+    write_bus(X"78",X"00");        -- x msb
+--    write_bus(X"79",X"10");        -- x lsb
+    write_bus(X"79",X"64");        -- x lsb
+--    write_bus(X"7A",X"0F");        -- y msb
+--    write_bus(X"7B",X"FA");       -- y lsb
+    write_bus(X"7A",X"00");        -- y msb
+    write_bus(X"7B",X"05");       -- y lsb
+    write_bus(X"75",X"0A");        -- dx
+    write_bus(X"77",X"0A");        -- dy
+    write_bus(X"70",17+1*2+1*4);
+--    line(511,0,511,255);
+    
+    write_bus(X"70",X"0E");  -- y = 0
+    write_bus(X"70",X"0D");  -- x = 0
+    write_bus(X"70",X"0f");  -- DMA
+    wait_ready;
+    read_bus(X"60",read_data); 
+    write_bus(X"79",X"08");  -- x=8
+    write_bus(X"70",X"0f");  -- DMA
+    wait_ready;
+    read_bus(X"60",read_data);
+    
+--    write_bus(X"60",3*64);   -- Set Write-Page
+--    write_bus(X"70",X"0C");  -- Fill Screen
 --    wait_ready;
-----    write_bus(X"70",X"05");  -- x,y=0
-----    write_bus(X"73",X"11");  -- CSIZE = 0x22
-----    write_bus(X"72",X"20");  -- Raster also bg
-----    write_bus(X"A1",X"05");
-----    write_bus(X"70",X"21");  --wait_ready;
-----    write_bus(X"70",X"7f");  --
-----    wait_ready;
-----    write_bus(X"72",X"00");  -- Raster only fg
-----    write_bus(X"70",X"41");  --
-----    wait_ready;
-----    write_bus(X"70",X"0B");  -- 4x4
-----    wait_ready;
-----    write_bus(X"70",X"0A");  -- 5x8
-----    wait_ready;
-----    write_bus(X"72",X"00");  --
-----    write_bus(X"79",X"64");  -- x=100
-----    write_bus(X"7B",X"64");  -- y=100
-----    write_bus(X"70",X"E0");  -- x+=4 draw marker
-----    wait_ready;
---    write_bus(X"A0",X"80"); -- fg
---    line(100,65,94,79);
---    line(94,79, 94,70);
---    line(0,0,511,0);
---    line(0,0,0,255);
---    --line(100,2,105,-5);
---    --line(511,0,511,255);
---
---    write_bus(X"A0",X"E0"); -- fg
---    write_bus(X"A1",X"07"); -- bg
---    line(1,1,510,1);
---    write_bus(X"A0",X"18"); -- fg
---    line(1,1,1,254);
---    write_bus(X"A0",X"07"); -- fg
---    line(510,1,510,254);
+    
+--    read_bus(X"68",read_data);
+--    read_bus(X"69",read_data);
+    
+    -- test write to char_rom
+--    write_bus(X"79",X"DB");         -- x = 1
+--    write_bus(X"78",X"01");         -- x msb
+--    write_bus(X"7E",X"FF");         -- 
+--    write_bus(X"7E",X"FF");
+--    write_bus(X"72",X"10");         -- CTRL2 = 0x10
     
     do_dump <= true;
     wait for 1 us;
