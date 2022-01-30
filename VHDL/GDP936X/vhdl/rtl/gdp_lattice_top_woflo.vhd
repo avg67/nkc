@@ -80,9 +80,14 @@ entity gdp_lattice_top is
        -- SPI-Signals
        --------------------------
        SD_SCK_o  : out std_ulogic;
-       SD_nCS_o  : out std_ulogic_vector(2 downto 0);
+       SD_nCS_o  : out std_ulogic_vector(1 downto 0);
        SD_MOSI_o : out std_ulogic;
        SD_MISO_i : in  std_ulogic;
+       --
+       ETH_SCK_o  : out std_ulogic;
+       ETH_nCS_o  : out std_ulogic;
+       ETH_MOSI_o : out std_ulogic;
+       ETH_MISO_i : in  std_ulogic;
        --------------------------
        -- VDIP-SPI-Signals
        --------------------------
@@ -417,6 +422,10 @@ architecture rtl of gdp_lattice_top is
   
   signal t1_cs,t1_irq      : std_ulogic;
   signal t1_data           : std_ulogic_vector(7 downto 0);
+  SIGNAL SD_SCK_s          : std_ulogic; 
+  SIGNAL SD_nCS_s          : std_ulogic_vector(2 downto 0);
+  SIGNAL SD_MOSI_s         : std_ulogic;
+  SIGNAL SD_MISO_s         : std_ulogic;
 begin
 
   dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
@@ -863,10 +872,10 @@ begin
       port map (
         reset_n_i   => reset_n,
         clk_i       => clk_i,
-        SD_SCK_o    => SD_SCK_o,
-        SD_nCS_o    => SD_nCS_o,
-        SD_MOSI_o   => SD_MOSI_o,
-        SD_MISO_i   => SD_MISO_i,
+        SD_SCK_o    => SD_SCK_s,
+        SD_nCS_o    => SD_nCS_s,
+        SD_MOSI_o   => SD_MOSI_s,
+        SD_MISO_i   => SD_MISO_s,
         Adr_i       => Addr(0 downto 0),
         en_i        => spi_cs,
         DataIn_i    => data_in,
@@ -874,6 +883,16 @@ begin
         Wr_i        => gdp_Wr,
         DataOut_o   => spi_data
       );
+      SD_SCK_o <= SD_SCK_s;
+      SD_nCS_o <= SD_nCS_s(1 downto 0);
+      SD_MOSI_o <= SD_MOSI_s;
+      SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
+                   SD_MISO_i;
+      --SD_MISO_s <= SD_MISO_i;
+      -- duplicate SPI pins to decouple SD-cards and Ethernet controller electrically
+      ETH_SCK_o  <= SD_SCK_s;
+      ETH_nCS_o  <= SD_nCS_s(2);
+      ETH_MOSI_o <= SD_MOSI_s;
   end generate;
   no_spi: if not use_spi_c generate
     spi_data       <= (others =>'0');
@@ -881,6 +900,9 @@ begin
     SD_SCK_o       <= '0';
     SD_nCS_o       <= (others => '1');
     SD_MOSI_o      <= SD_MISO_i;
+    ETH_SCK_o      <= SD_SCK_s;
+    ETH_nCS_o      <= '1';
+    ETH_MOSI_o     <= ETH_MISO_i;
   end generate;
   
   impl_T1: if use_timer_c generate 

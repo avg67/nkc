@@ -195,11 +195,11 @@ begin
         end if;
         SD_nCS <= (others => '1');
         case ctrl_reg(6 downto 4) is
-          when "010" =>
+          when "010" => --0
             SD_nCS <= "110";
-          when "100" =>
+          when "100" => --1
             SD_nCS <= "101";
-          when "001" =>
+          when "001" => -- 2
             SD_nCS <= "011";
           when others => null;
         end case;

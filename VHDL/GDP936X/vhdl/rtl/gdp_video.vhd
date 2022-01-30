@@ -321,12 +321,12 @@ begin
       rd_state       <= idle_e;
       if not color_support_c then
         rd_address     <= to_unsigned(255*512/8,rd_address'length); -- last line
-      elsif color_mode_i = '0' then
+--      elsif color_mode_i = '0' then
         -- 4 bit / Pixel
         rd_address     <= to_unsigned(255*512/2,rd_address'length); -- last line
-      else
-         -- 8 bit / Pixel
-        rd_address     <= to_unsigned(511*512,rd_address'length); -- last line
+--      else
+--         -- 8 bit / Pixel
+--        rd_address     <= to_unsigned(511*512,rd_address'length); -- last line
       end if;
       rd_data        <= (others => '0');
 --      Pixel_count    <= (others => '0');

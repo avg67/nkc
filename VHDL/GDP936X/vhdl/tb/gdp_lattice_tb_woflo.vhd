@@ -66,7 +66,11 @@ architecture beh of gdp_lattice_tb is
   signal Ps2MouseDat    : std_logic;
   signal TxD            : std_ulogic;
 
+  signal SD_nCS         : std_ulogic_vector(1 downto 0);
   signal SD_MOSI        : std_ulogic;
+  signal ETH_nCS        : std_ulogic;
+  signal ETH_MISO       : std_ulogic;
+  signal ETH_MOSI       : std_ulogic;
 --  signal VDIP_SCK       : std_ulogic;
 --  signal VDIP_CS        : std_ulogic;
 --  signal VDIP_MOSI      : std_ulogic;
@@ -100,9 +104,12 @@ begin  -- beh
       driver_nEN_o=> driver_nEN,
       driver_DIR_o=> driver_DIR,
       SD_SCK_o    => open,
-      SD_nCS_o    => open,
+      SD_nCS_o    => SD_nCS,
       SD_MOSI_o   => SD_MOSI,
       SD_MISO_i   => SD_MOSI,
+      ETH_nCS_o   => ETH_nCS,
+      ETH_MOSI_o  => ETH_MOSI,
+      ETH_MISO_i  => ETH_MISO,
 --      VDIP_SCK_o  => VDIP_SCK, 
 --      VDIP_CS_o   => VDIP_CS,  
 --      VDIP_MOSI_o => VDIP_MOSI,
@@ -117,7 +124,7 @@ begin  -- beh
       SRAM1_nOE   => SRAM_nOE
 
       );
-
+  ETH_MISO <= not ETH_MOSI and not ETH_nCS;
   gpio <= (others => 'H');
 
   RX : entity work.RS_232_RX
@@ -656,6 +663,37 @@ begin  -- beh
 --    write_bus(X"7E",X"FF");         -- 
 --    write_bus(X"7E",X"FF");
 --    write_bus(X"72",X"10");         -- CTRL2 = 0x10
+    
+    -- SPI
+    for i in 0 to 1 loop
+      read_bus(X"00",read_data);
+      if i=0 then
+        -- SCK IDLE LOW
+        write_bus(X"00",X"83");
+        read_bus(X"00",read_data);
+        --write_bus(X"00",X"A3");
+        write_bus(X"00",X"93");
+      else
+        -- SCK IDLE HIGH 
+        write_bus(X"00",X"8B");
+        read_bus(X"00",read_data);
+        write_bus(X"00",X"AB");
+      end if;
+      
+      write_bus(X"01",X"A5");
+      wait_spi_done;
+      read_bus(X"01",read_data);
+      write_bus(X"01",X"5A");
+      wait_spi_done;
+      read_bus(X"01",read_data);
+      if i=0 then
+        write_bus(X"00",X"83");
+      else
+        write_bus(X"00",X"8B");
+      end if;
+    end loop;
+    
+    
     
     do_dump <= true;
     wait for 1 us;
