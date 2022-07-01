@@ -121,7 +121,9 @@ begin  -- beh
       SRAM1_nCS   => SRAM_nCE,
       SRAM1_nCS1  => SRAM_nCE1,
       SRAM1_nWR   => SRAM_nWR,
-      SRAM1_nOE   => SRAM_nOE
+      SRAM1_nOE   => SRAM_nOE,
+      
+      glob_gdp_en_i => '1'
 
       );
   ETH_MISO <= not ETH_MOSI and not ETH_nCS;

@@ -107,10 +107,11 @@ entity gdp_lattice_top is
        SRAM1_ADR    : out std_ulogic_vector(16 downto 0);
        SRAM1_DB     : inout std_logic_vector(7 downto 0);
        SRAM1_nWR    : out std_ulogic;
-       SRAM1_nOE    : out std_ulogic
+       SRAM1_nOE    : out std_ulogic;
        --------------------------
        -- Debug Signals - GDP
        --------------------------
+       glob_gdp_en_i : in std_ulogic
 --       debug_o      : out std_ulogic_vector(nr_mon_sigs_c-1 downto 0);
 --       sample_clk_o : out std_ulogic
        );
@@ -390,6 +391,7 @@ architecture rtl of gdp_lattice_top is
 --  signal nWR_d             : std_ulogic;
   signal nWr,nRd           : std_ulogic;
   signal IORQ              : std_ulogic;
+  signal glob_gdp_en       : std_ulogic;
   signal Addr              : std_ulogic_vector(7 downto 0);
   signal data_in           : std_ulogic_vector(7 downto 0);
   signal output_en,fpga_en : std_ulogic;
@@ -459,6 +461,16 @@ begin
     reset_n  <= reset_n_i;
   end generate;
   
+  GDP_EN_SYNC : InputSync
+     generic map (
+       ResetValue_g => '1'
+     )
+     port map (
+         Input => glob_gdp_en_i,
+         clk   => clk_i,
+         clr_n => reset_n,
+         q     => glob_gdp_en
+     );
 --  ISIORQ : InputSync
 --  generic map (
 --    ResetValue_g => '1'
@@ -665,7 +677,7 @@ begin
 --            '0';
 
 --  gdp_cs <= (not nIORQ and not nIORQ_d) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
-  gdp_cs <= IORQ when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
+  gdp_cs <= (IORQ and glob_gdp_en) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
                        (Addr(7 downto 1) = sfr_base(7 downto 1)) or
                        (Addr(7 downto 1) = COL_BASE_c(7 downto 1) and color_support_c) or -- SFRs
                        (Addr(7 downto 2) = CLUT_BASE_c(7 downto 2) and color_support_c) else
