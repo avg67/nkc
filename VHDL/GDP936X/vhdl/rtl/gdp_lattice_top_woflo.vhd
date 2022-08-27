@@ -26,7 +26,7 @@ entity gdp_lattice_top is
        --------------------------
        -- NKC Bus
        --------------------------
-       nkc_DB        : inout std_logic_vector(7 downto 0);
+       nkc_DB        : inout std_logic_vector(15 downto 0);
        nkc_ADDR_i    : in std_ulogic_vector(7 downto 0);
        nkc_nRD_i     : in std_ulogic;
        nkc_nWR_i     : in std_ulogic;
@@ -34,6 +34,10 @@ entity gdp_lattice_top is
        driver_nEN_o  : out std_ulogic;
        driver_DIR_o  : out std_ulogic;
        nIRQ_o        : out std_ulogic;
+	   --UDS_SIZ0_i	 : in std_logic;
+	   --LDS_SIZ1_i	 : in std_logic;
+	   is68000_o	 : out std_logic; 
+      nkc_nWAIT_o	 : out std_logic; 
        --------------------------
        -- UART Receiver
        --------------------------
@@ -67,7 +71,8 @@ entity gdp_lattice_top is
        --                       |
        --                      GND
        --------------------------
-       PWM_OUT_o   : out std_ulogic;
+       PWM_OUT_R_o   : out std_ulogic;
+       PWM_OUT_L_o   : out std_ulogic;
        --------------------------
        -- Video out
        --------------------------
@@ -80,14 +85,14 @@ entity gdp_lattice_top is
        -- SPI-Signals
        --------------------------
        SD_SCK_o  : out std_ulogic;
-       SD_nCS_o  : out std_ulogic_vector(1 downto 0);
+       SD_nCS_o  : out std_ulogic_vector(0 downto 0);
        SD_MOSI_o : out std_ulogic;
        SD_MISO_i : in  std_ulogic;
        --
-       ETH_SCK_o  : out std_ulogic;
-       ETH_nCS_o  : out std_ulogic;
-       ETH_MOSI_o : out std_ulogic;
-       ETH_MISO_i : in  std_ulogic;
+       --ETH_SCK_o  : out std_ulogic;
+       --ETH_nCS_o  : out std_ulogic;
+       --ETH_MOSI_o : out std_ulogic;
+       --ETH_MISO_i : in  std_ulogic;
        --------------------------
        -- VDIP-SPI-Signals
        --------------------------
@@ -98,20 +103,22 @@ entity gdp_lattice_top is
        --------------------------
        -- GPIO-Signals
        --------------------------
-       GPIO_io   : inout std_logic_vector(7 downto 0);
+       --GPIO_io   : inout std_logic_vector(7 downto 0);
        --------------------------
        -- Video-Memory data bus
        --------------------------
-       SRAM1_nCS    : out std_ulogic;
-       SRAM1_nCS1   : out std_ulogic;
-       SRAM1_ADR    : out std_ulogic_vector(16 downto 0);
-       SRAM1_DB     : inout std_logic_vector(7 downto 0);
-       SRAM1_nWR    : out std_ulogic;
-       SRAM1_nOE    : out std_ulogic;
+       SRAM_nCS0   : out std_ulogic;
+       SRAM_nCS1   : out std_ulogic;
+       SRAM_ADDR   : out std_ulogic_vector(17 downto 0);
+       SRAM_DB     : inout std_logic_vector(15 downto 0);
+       SRAM_nWR    : out std_ulogic;
+       SRAM_nOE    : out std_ulogic;
+       SRAM_nBHE   : out std_ulogic;
+       SRAM_nBLE   : out std_ulogic
        --------------------------
        -- Debug Signals - GDP
        --------------------------
-       glob_gdp_en_i : in std_ulogic
+       --glob_gdp_en_i : in std_ulogic
 --       debug_o      : out std_ulogic_vector(nr_mon_sigs_c-1 downto 0);
 --       sample_clk_o : out std_ulogic
        );
@@ -138,7 +145,6 @@ architecture rtl of gdp_lattice_top is
   end component;
 
   component gdp_top is
-    generic(INT_CHR_ROM_g : boolean := true); 
     port(reset_n_i     : in  std_ulogic;
          clk_i         : in  std_ulogic;
          clk_en_i      : in  std_ulogic;
@@ -166,12 +172,13 @@ architecture rtl of gdp_lattice_top is
          --------------------------
          -- Video-Memory data bus
          --------------------------
-         sram_addr_o : out std_ulogic_vector(16 downto 0);
-         sram_data_o : out std_ulogic_vector(7 downto 0);
-         sram_data_i : in  std_ulogic_vector(7 downto 0);
-         sram_ena_o  : out std_ulogic_vector(1 downto 0);
-         sram_we_o   : out std_ulogic;
-         rom_ena_o   : out std_ulogic;
+         sram_addr_o       : out std_ulogic_vector(17 downto 0);
+         sram_data_o       : out std_ulogic_vector(15 downto 0);
+         sram_data_i       : in  std_ulogic_vector(15 downto 0);
+         sram_ena_o        : out std_ulogic_vector(1 downto 0);
+         sram_we_o         : out std_ulogic;
+         sram_bhe_o        : out std_ulogic;
+         sram_ble_o        : out std_ulogic;
          --------------------------
          -- Monitoring (Debug) signals
          --------------------------
@@ -344,14 +351,14 @@ architecture rtl of gdp_lattice_top is
   end component;
   
   constant use_ser_key_c   : boolean := false;
-  constant use_ps2_key_c   : boolean := true;
-  constant use_ps2_mouse_c : boolean := true;
-  constant use_ser1_c      : boolean := true;
-  constant use_sound_c     : boolean := true;
-  constant use_spi_c       : boolean := true;
-  constant use_timer_c     : boolean := true;
+  constant use_ps2_key_c   : boolean := false;
+  constant use_ps2_mouse_c : boolean := false;
+  constant use_ser1_c      : boolean := false;
+  constant use_sound_c     : boolean := false;
+  constant use_spi_c       : boolean := false;
+  constant use_timer_c     : boolean := false;
   constant use_vdip_c      : boolean := false;
-  constant use_gpio_c      : boolean := true;
+  constant use_gpio_c      : boolean := false;
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
 --  constant dipswitches1_c : std_logic_vector(7 downto 0) := X"01";
   
@@ -374,12 +381,14 @@ architecture rtl of gdp_lattice_top is
 --  constant DIP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"49"; -- r
   
   signal reset_n           : std_ulogic;
-  signal GDP_SRAM_ADDR     : std_ulogic_vector(16 downto 0);
-  signal GDP_SRAM_datao    : std_ulogic_vector(7 downto 0);
+  signal GDP_SRAM_ADDR     : std_ulogic_vector(17 downto 0);
+  signal GDP_SRAM_datao    : std_ulogic_vector(15 downto 0);
   signal GDP_DataOut       : std_ulogic_vector(7 downto 0);
-  signal GDP_SRAM_datai    : std_ulogic_vector(7 downto 0);
+  signal GDP_SRAM_datai    : std_ulogic_vector(15 downto 0);
   signal GDP_SRAM_ena      : std_ulogic_vector(1 downto 0);
   signal GDP_SRAM_we       : std_ulogic;
+  signal GDP_SRAM_BHE      : std_ulogic;
+  signal GDP_SRAM_BLE      : std_ulogic;
 --  signal VGA_pixel         : std_ulogic;
   signal gdp_Rd,gdp_Wr     : std_ulogic;
   signal gdp_cs            : std_ulogic;
@@ -389,6 +398,7 @@ architecture rtl of gdp_lattice_top is
 --  signal nIORQ,nIORQ_d     : std_ulogic;
 --  signal nRD_d             : std_ulogic;
 --  signal nWR_d             : std_ulogic;
+  signal nkc_nRD_s, nkc_nWR_s : std_ulogic;
   signal nWr,nRd           : std_ulogic;
   signal IORQ              : std_ulogic;
   signal glob_gdp_en       : std_ulogic;
@@ -428,6 +438,8 @@ architecture rtl of gdp_lattice_top is
   SIGNAL SD_nCS_s          : std_ulogic_vector(2 downto 0);
   SIGNAL SD_MOSI_s         : std_ulogic;
   SIGNAL SD_MISO_s         : std_ulogic;
+  
+  signal PWM_OUT_s         : std_ulogic;
 begin
 
   dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
@@ -461,16 +473,18 @@ begin
     reset_n  <= reset_n_i;
   end generate;
   
-  GDP_EN_SYNC : InputSync
-     generic map (
-       ResetValue_g => '1'
-     )
-     port map (
-         Input => glob_gdp_en_i,
-         clk   => clk_i,
-         clr_n => reset_n,
-         q     => glob_gdp_en
-     );
+--  GDP_EN_SYNC : InputSync
+--     generic map (
+--       ResetValue_g => '1'
+--     )
+--     port map (
+--         Input => glob_gdp_en_i,
+--         clk   => clk_i,
+--         clr_n => reset_n,
+--         q     => glob_gdp_en
+--     );
+   glob_gdp_en <= '1';
+
 --  ISIORQ : InputSync
 --  generic map (
 --    ResetValue_g => '1'
@@ -558,18 +572,25 @@ begin
       nRd_sync_o  => nRd,
       nWr_sync_o  => nWr,
       nkc_nIORQ_i => nkc_nIORQ_i,
-      nkc_nRD_i   => nkc_nRD_i,
-      nkc_nWR_i   => nkc_nWR_i,
+      nkc_nRD_i   => nkc_nRD_s,
+      nkc_nWR_i   => nkc_nWR_s,
       nkc_ADDR_i  => nkc_ADDR_i,
-      nkc_DB      => nkc_DB
+      nkc_DB      => nkc_DB(7 downto 0)
     );
-
+	
+	nkc_nRD_s <= '0' when nkc_nRD_i='0' else --and UDS_SIZ0_i ='0' else
+	              '1';
+    nkc_nWR_s <= '0' when nkc_nWR_i='0' else --and UDS_SIZ0_i ='0' else
+                  '1';
 
   fpga_en      <= gdp_cs or key_cs or dip_cs or mouse_cs or ser_cs or 
                   snd_cs or spi_cs or t1_cs or vdip_cs or gpio_cs;
   driver_nEN_o <= not reset_n; --not(output_en and (not nkc_nWR_i or not nkc_nRD_i)); 
-  driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
-                  '1';
+  --driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
+  --                '1';
+  driver_DIR_o <= '1' when (fpga_en and not nkc_nRD_i)='1' else 
+                  '0';
+  
   process(clk_i,reset_n)   
   begin
     if reset_n = '0' then
@@ -619,19 +640,18 @@ begin
 --  driver_nEN_o <= not(output_en and (not nkc_nWR_i or not nkc_nRD_i)); 
 --  driver_DIR_o <= nRD;
                    
-  nkc_DB       <= std_logic_vector(GDP_DataOut) when (output_en and gdp_cs   and not nkc_nRD_i)='1' else
-                  std_logic_vector(key_data)    when (output_en and key_cs   and not nkc_nRD_i)='1' else
-	                dipsw                         when (output_en and dip_cs   and not nkc_nRD_i)='1' else
-	                std_logic_vector(mouse_data)  when (output_en and mouse_cs and not nkc_nRD_i)='1' else
-	                std_logic_vector(ser_data)    when (output_en and ser_cs   and not nkc_nRD_i)='1' else
-	                std_logic_vector(snd_data)    when (output_en and snd_cs   and not nkc_nRD_i)='1' else
-	                std_logic_vector(spi_data)    when (output_en and spi_cs   and not nkc_nRD_i)='1' else
-	                std_logic_vector(t1_data)     when (output_en and t1_cs    and not nkc_nRD_i)='1' else
-	                std_logic_vector(vdip_data)   when (output_en and vdip_cs  and not nkc_nRD_i)='1' else
-	                std_logic_vector(gpio_data)   when (output_en and gpio_cs  and not nkc_nRD_i)='1' else
+  nkc_DB <=        std_logic_vector(GDP_DataOut)& std_logic_vector(GDP_DataOut) when (output_en and gdp_cs   and not nkc_nRD_i)='1' else
+                   std_logic_vector(key_data)   & std_logic_vector(key_data)    when (output_en and key_cs   and not nkc_nRD_i)='1' else
+	                dipsw                        & dipsw                         when (output_en and dip_cs   and not nkc_nRD_i)='1' else
+	                std_logic_vector(mouse_data) & std_logic_vector(mouse_data)  when (output_en and mouse_cs and not nkc_nRD_i)='1' else
+	                std_logic_vector(ser_data)   & std_logic_vector(ser_data)    when (output_en and ser_cs   and not nkc_nRD_i)='1' else
+	                std_logic_vector(snd_data)   & std_logic_vector(snd_data)    when (output_en and snd_cs   and not nkc_nRD_i)='1' else
+	                std_logic_vector(spi_data)   & std_logic_vector(spi_data)    when (output_en and spi_cs   and not nkc_nRD_i)='1' else
+	                std_logic_vector(t1_data)    & std_logic_vector(t1_data)     when (output_en and t1_cs    and not nkc_nRD_i)='1' else
+	                std_logic_vector(vdip_data)  & std_logic_vector(vdip_data)   when (output_en and vdip_cs  and not nkc_nRD_i)='1' else
+	                std_logic_vector(gpio_data)  & std_logic_vector(gpio_data)   when (output_en and gpio_cs  and not nkc_nRD_i)='1' else
                   (others => 'Z') after 1 ns;
   
-      
   GDP: gdp_top
     port map (
       reset_n_i   => reset_n,
@@ -658,25 +678,12 @@ begin
       sram_data_i => GDP_SRAM_datai,
       sram_ena_o  => GDP_SRAM_ena,
       sram_we_o   => GDP_SRAM_we,
+      sram_bhe_o  => GDP_SRAM_BHE,
+      sram_ble_o  => GDP_SRAM_BLE,
       monitoring_o=> open --debug_o
       );
   
-----  gdp_cs <= (not nIORQ and not nIORQ_d) when  Addr(7 downto 4) = "0111" or  -- GDP
-----                                             (Addr(7 downto 4) = "0110" and nWR='0')  else -- SFRs
-----            '0';
---  gdp_cs <= (not nIORQ and not nIORQ_d) when  Addr(7 downto 4) = GDP_BASE_ADDR_c(7 downto 4) or  -- GDP
---                                             (Addr(7 downto 4) = SFR_BASE_ADDR_c(7 downto 4) and nWR='0')  else -- SFRs
---            '0';
---  gdp_en <= gdp_cs when Addr(7 downto 4) = GDP_BASE_ADDR_c(7 downto 4) else
---            '0';
---  sfr_en <= gdp_cs when Addr(7 downto 4) = SFR_BASE_ADDR_c(7 downto 4) else
---            '0';
---  key_cs <= (not nIORQ and not nIORQ_d) when Addr = KEY_BASE_ADDR_c and nRD='0' else
---            '0';
---  dip_cs <= (not nIORQ and not nIORQ_d) when Addr = DIP_BASE_ADDR_c and nRD='0' else
---            '0';
 
---  gdp_cs <= (not nIORQ and not nIORQ_d) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
   gdp_cs <= (IORQ and glob_gdp_en) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
                        (Addr(7 downto 1) = sfr_base(7 downto 1)) or
                        (Addr(7 downto 1) = COL_BASE_c(7 downto 1) and color_support_c) or -- SFRs
@@ -691,13 +698,9 @@ begin
             '0';
   clut_en<= gdp_cs when Addr(7 downto 2) = CLUT_BASE_c(7 downto 2) and color_support_c else
             '0';
---  key_cs <= (not nIORQ and not nIORQ_d and addr_sel_i) when Addr = key_base and nRD='0' else
---  key_cs <= (not nIORQ and not nIORQ_d) when Addr = key_base and nRD='0' else
-  key_cs <= IORQ when Addr = key_base and nRD='0' else
+  key_cs <= IORQ when Addr = key_base and nRD='0' and use_ps2_key_c else
             '0';
---  dip_cs <= (not nIORQ and not nIORQ_d and addr_sel_i) when Addr = dip_base and nRD='0' else
---  dip_cs <= (not nIORQ and not nIORQ_d) when Addr = dip_base and nRD='0' else
-  dip_cs <= IORQ when Addr = dip_base and nRD='0' else
+  dip_cs <= IORQ when Addr = dip_base and nRD='0' and use_ps2_key_c else
             '0';
 
 --  impl_key1: if use_ser_key_c generate
@@ -741,6 +744,8 @@ begin
     DoutParRX <= (others =>'0');
     BusyRX    <= '1';
     key_data  <= not BusyRX & DoutParRX(6 downto 0);
+	Ps2Dat_io <= 'Z';
+	Ps2Dat_io <= 'Z';
   end generate;
   
   impl_key2: if use_ps2_key_c generate
@@ -748,7 +753,7 @@ begin
       port map (
         reset_n_i => reset_n,
         clk_i     => clk_i,
-        Ps2Clk_io => Ps2Clk_io,
+        Ps2Clk_io => Ps2Dat_io,
         Ps2Dat_io => Ps2Dat_io,
         KeyCS_i   => key_cs,
         DipCS_i   => dip_cs,
@@ -862,7 +867,7 @@ begin
   --      OUT_A     => open,
   --      OUT_B     => open,
   --      OUT_C     => open
-        PWM_OUT    => PWM_OUT_o
+        PWM_OUT    => PWM_OUT_s
       );
   end generate;
   no_sound: if not use_sound_c generate
@@ -870,10 +875,13 @@ begin
     snd_cs         <= '0';
     snd_bdir       <= '0';
     snd_bc1        <= '0';
-    PWM_OUT_o      <= '0';
+    PWM_OUT_s      <= '0';
     wav_cnt        <= 0;
     wav_en         <= '0';
   end generate;
+  
+  PWM_OUT_L_o <= PWM_OUT_s;
+  PWM_OUT_R_o <= PWM_OUT_s;
 
   impl_SPI: if use_spi_c generate 
 --    spi_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 1)=SPI_BASE_ADDR_c(7 downto 1) else -- 0x00 - 0x01
@@ -896,25 +904,25 @@ begin
         DataOut_o   => spi_data
       );
       SD_SCK_o <= SD_SCK_s;
-      SD_nCS_o <= SD_nCS_s(1 downto 0);
+      SD_nCS_o <= SD_nCS_s(0 downto 0);
       SD_MOSI_o <= SD_MOSI_s;
-      SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
-                   SD_MISO_i;
-      --SD_MISO_s <= SD_MISO_i;
+      --SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
+      --             SD_MISO_i;
+      SD_MISO_s <= SD_MISO_i;
       -- duplicate SPI pins to decouple SD-cards and Ethernet controller electrically
-      ETH_SCK_o  <= SD_SCK_s;
-      ETH_nCS_o  <= SD_nCS_s(2);
-      ETH_MOSI_o <= SD_MOSI_s;
+      --ETH_SCK_o  <= SD_SCK_s;
+      --ETH_nCS_o  <= SD_nCS_s(2);
+      --ETH_MOSI_o <= SD_MOSI_s;
   end generate;
   no_spi: if not use_spi_c generate
     spi_data       <= (others =>'0');
     spi_cs         <= '0';
     SD_SCK_o       <= '0';
-    SD_nCS_o       <= (others => '1');
+    SD_nCS_o       <= (others => '1'); --(others => '1');
     SD_MOSI_o      <= SD_MISO_i;
-    ETH_SCK_o      <= SD_SCK_s;
-    ETH_nCS_o      <= '1';
-    ETH_MOSI_o     <= ETH_MISO_i;
+    --ETH_SCK_o      <= SD_SCK_s;
+    --ETH_nCS_o      <= '1';
+    --ETH_MOSI_o     <= ETH_MISO_i;
   end generate;
   
   impl_T1: if use_timer_c generate 
@@ -971,7 +979,7 @@ begin
   end generate;
   
   impl_GPIO: if use_gpio_c generate 
---    vdip_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=VDIP_BASE_ADDR_c(7 downto 2) else -- 0x20 - 0x23
+  
     gpio_cs <= IORQ when Addr(7 downto 1)=GPIO_BASE_ADDR_c(7 downto 1) else -- 0x04 - 0x05
                 '0';
     
@@ -979,7 +987,7 @@ begin
       port map (
         reset_n_i   => reset_n,
         clk_i       => clk_i,
-        GPIO_io     => GPIO_io,
+        GPIO_io     => open, --GPIO_io,
         Adr_i       => Addr(0 downto 0),
         en_i        => gpio_cs,
         DataIn_i    => data_in,
@@ -991,33 +999,34 @@ begin
   no_gpio: if not use_gpio_c generate
     gpio_data       <= (others =>'0');
     gpio_cs         <= '0';
-    GPIO_io         <= (others =>'Z');
+--    GPIO_io         <= (others =>'Z');
   end generate;
   
 --  gdp_cs <= '1' when (CPUEN and not IORq_n)='1' and Cpu_A(7 downto 5) = "011" else
 --            '0';
-  SRAM1_ADR <= GDP_SRAM_ADDR after 1 ns;
-  SRAM1_DB  <= std_logic_vector(GDP_SRAM_datao) after 1 ns when ((GDP_SRAM_ena(0) or GDP_SRAM_ena(1)) and GDP_SRAM_we)='1' else
+  SRAM_ADDR <= GDP_SRAM_ADDR after 1 ns;
+  SRAM_DB   <= std_logic_vector(GDP_SRAM_datao) after 1 ns when ((GDP_SRAM_ena(0) or GDP_SRAM_ena(1)) and GDP_SRAM_we)='1' else
                (others => 'Z') after 1 ns;
-  GDP_SRAM_datai <= std_ulogic_vector(SRAM1_DB);
-  SRAM1_nCS      <= not GDP_SRAM_ena(0); -- and not clk);
-  SRAM1_nCS1     <= not GDP_SRAM_ena(1);
+
+  GDP_SRAM_datai <= std_ulogic_vector(SRAM_DB);
+  SRAM_nCS0     <= not GDP_SRAM_ena(0); -- and not clk);
+  SRAM_nCS1     <= not GDP_SRAM_ena(1);
+  SRAM_nBHE     <= not GDP_SRAM_BHE after 1 ns;
+  SRAM_nBLE     <= not GDP_SRAM_BLE after 1 ns;
 
 --  sim_ram : if sim_g generate
 --    SRAM1_nOE      <= not (GDP_SRAM_ena and not GDP_SRAM_we and not clk);
 --    SRAM1_nWR      <= not (GDP_SRAM_we and not clk);
-    SRAM1_nWR      <= not (GDP_SRAM_we and not clk_i);
+    SRAM_nWR      <= not (GDP_SRAM_we and not clk_i);
 --  end generate;
 --  rtl_ram : if not sim_g generate
-    SRAM1_nOE      <= not ((GDP_SRAM_ena(0) or GDP_SRAM_ena(1)) and not GDP_SRAM_we);
+    SRAM_nOE      <= not ((GDP_SRAM_ena(0) or GDP_SRAM_ena(1)) and not GDP_SRAM_we);
 --    SRAM1_nWR      <= not (GDP_SRAM_we);
 --  end generate;
   
---  Red_o   <= (others => VGA_pixel);
---  Green_o <= (others => VGA_pixel);
---  Blue_o  <= (others => VGA_pixel);
-
   nIRQ_o <= '0' when t1_irq='1' else
-            'Z';
+            '1';
 --  sample_clk_o  <= clk_i;
+  is68000_o   <= '1';
+  nkc_nWAIT_o <= '1';
 end rtl;

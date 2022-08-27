@@ -524,6 +524,32 @@ begin
         next_wr_ack <= '1';
       end if;
     end procedure;
+
+    procedure issue_clr_req_p is
+    begin
+       if not color_support_c then
+         kernel_wr_data <= (others => color);
+       elsif color_mode = '0' then 
+         -- 4 bit / Pixel
+         if color ='1' then
+           -- fill with fg color
+           kernel_wr_data <= color_reg_i(3 downto 0) & color_reg_i(3 downto 0);
+         else
+           -- fill with bg color
+           kernel_wr_data <= color_reg_i(11 downto 8) & color_reg_i(11 downto 8);
+         end if;
+       else
+         -- 8 bit / Pixel
+         --kernel_wr_data <= (others => '0');
+         if color ='1' then
+           -- fill with fg color
+           kernel_wr_data <= color_reg_i(7 downto 0);
+         else
+           -- fill with bg color
+           kernel_wr_data <= color_reg_i(15 downto 8);
+         end if;
+       end if;
+   end procedure;
   begin
     cache_hit_v      := false;
     next_state       <= state;
@@ -558,7 +584,8 @@ begin
           kernel_addr    <= (others => '0');
           kernel_req     <= '1';
           kernel_wr      <= '1';
-          kernel_wr_data <= (others => '0');
+--          kernel_wr_data <= (others => '0');
+          issue_clr_req_p;
           next_clrscr_busy <= '1';
         elsif drawCmd_stb = '1' and drawCmd = DMA_e then
           next_state     <= dma_e;
@@ -634,28 +661,7 @@ begin
         kernel_wr <= '1';
         if vram_busy = '0' then
           kernel_req  <= '1';
-          if not color_support_c then
-            kernel_wr_data <= (others => color);
-          elsif color_mode = '0' then 
-            -- 4 bit / Pixel
-            if color ='1' then
-              -- fill with fg color
-              kernel_wr_data <= color_reg_i(3 downto 0) & color_reg_i(3 downto 0);
-            else
-              -- fill with bg color
-              kernel_wr_data <= color_reg_i(11 downto 8) & color_reg_i(11 downto 8);
-            end if;
-          else
-            -- 8 bit / Pixel
-            --kernel_wr_data <= (others => '0');
-            if color ='1' then
-              -- fill with fg color
-              kernel_wr_data <= color_reg_i(7 downto 0);
-            else
-              -- fill with bg color
-              kernel_wr_data <= color_reg_i(15 downto 8);
-            end if;
-          end if;
+          issue_clr_req_p;
 --          kernel_wr_data <= cached_kernel_addr(7 downto 0);
           if (not color_support_c and                       unsigned(cached_kernel_addr(13 downto 0)) = (yres_v * XRES_c/8)-1) or
              (    color_support_c and color_mode = '0'  and unsigned(cached_kernel_addr)              = (yres_v * XRES_c/2)-1) or 

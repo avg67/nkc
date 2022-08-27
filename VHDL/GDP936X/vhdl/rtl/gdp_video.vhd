@@ -28,8 +28,8 @@ entity gdp_video is
        -- interface to VRAM
        -----------------------------
        rd_req_o   : out std_ulogic;
-       rd_addr_o  : out std_ulogic_vector(17 downto 0);
-       rd_data_i  : in  std_ulogic_vector(7 downto 0);
+       rd_addr_o  : out std_ulogic_vector(16 downto 0);
+       rd_data_i  : in  std_ulogic_vector(15 downto 0);
        rd_ack_i   : in  std_ulogic;
        rd_busy_i  : in  std_ulogic;
        -----------------------------
@@ -97,11 +97,11 @@ architecture rtl of gdp_video is
   signal Pixel               : std_ulogic_vector(7 downto 0);
 --  signal Pixel_count         : unsigned(2 downto 0);
 --  signal next_Pixel_count    : unsigned(2 downto 0);
-  signal rd_data,next_rd_data: std_ulogic_vector(7 downto 0);
+  signal rd_data,next_rd_data: std_ulogic_vector(15 downto 0);
   signal set_rd_data         : std_ulogic; 
 
   signal rd_state,next_rd_state       : rd_state_t;
-  signal rd_address                   : unsigned(17 downto 0);
+  signal rd_address                   : unsigned(16 downto 0);
   signal wait_not_busy,rd_req         : std_ulogic;
   signal frame_start                  : std_ulogic;
   signal rgb_pixel                    : std_ulogic_vector(8 downto 0);
@@ -272,7 +272,7 @@ begin
         --if ((VidEn and not color_mode_i) or (VidEn1 and color_mode_i))='1' then
           if (not HSYNC and not VSYNC) = '1' then
             if not color_support_c then
-              if unsigned(q(2 downto 0)) = 7 then
+              if unsigned(q(3 downto 0)) = 15 then
                 set_rd_data      <= '1';
                 next_rd_data     <= rd_data_i;
                 rd_req           <= '1';
@@ -282,21 +282,24 @@ begin
               end if;
             elsif color_mode_i = '0' then
               -- 4bit / Pixel
-              if q(0)='1' then
+              if unsigned(q(1 downto 0))=3 then
                 set_rd_data      <= '1';
                 next_rd_data     <= rd_data_i;
                 rd_req           <= '1';
               else
                 set_rd_data              <= '1';
-                next_rd_data(7 downto 4) <= rd_data(3 downto 0); -- 2 pixel per Byte
+                next_rd_data(15 downto 4) <= rd_data(11 downto 0); -- 4 pixel per Byte
               end if;
             else
-               -- 8 bit/Pixel
-               set_rd_data      <= '1';
-               next_rd_data     <= rd_data_i;
-               if VidEn1='1' then
-                  rd_req           <= '1';
-               end if;
+               -- 8bit / Pixel
+              if q(0)='1' then
+                set_rd_data      <= '1';
+                next_rd_data     <= rd_data_i;
+                rd_req           <= '1';
+              else
+                set_rd_data               <= '1';
+                next_rd_data(15 downto 8) <= rd_data(7 downto 0); -- 2 pixel per Byte
+              end if;
             end if;
           end if;
         elsif color_mode_i='1' then
@@ -320,10 +323,10 @@ begin
     if reset_n_i ='0' then
       rd_state       <= idle_e;
       if not color_support_c then
-        rd_address     <= to_unsigned(255*512/8,rd_address'length); -- last line
+        rd_address     <= to_unsigned(255*512/(8*2),rd_address'length); -- last line
 --      elsif color_mode_i = '0' then
         -- 4 bit / Pixel
-        rd_address     <= to_unsigned(255*512/2,rd_address'length); -- last line
+        rd_address     <= to_unsigned(255*512/(2*2),rd_address'length); -- last line
 --      else
 --         -- 8 bit / Pixel
 --        rd_address     <= to_unsigned(511*512,rd_address'length); -- last line
@@ -346,34 +349,34 @@ begin
             if color_support_c then
                if color_mode_i = '0' then
                   -- 4 bit / Pixel
-                  if rd_address(7 downto 0) = "11111111" then
-                     rd_address(7 downto 0) <= "00000000";
+                  if rd_address(6 downto 0) = "1111111" then
+                     rd_address(6 downto 0) <= "0000000";
                      if Line(0) = '1' then
-                        rd_address(rd_address'high downto 8) <= rd_address(rd_address'high downto 8) - 1;
+                        rd_address(rd_address'high downto 7) <= rd_address(rd_address'high downto 7) - 1;
                      end if;
                   else
-                     rd_address(7 downto 0) <= rd_address(7 downto 0) + 1;
+                     rd_address(6 downto 0) <= rd_address(6 downto 0) + 1;
                   end if;
                else
                   -- 8 bit / Pixel
-                  if rd_address(8 downto 0) = "111111111" then
-                     rd_address(8 downto 0) <= "000000000";
-                     rd_address(rd_address'high downto 9) <= rd_address(rd_address'high downto 9) - 1;
+                  if rd_address(7 downto 0) = "11111111" then
+                     rd_address(7 downto 0) <= "00000000";
+                     rd_address(rd_address'high downto 8) <= rd_address(rd_address'high downto 8) - 1;
                   else
-                     rd_address(8 downto 0) <= rd_address(8 downto 0) + 1;
+                     rd_address(7 downto 0) <= rd_address(7 downto 0) + 1;
                   end if;
                end if;
             end if;
           elsif wait_not_busy='1' and rd_busy_i='0' then
             wait_not_busy <='0';
             if not color_support_c then
-              if rd_address(5 downto 0) = "111111" then
-                rd_address(5 downto 0) <= "000000";
+              if rd_address(4 downto 0) = "11111" then
+                rd_address(4 downto 0) <= "00000";
                 if Line(0) = '1' then
-                  rd_address(rd_address'high-2 downto 6) <= rd_address(rd_address'high-2 downto 6) - 1;
+                  rd_address(rd_address'high-2 downto 5) <= rd_address(rd_address'high-2 downto 5) - 1;
                 end if;
               else
-                rd_address(5 downto 0) <= rd_address(5 downto 0) + 1;
+                rd_address(4 downto 0) <= rd_address(4 downto 0) + 1;
               end if;
 --            else
 --              if rd_address(7 downto 0) = "11111111" then
@@ -387,27 +390,27 @@ begin
             end if;
           elsif wait_not_busy='0' and rd_req='0' and rd_busy_i='0' and VSYNC='1' then
             if not color_support_c then
-              rd_address     <= to_unsigned(255*512/8,rd_address'length); -- last line
+              rd_address     <= to_unsigned(255*512/(8*2),rd_address'length); -- last line
             elsif color_mode_i = '0' then
               -- 4 bit / Pixel
-              rd_address     <= to_unsigned(255*512/2,rd_address'length); -- last line
+              rd_address     <= to_unsigned(255*512/(2*2),rd_address'length); -- last line
             else
                -- 8 bit / Pixel
-               rd_address     <= to_unsigned(511*512,rd_address'length); -- last line
+               rd_address     <= to_unsigned(511*512/2,rd_address'length); -- last line
             end if;
     --        rd_address <= (others => '0');
           end if;
         else
           wait_not_busy <= '0';
           if not color_support_c then
-            rd_address <= to_unsigned(255*512/8,rd_address'length); -- last line
+            rd_address <= to_unsigned(255*512/(8*2),rd_address'length); -- last line
             rd_data(7) <= '0';
           elsif color_mode_i = '0' then
             -- 4 bit / Pixel
-            rd_address <= to_unsigned(255*512/2,rd_address'length); -- last line
+            rd_address <= to_unsigned(255*512/(2*2),rd_address'length); -- last line
             rd_data    <= (others => '0');
           else
-            rd_address <= to_unsigned(511*512,rd_address'length); -- last line
+            rd_address <= to_unsigned(511*512/2,rd_address'length); -- last line
             rd_data    <= (others => '0');
           end if;
         end if;
@@ -416,19 +419,19 @@ begin
   end process;
   
   color_pixel: if color_support_c generate
-  Pixel    <= "0000" & rd_data(7 downto 4) when isCursor = '0' and color_mode_i = '0' else
-              rd_data(7 downto 0) when isCursor = '0' and color_mode_i = '1' else
+  Pixel    <= "0000" & rd_data(15 downto 12) when isCursor = '0' and color_mode_i = '0' else
+              rd_data(15 downto 8) when isCursor = '0' and color_mode_i = '1' else
               curcol_i;
   end generate;
   
   no_color_pixel: if not color_support_c generate
-  Pixel    <= "0000000" & rd_data(7) when isCursor = '0' else
+  Pixel    <= "0000000" & rd_data(15) when isCursor = '0' else
               "00000001";
   end generate;
            
   rd_req_o <= rd_req;
-  rd_addr_o<= std_ulogic_vector(rd_address + (unsigned(scroll_i) & "000000000")) when color_support_c else
-              "0000" & std_ulogic_vector(rd_address(13 downto 0) + (unsigned(scroll_i) & "0000000"));
+  rd_addr_o<= std_ulogic_vector(rd_address + (unsigned(scroll_i) & "00000000")) when color_support_c else
+              "0000" & std_ulogic_vector(rd_address(12 downto 0) + (unsigned(scroll_i) & "000000"));
 
   no_clut: if not use_clut_c or not color_support_c generate
     process(clk_i)
