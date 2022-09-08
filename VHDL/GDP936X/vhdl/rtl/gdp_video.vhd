@@ -295,7 +295,9 @@ begin
               if q(0)='1' then
                 set_rd_data      <= '1';
                 next_rd_data     <= rd_data_i;
-                rd_req           <= '1';
+                if VidEn1='1' then
+                  rd_req           <= '1';
+               end if;
               else
                 set_rd_data               <= '1';
                 next_rd_data(15 downto 8) <= rd_data(7 downto 0); -- 2 pixel per Byte

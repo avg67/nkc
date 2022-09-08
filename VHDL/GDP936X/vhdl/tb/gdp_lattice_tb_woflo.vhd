@@ -188,6 +188,7 @@ begin  -- beh
 
 VSRAM0 : entity work.mobl_256Kx16
    generic map (
+      dump_offset => 0,
       ADDR_BITS  => 18,
       DATA_BITS   => 16,
       depth       => 2**18,
@@ -196,6 +197,7 @@ VSRAM0 : entity work.mobl_256Kx16
       TimingChecks =>'1'
    )
    port map(
+       dump  => do_dump,
        CE1_b => SRAM_nCE,
        CE2   => '1',
        WE_b  => SRAM_nWR,
@@ -208,6 +210,7 @@ VSRAM0 : entity work.mobl_256Kx16
 
 VSRAM1 : entity work.mobl_256Kx16
    generic map (
+      dump_offset => 2,
       ADDR_BITS  => 18,
       DATA_BITS   => 16,
       depth       => 2**18,
@@ -216,6 +219,7 @@ VSRAM1 : entity work.mobl_256Kx16
       TimingChecks =>'1'
    )
    port map(
+       dump  => do_dump,
        CE1_b => SRAM_nCE1,
        CE2   => '1',
        WE_b  => SRAM_nWR,
@@ -548,28 +552,55 @@ VSRAM1 : entity work.mobl_256Kx16
     --wait for 10 ms;
     wait until CPU_Clk'event and CPU_Clk='1';
     
-    --write_bus(COL_MODE_REG_c, X"01");  -- switch to 8bit color mode
+    write_bus(COL_MODE_REG_c, X"01");  -- switch to 8bit color mode
+    write_bus(X"60",X"00");   -- Set Write-Page and Read-Page to 0
+    write_bus(COL_MODE_REG_c, X"01");  -- switch to 8bit color mode
     write_bus(X"A0",X"55"); -- fg
     write_bus(X"A1","01001001"); -- bg
     write_bus(X"70",X"07");  -- Clear Screen
     wait_ready;
     write_bus(X"71",X"03");  --  CTRL1 = 3
+    write_bus(X"73",X"44");  -- CSIZE
+    --line(511,0,511,511);
+    write_bus(X"70",X"05");  -- Home
+    wait_ready;
+    for i in 0 to 7 loop
+       write_bus(X"78",0);         -- X-h
+       write_bus(X"79",0);         -- X-l
+       write_bus(X"7A",(100+i*16)/256);  -- Y-h
+       write_bus(X"7B",100+i*16);  -- Y-l
+       for color in 0 to 31 loop
+       
+         write_bus(X"A0", i*32+color);  -- write fg color
+         write_bus(X"70",X"0b");  -- Draw 4x4
+         wait_ready;
+       end loop;
+    end loop;
 
+
+
+
+--    write_bus(X"A0",X"55"); -- fg
+--    write_bus(X"A1","01001001"); -- bg
+--    write_bus(X"70",X"07");  -- Clear Screen
+--    wait_ready;
+--    write_bus(X"71",X"03");  --  CTRL1 = 3
+--
     write_bus(X"A0",X"E0"); -- fg red
     write_bus(X"A1",X"29"); -- bg light grey
---    line(100,65,94,79);
---    line(94,79, 94,70);
---    line(0,0,511,0);
---    line(0,0,0,255);
---    line(100,2,105,-5);
+----    line(100,65,94,79);
+----    line(94,79, 94,70);
+----    line(0,0,511,0);
+----    line(0,0,0,255);
+----    line(100,2,105,-5);
     line(0,0,0,511);
     line(0,0,255,0);
-    write_bus(X"A0",X"F5"); -- fg 
-    write_bus(X"61",X"02"); -- scroll
-    line(1,0,1,511);
---    line(511,0,511,511);
-
-    write_bus(X"A0","01101100"); -- fg red + green
+--    write_bus(X"A0",X"F5"); -- fg 
+--    write_bus(X"61",X"02"); -- scroll
+--    line(1,0,1,511);
+----    line(511,0,511,511);
+--
+--    write_bus(X"A0","01101100"); -- fg red + green
 
     
     

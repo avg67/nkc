@@ -81,6 +81,7 @@ add wave -group {Kernel} -noupdate -radix hex /dut/gdp/kernel/*
 add wave -group {Bresenham} -noupdate -radix hex /dut/gdp/kernel/bres/*
 add wave -group {Char} -noupdate -radix hex /dut/gdp/kernel/char/*
 add wave -group {VRAM} -noupdate -radix hex /dut/gdp/vram/*
+add wave -group {GDP_Top} -noupdate -radix hex /dut/gdp/*
 #add wave -noupdate -divider Sound
 #add wave -group {Sound} -noupdate -radix hex /dut/impl_sound/sound_inst/*
 #add wave -group {Sound_Wave} -noupdate -radix hex /dut/impl_sound/sound_inst/i_psg_wave/*
