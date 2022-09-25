@@ -525,6 +525,7 @@ int main(void)
    gp_clearscreen();
    gp_cursor_off();
    gp_setflip(10u,10u);
+   GDP_Ctrl.page_dma = 0u;
    //GDP_Col.bg = GRAY | DARK;
    //GDP.ctrl2 |= (1u<<5u); // turn on BG mode
    
@@ -654,6 +655,7 @@ int main(void)
                case drop_e:
                   while(!check_collision(current_row-1u,current_col,&my_stone)) {
                      current_row--;
+                     points++;
                   }
                   new_stone=true;
                   copy_stone(current_row, current_col, &my_stone, color);
@@ -745,6 +747,10 @@ int main(void)
             case 'u':
                redraw_board();
                break;
+            case 'c':
+               GDP.ctrl2 &= ~(1u<<5u); // turn off BG mode
+               GDP_Ctrl.page_dma = 0u;
+               break;
          }
          
       }
@@ -761,7 +767,7 @@ int main(void)
          delay_ms(500u);
       }while(!gp_csts());
       gp_ci();
-      GDP.ctrl2 &= ~(1u<<5u); // turn on BG mode
+      GDP.ctrl2 &= ~(1u<<5u); // turn off BG mode
    }
 /*   do
    {
@@ -774,6 +780,7 @@ int main(void)
    GDP_Col.fg=1;
    GDP_Col.bg=0;
    gp_clearscreen();
+   iprintf("GDP.ctrl2: 0x%X\r\n", GDP.ctrl2 );
 /*   for (uint8_t i=BOARD_HEIGHT-1u;i!=0xffu;i--) {
       iprintf("%02u:",i);
       for (uint8_t j=0u;j<BOARD_WIDTH; j++) {
