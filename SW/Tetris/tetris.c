@@ -28,11 +28,12 @@ extern time_t _gettime(void);
 #define LEFT  0x13u
 #define RIGHT 0x04u
 
-#define SPEED_DELAY 1010u
+#define SPEED_DELAY 1000u
+#define MAX_SPEED_DELAY (SPEED_DELAY-100u)
 #define SPEED_CALC(level) ((clock_t)(min((uint16_t)level,5u)*200u))
+//#define SPEED_INC_VAL 307uLL  //((uint32_t)(1.2f*256.0f))
 
 /* Board screen locations */
-
 #define X_RES 512u
 #define Y_RES 256u
 #define X_SCALE 3u
@@ -190,6 +191,16 @@ void delay_ms(const uint16_t ms) {
    clock_t ticks = ((clock_t)ms*200u)/1000u;
    clock_t start = _clock(NULL);
    while((_clock(NULL)-start)<ticks) {};
+}
+
+//#define SPEED_CALC(level) ((clock_t)(min((uint16_t)level,5u)*200u))
+// increases speed by 20%
+uint16_t speed_increase(const uint16_t current_speed)
+{
+   /*uint32_t temp = (uint32_t)current_speed<<8u;
+   temp*=SPEED_INC_VAL;
+   return (uint16_t)(temp>>16u);*/
+   return (current_speed + ((SPEED_DELAY - current_speed )/4u));
 }
 
 void draw_square(const uint8_t row, const uint8_t col, const uint8_t color) {
@@ -509,8 +520,6 @@ void copy_stone(const uint8_t row, const uint8_t col, const Stone_t* const p_sto
 
 int main(void)
 {
-	//bool b=false;
-   //unsigned char tmp;
    const uint32_t sysinfo = gp_system();
    if (!((sysinfo & (IS_08 | IS_00 | IS_20 | GDP_FPGA)) == ((IS_08 << PADDING) | GDP_FPGA))) {
       #if(cpu==1)
@@ -543,11 +552,20 @@ int main(void)
    SetCurrentColor(WHITE);
    gp_writexy(CCNV_X(BOARD_X+BOARD_WIDTH+2u),CCNV_Y(BOARD_Y),   0x11u, "Lines: 0 ");
    gp_writexy(CCNV_X(BOARD_X+BOARD_WIDTH+2u),CCNV_Y(BOARD_Y+2u),0x11u, "Level: 1 ");
-
+   gp_writexy(CCNV_X(BOARD_X+BOARD_WIDTH+2u),CCNV_Y(BOARD_Y+4u),0x11, "Speed: 0");
+   gp_writexy(CCNV_X(2u),CCNV_Y(BOARD_Y+BOARD_HEIGHT+2u),0x22, "Points: 0  ");
+   gp_writexy(CCNV_X(2u),CCNV_Y(2u),0x11, "x = Exit");
+   gp_writexy(CCNV_X(2u),CCNV_Y(3u),0x11, "p = Pause");
+   gp_writexy(CCNV_X(2u),CCNV_Y(5u),0x11, "down  = Drop");
+   gp_writexy(CCNV_X(2u),CCNV_Y(6u),0x11, "left  = Move Left");
+   gp_writexy(CCNV_X(2u),CCNV_Y(7u),0x11, "right = Move Right");
+   gp_writexy(CCNV_X(2u),CCNV_Y(8u),0x11, "up    = Rotate");
+   
    
    uint16_t deleted_lines = 0u;
    uint8_t level = 0u;
-   clock_t speed = SPEED_DELAY-SPEED_CALC(1u);
+   uint8_t old_level = level;
+   clock_t speed = 400u;
    uint16_t points = 0u;
    uint8_t stone_index=0u;
    uint8_t stone_data[8]={0u};
@@ -556,27 +574,6 @@ int main(void)
    uint8_t color = colors[rand() % ARRAY_SIZE(colors)];
    uint8_t current_row=BOARD_HEIGHT-1u;
    uint8_t current_col=(BOARD_WIDTH/2u)-1u;
-
-#if 0
-   // draw all Stones with all possible orientations
-   for(uint16_t j=0u;j<4u;j++) {
-      uint8_t color_index = 0u;
-      for(uint16_t i=0u;i<ARRAY_SIZE(stones);i++) {
-         //draw_stone(stones[i],j, j*4,i*4u, colors[color_index++]);
-      
-
-         get_stone(stones[i], j, &my_stone);
-         //iprintf("Stone: %d, orientation %d\r\n",i,j );
-         //print_stone(&my_stone);
-         draw_stone(&my_stone, j*4,i*4u, colors[color_index++]);
-
-         if(color_index>=ARRAY_SIZE(colors)) {
-            color_index=0u;
-         }
-      }
-      
-   }
-#endif  
 
    draw_board();
 
@@ -598,7 +595,7 @@ int main(void)
          }
          if (!refresh) {
 
-            end_time  = _clock(NULL) + (speed*CLOCKS_PER_SEC)/1000u;
+            end_time  = _clock(NULL) + ((SPEED_DELAY - speed)*CLOCKS_PER_SEC)/1000u;
             
             if (new_stone) {
                if (check_finish()) {
@@ -617,28 +614,11 @@ int main(void)
                if(!check_collision(current_row-1u,current_col,&my_stone)) {
                   current_row--;
                }else{
-/*                  if ((current_row + my_stone.rows) >=(BOARD_HEIGHT-2u)) {
-                     game_over=true;
-                     break;
-                  }*/
                   new_stone=true;
                   copy_stone(current_row, current_col, &my_stone, color);
-                  
-#if 0
-                  char bfr[16];
-                  SetCurrentColor(WHITE); 
-                  siprintf(bfr,"ss r:%02u c:%02u",current_row,current_col);
-                  WriteScreenxy(0,10,bfr);
-#endif
                }
             }
-/*            {
-               // debug
-               char bfr[16];
-               SetCurrentColor(WHITE); 
-               siprintf(bfr,"cr:%02u cc:%02u",current_row,current_col);
-               WriteScreenxy(0,20,bfr);
-            }*/
+
          }else{
             switch(command) {
                case move_left_e:
@@ -659,6 +639,7 @@ int main(void)
                   }
                   new_stone=true;
                   copy_stone(current_row, current_col, &my_stone, color);
+                  break;
                case rotate_e:
                   break;
                default:
@@ -692,9 +673,17 @@ int main(void)
             if (currently_deleted_lines>0u) {
                points += (level+1u)*10u + (currently_deleted_lines-1u)*20u;
             }
-            SetCurrentColor(WHITE); 
-            speed = SPEED_DELAY-SPEED_CALC(level);
-            siprintf(bfr,"Speed: %u  ",(unsigned int)SPEED_CALC(level+1u));  
+            SetCurrentColor(WHITE);
+            if (level!=old_level) {
+               // Level increased. So speed up the game
+               const uint16_t speed_temp = speed_increase(speed); //SPEED_CALC(level);
+               if (speed_temp<MAX_SPEED_DELAY) {
+                  speed = speed_temp;
+               }
+               //speed = SPEED_DELAY - speed_temp;
+               old_level = level;
+            }
+            siprintf(bfr,"Speed: %u  ",(unsigned int)speed); //(unsigned int)SPEED_CALC(level+1u));  
             gp_writexy(CCNV_X(BOARD_X+BOARD_WIDTH+2u),CCNV_Y(BOARD_Y+4u),0x11, bfr);
             siprintf(bfr,"Points: %u  ",points); 
             gp_writexy(CCNV_X(2u),CCNV_Y(BOARD_Y+BOARD_HEIGHT+2u),0x22, bfr);
@@ -751,6 +740,9 @@ int main(void)
                GDP.ctrl2 &= ~(1u<<5u); // turn off BG mode
                GDP_Ctrl.page_dma = 0u;
                break;
+/*            case 'i':
+               old_level++;
+               break;*/
          }
          
       }
@@ -769,24 +761,17 @@ int main(void)
       gp_ci();
       GDP.ctrl2 &= ~(1u<<5u); // turn off BG mode
    }
-/*   do
-   {
 
-      key = gp_ci();
-
-   } while (key != 'x');*/
-
-   //SetCurrentColor(0u);
    GDP_Col.fg=1;
    GDP_Col.bg=0;
    gp_clearscreen();
-   iprintf("GDP.ctrl2: 0x%X\r\n", GDP.ctrl2 );
+   //iprintf("GDP.ctrl2: 0x%X\r\n", GDP.ctrl2 );
 /*   for (uint8_t i=BOARD_HEIGHT-1u;i!=0xffu;i--) {
       iprintf("%02u:",i);
       for (uint8_t j=0u;j<BOARD_WIDTH; j++) {
          iprintf("%02x ",board[i][j]);
       }
-      printf("\r\n");
+      iprintf("\r\n");
    }
 */
 }
