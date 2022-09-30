@@ -1042,8 +1042,8 @@ static inline __attribute__((always_inline)) uint8_t jd_directory(void* pbuf, vo
     "moveal %2,%%a0"               "\n\t" \
     "moveal %3,%%a1"               "\n\t" \
     "moveb %4,%%d2"                "\n\t" \
-    "movew %5,%%d3"                "\n\t" \   
-    "movew %6,%%d1"                "\n\t" \   
+    "movew %5,%%d3"                "\n\t" \
+    "movew %6,%%d1"                "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
     "trap #6"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
@@ -1052,6 +1052,7 @@ static inline __attribute__((always_inline)) uint8_t jd_directory(void* pbuf, vo
     : "g"(__directory),"g"(pbuf),"g"(ppattern),"g"(attrib),"g"(columns),"g"(size)    /* inputs */    \
     : "d0","d1","d2","d3","d7","a0","a1"             /* clobbered regs */ \
     );
+    return ret;
 }
 #endif
 

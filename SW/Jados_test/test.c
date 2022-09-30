@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "../../nkc_common/nkc/nkc.h"
 
-main(int argc, char **argp, char **envp)
+int main(int argc, char **argp, char **envp)
 {
 	char ch[40];
 	time_t now;
