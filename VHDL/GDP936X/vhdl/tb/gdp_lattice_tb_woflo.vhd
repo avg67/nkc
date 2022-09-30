@@ -527,457 +527,486 @@ begin  -- beh
          wait_ready;
        end loop;
     end loop;
-
-    write_bus(X"A0",X"55"); -- fg
-    write_bus(X"A1",X"AA"); -- bg    
-    write_bus(X"75",X"04");  -- dx = 5
-    write_bus(X"71",X"03");  --  CTRL1 = 3
---    write_bus(X"72",X"01");  --  CTRL2 = 1
---    write_bus(X"70",X"00");
---    write_bus(X"70",X"02");
---    write_bus(X"70",X"11");
-    write_bus(X"70",X"10");  -- x+=5
-    wait_ready;
-    write_bus(X"70",X"E6");  -- x-=4
-    wait_ready;
-    write_bus(X"70",X"A6");  -- x-=2
-    wait_ready;
-    write_bus(X"70",X"80");  -- x+=1
-    wait_ready;
---    write_bus(X"70",X"F9");  -- x+=4, Y+=4
-    write_bus(X"75",X"ff");  -- dx = 255
---    write_bus(X"70",X"19");  -- x+=255
-    wait_ready;
-
-    write_bus(X"70",X"05");  -- x,y=0
-    write_bus(X"73",X"11");  -- CSIZE = 0x22
-    write_bus(X"72",X"20");  -- Raster also bg
-    write_bus(X"A1",X"05");
-    write_bus(X"70",X"21");  --
-    wait_ready;
-    write_bus(X"70",X"7f");  --
-    wait_ready;
-    write_bus(X"72",X"00");  -- Raster only fg
-    write_bus(X"70",X"41");  --
-    wait_ready;
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"70",X"0A");  -- 5x8
-    wait_ready;
-    write_bus(X"72",X"00");  --
-    write_bus(X"79",X"64");  -- x=100
-    write_bus(X"7B",X"64");  -- y=100
-    write_bus(X"70",X"E0");  -- x+=4 draw marker
-    wait_ready;
-    write_bus(X"79",X"64");  -- x=100
-    write_bus(X"70",X"9C");  -- y-=4 draw marker
-    wait_ready;
-    write_bus(X"79",X"32");  -- x=50
-    write_bus(X"7B",X"32");  -- y=50
-    write_bus(X"72",X"04");  --
-    write_bus(X"70",X"41");  --
-    wait_ready;
-    write_bus(X"79",X"32");  -- x=50
-    wait_ready;
-    write_bus(X"72",X"0C");  --
-    write_bus(X"79",X"64");  -- x=100
-    write_bus(X"7B",X"64");  -- y=100
-    write_bus(X"70",X"41");  --
-    wait_ready;
-    
---    write_bus(X"71",X"0B");  --  CTRL1 = b, neverLeave=1
-    write_bus(X"79",X"A0");  -- 
-    write_bus(X"78",X"01");  -- x=0x1A0
-    write_bus(X"7B",X"64");  -- y=100
-    write_bus(X"77",X"10");  -- dy = 10
-    write_bus(X"70",X"11");  -- x+=255, y+=10
-    wait_ready;
-    write_bus(X"70",X"0E");  -- y = 0
-    write_bus(X"70",X"0D");  -- x = 0
-    wait_ready;
-    write_bus(X"72",X"00");  -- CTRL2 = 0
-    write_bus(X"79",X"16");  -- x=22
-    write_bus(X"70",X"01");  -- Löschstift
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"79",X"20");  -- x=32
-    write_bus(X"70",X"00");  -- Schreibstift
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"72",X"04");  -- CTRL2 = 4
-    write_bus(X"79",X"28");  -- x=40
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"60",X"01");  -- XOR Mode
-    write_bus(X"79",X"05");   -- x=5
-    write_bus(X"72",X"00");  -- CTRL2 = 0
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
---    line(47,75,30,88);
     write_bus(X"A0",X"E0"); -- fg red
     write_bus(X"A1",X"29"); -- bg light grey
-    line(100,65,94,79);
-    line(94,79, 94,70);
-    line(0,0,511,0);
-    line(0,0,0,255);
-    line(100,2,105,-5);
-    line(511,0,511,255);
+    line(0,0,0,511);
+    line(0,0,255,0);
 
-    write_bus(X"A0","01101100"); -- fg red + green
-    write_bus(X"A1",X"29"); -- bg light grey
-    line(1,1,510,1);
-    line(1,1,1,254);
-    line(510,1,510,254);
-    
-    
-    write_bus(X"78",X"00");        -- x msb
---    write_bus(X"79",X"10");        -- x lsb
-    write_bus(X"79",X"64");        -- x lsb
---    write_bus(X"7A",X"0F");        -- y msb
---    write_bus(X"7B",X"FA");       -- y lsb
-    write_bus(X"7A",X"00");        -- y msb
-    write_bus(X"7B",X"05");       -- y lsb
-    write_bus(X"75",X"0A");        -- dx
-    write_bus(X"77",X"0A");        -- dy
-    write_bus(X"70",17+1*2+1*4);
+--
+--    write_bus(X"A0",X"55"); -- fg
+--    write_bus(X"A1",X"AA"); -- bg    
+--    write_bus(X"75",X"04");  -- dx = 5
+--    write_bus(X"71",X"03");  --  CTRL1 = 3
+----    write_bus(X"72",X"01");  --  CTRL2 = 1
+----    write_bus(X"70",X"00");
+----    write_bus(X"70",X"02");
+----    write_bus(X"70",X"11");
+--    write_bus(X"70",X"10");  -- x+=5
+--    wait_ready;
+--    write_bus(X"70",X"E6");  -- x-=4
+--    wait_ready;
+--    write_bus(X"70",X"A6");  -- x-=2
+--    wait_ready;
+--    write_bus(X"70",X"80");  -- x+=1
+--    wait_ready;
+----    write_bus(X"70",X"F9");  -- x+=4, Y+=4
+--    write_bus(X"75",X"ff");  -- dx = 255
+----    write_bus(X"70",X"19");  -- x+=255
+--    wait_ready;
+--
+--    write_bus(X"70",X"05");  -- x,y=0
+--    write_bus(X"73",X"11");  -- CSIZE = 0x22
+--    write_bus(X"72",X"20");  -- Raster also bg
+--    write_bus(X"A1",X"05");
+--    write_bus(X"70",X"21");  --
+--    wait_ready;
+--    write_bus(X"70",X"7f");  --
+--    wait_ready;
+--    write_bus(X"72",X"00");  -- Raster only fg
+--    write_bus(X"70",X"41");  --
+--    wait_ready;
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"70",X"0A");  -- 5x8
+--    wait_ready;
+--    write_bus(X"72",X"00");  --
+--    write_bus(X"79",X"64");  -- x=100
+--    write_bus(X"7B",X"64");  -- y=100
+--    write_bus(X"70",X"E0");  -- x+=4 draw marker
+--    wait_ready;
+--    write_bus(X"79",X"64");  -- x=100
+--    write_bus(X"70",X"9C");  -- y-=4 draw marker
+--    wait_ready;
+--    write_bus(X"79",X"32");  -- x=50
+--    write_bus(X"7B",X"32");  -- y=50
+--    write_bus(X"72",X"04");  --
+--    write_bus(X"70",X"41");  --
+--    wait_ready;
+--    write_bus(X"79",X"32");  -- x=50
+--    wait_ready;
+--    write_bus(X"72",X"0C");  --
+--    write_bus(X"79",X"64");  -- x=100
+--    write_bus(X"7B",X"64");  -- y=100
+--    write_bus(X"70",X"41");  --
+--    wait_ready;
+--    
+----    write_bus(X"71",X"0B");  --  CTRL1 = b, neverLeave=1
+--    write_bus(X"79",X"A0");  -- 
+--    write_bus(X"78",X"01");  -- x=0x1A0
+--    write_bus(X"7B",X"64");  -- y=100
+--    write_bus(X"77",X"10");  -- dy = 10
+--    write_bus(X"70",X"11");  -- x+=255, y+=10
+--    wait_ready;
+--    write_bus(X"70",X"0E");  -- y = 0
+--    write_bus(X"70",X"0D");  -- x = 0
+--    wait_ready;
+--    write_bus(X"72",X"00");  -- CTRL2 = 0
+--    write_bus(X"79",X"16");  -- x=22
+--    write_bus(X"70",X"01");  -- Löschstift
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"79",X"20");  -- x=32
+--    write_bus(X"70",X"00");  -- Schreibstift
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"72",X"04");  -- CTRL2 = 4
+--    write_bus(X"79",X"28");  -- x=40
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"60",X"01");  -- XOR Mode
+--    write_bus(X"79",X"05");   -- x=5
+--    write_bus(X"72",X"00");  -- CTRL2 = 0
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+----    line(47,75,30,88);
+--    write_bus(X"A0",X"E0"); -- fg red
+--    write_bus(X"A1",X"29"); -- bg light grey
+--    line(100,65,94,79);
+--    line(94,79, 94,70);
+--    line(0,0,511,0);
+--    line(0,0,0,255);
+--    line(100,2,105,-5);
 --    line(511,0,511,255);
-    
-    write_bus(X"70",X"0E");  -- y = 0
-    write_bus(X"70",X"0D");  -- x = 0
-    write_bus(X"70",X"0f");  -- DMA
-    wait_ready;
-    read_bus(X"60",read_data); 
-    write_bus(X"79",X"08");  -- x=8
-    write_bus(X"70",X"0f");  -- DMA
-    wait_ready;
-    read_bus(X"60",read_data);
-    
+--
+--    write_bus(X"A0","01101100"); -- fg red + green
+--    write_bus(X"A1",X"29"); -- bg light grey
+--    line(1,1,510,1);
+--    line(1,1,1,254);
+--    line(510,1,510,254);
+--    
+--    
+--    write_bus(X"78",X"00");        -- x msb
+----    write_bus(X"79",X"10");        -- x lsb
+--    write_bus(X"79",X"64");        -- x lsb
+----    write_bus(X"7A",X"0F");        -- y msb
+----    write_bus(X"7B",X"FA");       -- y lsb
+--    write_bus(X"7A",X"00");        -- y msb
+--    write_bus(X"7B",X"05");       -- y lsb
+--    write_bus(X"75",X"0A");        -- dx
+--    write_bus(X"77",X"0A");        -- dy
+--    write_bus(X"70",17+1*2+1*4);
+----    line(511,0,511,255);
+--    
+--    write_bus(X"70",X"0E");  -- y = 0
+--    write_bus(X"70",X"0D");  -- x = 0
+--    write_bus(X"70",X"0f");  -- DMA
+--    wait_ready;
+--    read_bus(X"60",read_data); 
+--    write_bus(X"79",X"08");  -- x=8
+--    write_bus(X"70",X"0f");  -- DMA
+--    wait_ready;
+--    read_bus(X"60",read_data);
+--    
+----    write_bus(X"60",3*64);   -- Set Write-Page
+----    write_bus(X"70",X"0C");  -- Fill Screen
+----    wait_ready;
+--    
+----    read_bus(X"68",read_data);
+----    read_bus(X"69",read_data);
+--    
+--    -- test write to char_rom
+----    write_bus(X"79",X"DB");         -- x = 1
+----    write_bus(X"78",X"01");         -- x msb
+----    write_bus(X"7E",X"FF");         -- 
+----    write_bus(X"7E",X"FF");
+----    write_bus(X"72",X"10");         -- CTRL2 = 0x10
+--    
+--    -- SPI
+--    for i in 0 to 1 loop
+--      read_bus(X"00",read_data);
+--      if i=0 then
+--        -- SCK IDLE LOW
+--        write_bus(X"00",X"83");
+--        read_bus(X"00",read_data);
+--        --write_bus(X"00",X"A3");
+--        write_bus(X"00",X"93");
+--      else
+--        -- SCK IDLE HIGH 
+--        write_bus(X"00",X"8B");
+--        read_bus(X"00",read_data);
+--        write_bus(X"00",X"AB");
+--      end if;
+--      
+--      write_bus(X"01",X"A5");
+--      wait_spi_done;
+--      read_bus(X"01",read_data);
+--      write_bus(X"01",X"5A");
+--      wait_spi_done;
+--      read_bus(X"01",read_data);
+--      if i=0 then
+--        write_bus(X"00",X"83");
+--      else
+--        write_bus(X"00",X"8B");
+--      end if;
+--    end loop;
+--    
+--    
+--    
+--    do_dump <= true;
+--    wait for 1 us;
+--    assert false report "End of simulation" severity failure;
+--    wait; -- for 10 ms;
+--    write_bus(COL_MODE_REG_c, X"00");  -- switch to 4bit color mode
+--    
+--    
+--    read_bus(X"04",read_data);
+--    write_bus(X"05",X"ff");
+--    write_bus(X"04",X"55");
+--    read_bus(X"04",read_data);
+--    
+--    -- clk divider = 1
+--    write_bus(X"20",X"09");
+--    -- addr = 0
+--    write_bus(X"21",X"00");
+--    read_bus(X"21",read_data);
+--    write_bus(X"22",X"A5");
+--    wait_vdip_done;
+--    -- Read back
+--    write_bus(X"21",X"02");
+--    wait_vdip_done;
+--    read_bus(X"22",read_data);
+--    read_bus(X"21",read_data);
+--    write_bus(X"21",X"02");
+--    wait_vdip_done;
+--    read_bus(X"22",read_data);
+--    
+--    write_bus(X"20",X"0f");
+--    write_bus(X"21",X"01"); -- Addr 1
+--    write_bus(X"22",X"5A");
+--    wait_vdip_done;
+--    -- read back
+--    write_bus(X"21",X"02");
+--    wait_vdip_done;
+--    read_bus(X"22",read_data);
+--    write_bus(X"21",X"03");
+--    wait_vdip_done;
+--    read_bus(X"22",read_data);
+--    
+--    
+--    -- CLUT
+--    write_bus(X"A4",X"00");
+--    for i in 0 to 15 loop
+--      write_bus(X"A5",i);
+--      write_bus(X"A6",i);
+--    end loop;
+--    -- Timer T1
+--    read_bus(X"F4",read_data);
+--    write_bus(X"F4",X"04");
+--    write_bus(X"F5",X"00");
+--    write_bus(X"F6",X"16");
+--    write_bus(X"F4",X"81");
+--    wait_T1OV;
+--    
+--    read_bus(X"A0",read_data);
+--    read_bus(X"A1",read_data);
+--    
+--    for i in 0 to 1 loop
+--      read_bus(X"00",read_data);
+--      if i=0 then
+--        -- SCK IDLE LOW
+--        write_bus(X"00",X"83");
+--        read_bus(X"00",read_data);
+--        --write_bus(X"00",X"A3");
+--        write_bus(X"00",X"93");
+--      else
+--        -- SCK IDLE HIGH 
+--        write_bus(X"00",X"8B");
+--        read_bus(X"00",read_data);
+--        write_bus(X"00",X"AB");
+--      end if;
+--      
+--      write_bus(X"01",X"A5");
+--      wait_spi_done;
+--      read_bus(X"01",read_data);
+--      write_bus(X"01",X"5A");
+--      wait_spi_done;
+--      read_bus(X"01",read_data);
+--      if i=0 then
+--        write_bus(X"00",X"83");
+--      else
+--        write_bus(X"00",X"8B");
+--      end if;
+--    end loop;
+--    
+--    write_bus(X"50",0);
+--    write_bus(X"51",X"55");     -- Frequenz A = 0x055
+--    read_bus(X"51",read_data);
+--    write_bus(X"50",2);      
+--    write_bus(X"51",X"AA");     -- Frequenz B = 0x0AA    
+--    write_bus(X"50",7);
+--    write_bus(X"51",X"FC");     -- Freigabe A,B
+--    write_bus(X"50",8);
+--    write_bus(X"51",15);        -- Aplitude A = 15
+--    write_bus(X"50",9);
+--    write_bus(X"51",31);        -- Aplitude B = Hüllkurve
+--    write_bus(X"50",X"0D");
+--    write_bus(X"51",8);
+--    write_bus(X"50",X"0B");
+--    write_bus(X"51",X"0F");
+--    
+--    
+----    read_bus(X"60",read_data);
+--
+--    
+----    write_bus(X"F3",X"1F"); -- 8 bit
+----    write_bus(X"F2",X"66"); -- 8,e,1 bit
+------    write_bus(X"FC",X"55");
+----    send_uart(X"55");
+----    send_uart(X"00");
+----    send_uart(X"02");
+----    send_uart(X"FF");
+----    wait_tx_empty;
+----    wait for 600 us;
+----    write_bus(X"F3",X"BF"); -- 7,n,2
+----    write_bus(X"F2",X"06"); -- 7,n,1 bit
+----    send_uart(X"55");
+----    send_uart(X"00");
+----    send_uart(X"02");
+----    
+----    read_bus(X"F0",read_data);
+----    
+----    send_uart(X"FF");
+----    
+----    
+----    
+----    read_bus(X"8B",read_data);
+----    read_bus(X"8C",read_data);
+----    read_bus(X"8D",read_data);
+----    read_bus(X"8E",read_data);
+----    read_bus(X"8F",read_data);
+----    
+----    read_bus(X"68",read_data);
+----    read_bus(X"69",read_data);
+--    for i in 3 downto 0 loop
+--      write_bus(X"60",i*64);   -- Set Write-Page
+--      write_bus(X"70",X"07");  -- Clear Screen
+--      wait_ready;
+--    end loop;
+--    wait for 1500 us;
+--    write_bus(X"75",X"04");  -- dx = 5
+--    write_bus(X"71",X"03");  --  CTRL1 = 3
+----    write_bus(X"72",X"01");  --  CTRL2 = 1
+----    write_bus(X"70",X"00");
+----    write_bus(X"70",X"02");
+----    write_bus(X"70",X"11");
+--    write_bus(X"70",X"10");  -- x+=5
+--    wait_ready;
+--    write_bus(X"70",X"E6");  -- x-=4
+--    wait_ready;
+--    write_bus(X"70",X"A6");  -- x-=2
+--    wait_ready;
+--    write_bus(X"70",X"80");  -- x+=1
+--    wait_ready;
+----    write_bus(X"70",X"F9");  -- x+=4, Y+=4
+--    write_bus(X"75",X"ff");  -- dx = 255
+----    write_bus(X"70",X"19");  -- x+=255
+--    wait_ready;
+--
+--    write_bus(X"70",X"05");  -- x,y=0
+--    write_bus(X"73",X"11");  -- CSIZE = 0x22
+--    write_bus(X"72",X"20");  -- Raster also bg
+--    write_bus(X"A1",X"05");
+--    write_bus(X"70",X"21");  --
+--    wait_ready;
+--    write_bus(X"70",X"7f");  --
+--    wait_ready;
+--    write_bus(X"72",X"00");  -- Raster only fg
+--    write_bus(X"70",X"41");  --
+--    wait_ready;
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"70",X"0A");  -- 5x8
+--    wait_ready;
+--    write_bus(X"72",X"00");  --
+--    write_bus(X"79",X"64");  -- x=100
+--    write_bus(X"7B",X"64");  -- y=100
+--    write_bus(X"70",X"E0");  -- x+=4 draw marker
+--    wait_ready;
+--    write_bus(X"79",X"64");  -- x=100
+--    write_bus(X"70",X"9C");  -- y-=4 draw marker
+--    wait_ready;
+--    write_bus(X"79",X"32");  -- x=50
+--    write_bus(X"7B",X"32");  -- y=50
+--    write_bus(X"72",X"04");  --
+--    write_bus(X"70",X"41");  --
+--    wait_ready;
+--    write_bus(X"79",X"32");  -- x=50
+--    wait_ready;
+--    write_bus(X"72",X"0C");  --
+--    write_bus(X"79",X"64");  -- x=100
+--    write_bus(X"7B",X"64");  -- y=100
+--    write_bus(X"70",X"41");  --
+--    wait_ready;
+--    
+----    write_bus(X"71",X"0B");  --  CTRL1 = b, neverLeave=1
+--    write_bus(X"79",X"A0");  -- 
+--    write_bus(X"78",X"01");  -- x=0x1A0
+--    write_bus(X"7B",X"64");  -- y=100
+--    write_bus(X"77",X"10");  -- dy = 10
+--    write_bus(X"70",X"11");  -- x+=255, y+=10
+--    wait_ready;
+--    write_bus(X"70",X"0E");  -- y = 0
+--    write_bus(X"70",X"0D");  -- x = 0
+--    wait_ready;
+--    write_bus(X"72",X"00");  -- CTRL2 = 0
+--    write_bus(X"79",X"16");  -- x=22
+--    write_bus(X"70",X"01");  -- Löschstift
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"79",X"20");  -- x=32
+--    write_bus(X"70",X"00");  -- Schreibstift
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"72",X"04");  -- CTRL2 = 4
+--    write_bus(X"79",X"28");  -- x=40
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+--    write_bus(X"60",X"01");  -- XOR Mode
+--    write_bus(X"79",X"05");   -- x=5
+--    write_bus(X"72",X"00");  -- CTRL2 = 0
+--    write_bus(X"70",X"0B");  -- 4x4
+--    wait_ready;
+----    line(47,75,30,88);
+--    write_bus(X"A0",X"04"); -- fg
+--    write_bus(X"A1",X"08"); -- bg
+--    line(100,65,94,79);
+--    line(94,79, 94,70);
+--    line(0,0,511,0);
+--    line(0,0,0,255);
+--    line(100,2,105,-5);
+--    line(511,0,511,255);
+--
+--    write_bus(X"A0",X"0A"); -- fg
+--    write_bus(X"A1",X"08"); -- bg
+--    line(1,1,510,1);
+--    line(1,1,1,254);
+--    line(510,1,510,254);
+--    
+--    
+--    write_bus(X"78",X"00");        -- x msb
+----    write_bus(X"79",X"10");        -- x lsb
+--    write_bus(X"79",X"64");        -- x lsb
+----    write_bus(X"7A",X"0F");        -- y msb
+----    write_bus(X"7B",X"FA");       -- y lsb
+--    write_bus(X"7A",X"00");        -- y msb
+--    write_bus(X"7B",X"05");       -- y lsb
+--    write_bus(X"75",X"0A");        -- dx
+--    write_bus(X"77",X"0A");        -- dy
+--    write_bus(X"70",17+1*2+1*4);
+----    line(511,0,511,255);
+--    
+--    write_bus(X"70",X"0E");  -- y = 0
+--    write_bus(X"70",X"0D");  -- x = 0
+--    write_bus(X"70",X"0f");  -- DMA
+--    wait_ready;
+--    read_bus(X"60",read_data); 
+--    write_bus(X"79",X"08");  -- x=8
+--    write_bus(X"70",X"0f");  -- DMA
+--    wait_ready;
+--    read_bus(X"60",read_data);
+--    
 --    write_bus(X"60",3*64);   -- Set Write-Page
 --    write_bus(X"70",X"0C");  -- Fill Screen
 --    wait_ready;
-    
+--    
 --    read_bus(X"68",read_data);
 --    read_bus(X"69",read_data);
-    
-    -- test write to char_rom
+--    
+--    -- test write to char_rom
 --    write_bus(X"79",X"DB");         -- x = 1
 --    write_bus(X"78",X"01");         -- x msb
 --    write_bus(X"7E",X"FF");         -- 
 --    write_bus(X"7E",X"FF");
---    write_bus(X"72",X"10");         -- CTRL2 = 0x10
-    
-    -- SPI
-    for i in 0 to 1 loop
-      read_bus(X"00",read_data);
-      if i=0 then
-        -- SCK IDLE LOW
-        write_bus(X"00",X"83");
-        read_bus(X"00",read_data);
-        --write_bus(X"00",X"A3");
-        write_bus(X"00",X"93");
-      else
-        -- SCK IDLE HIGH 
-        write_bus(X"00",X"8B");
-        read_bus(X"00",read_data);
-        write_bus(X"00",X"AB");
-      end if;
-      
-      write_bus(X"01",X"A5");
-      wait_spi_done;
-      read_bus(X"01",read_data);
-      write_bus(X"01",X"5A");
-      wait_spi_done;
-      read_bus(X"01",read_data);
-      if i=0 then
-        write_bus(X"00",X"83");
-      else
-        write_bus(X"00",X"8B");
-      end if;
-    end loop;
-    
-    
-    
-    do_dump <= true;
-    wait for 1 us;
-    assert false report "End of simulation" severity failure;
-    wait; -- for 10 ms;
-    write_bus(COL_MODE_REG_c, X"00");  -- switch to 4bit color mode
-    
-    
-    read_bus(X"04",read_data);
-    write_bus(X"05",X"ff");
-    write_bus(X"04",X"55");
-    read_bus(X"04",read_data);
-    
-    -- clk divider = 1
-    write_bus(X"20",X"09");
-    -- addr = 0
-    write_bus(X"21",X"00");
-    read_bus(X"21",read_data);
-    write_bus(X"22",X"A5");
-    wait_vdip_done;
-    -- Read back
-    write_bus(X"21",X"02");
-    wait_vdip_done;
-    read_bus(X"22",read_data);
-    read_bus(X"21",read_data);
-    write_bus(X"21",X"02");
-    wait_vdip_done;
-    read_bus(X"22",read_data);
-    
-    write_bus(X"20",X"0f");
-    write_bus(X"21",X"01"); -- Addr 1
-    write_bus(X"22",X"5A");
-    wait_vdip_done;
-    -- read back
-    write_bus(X"21",X"02");
-    wait_vdip_done;
-    read_bus(X"22",read_data);
-    write_bus(X"21",X"03");
-    wait_vdip_done;
-    read_bus(X"22",read_data);
-    
-    
-    -- CLUT
-    write_bus(X"A4",X"00");
-    for i in 0 to 15 loop
-      write_bus(X"A5",i);
-      write_bus(X"A6",i);
-    end loop;
-    -- Timer T1
-    read_bus(X"F4",read_data);
-    write_bus(X"F4",X"04");
-    write_bus(X"F5",X"00");
-    write_bus(X"F6",X"16");
-    write_bus(X"F4",X"81");
-    wait_T1OV;
-    
-    read_bus(X"A0",read_data);
-    read_bus(X"A1",read_data);
-    
-    for i in 0 to 1 loop
-      read_bus(X"00",read_data);
-      if i=0 then
-        -- SCK IDLE LOW
-        write_bus(X"00",X"83");
-        read_bus(X"00",read_data);
-        --write_bus(X"00",X"A3");
-        write_bus(X"00",X"93");
-      else
-        -- SCK IDLE HIGH 
-        write_bus(X"00",X"8B");
-        read_bus(X"00",read_data);
-        write_bus(X"00",X"AB");
-      end if;
-      
-      write_bus(X"01",X"A5");
-      wait_spi_done;
-      read_bus(X"01",read_data);
-      write_bus(X"01",X"5A");
-      wait_spi_done;
-      read_bus(X"01",read_data);
-      if i=0 then
-        write_bus(X"00",X"83");
-      else
-        write_bus(X"00",X"8B");
-      end if;
-    end loop;
-    
-    write_bus(X"50",0);
-    write_bus(X"51",X"55");     -- Frequenz A = 0x055
-    read_bus(X"51",read_data);
-    write_bus(X"50",2);      
-    write_bus(X"51",X"AA");     -- Frequenz B = 0x0AA    
-    write_bus(X"50",7);
-    write_bus(X"51",X"FC");     -- Freigabe A,B
-    write_bus(X"50",8);
-    write_bus(X"51",15);        -- Aplitude A = 15
-    write_bus(X"50",9);
-    write_bus(X"51",31);        -- Aplitude B = Hüllkurve
-    write_bus(X"50",X"0D");
-    write_bus(X"51",8);
-    write_bus(X"50",X"0B");
-    write_bus(X"51",X"0F");
-    
-    
---    read_bus(X"60",read_data);
-
-    
---    write_bus(X"F3",X"1F"); -- 8 bit
---    write_bus(X"F2",X"66"); -- 8,e,1 bit
-----    write_bus(X"FC",X"55");
---    send_uart(X"55");
---    send_uart(X"00");
---    send_uart(X"02");
---    send_uart(X"FF");
---    wait_tx_empty;
---    wait for 600 us;
---    write_bus(X"F3",X"BF"); -- 7,n,2
---    write_bus(X"F2",X"06"); -- 7,n,1 bit
---    send_uart(X"55");
---    send_uart(X"00");
---    send_uart(X"02");
---    
---    read_bus(X"F0",read_data);
---    
---    send_uart(X"FF");
---    
---    
---    
---    read_bus(X"8B",read_data);
---    read_bus(X"8C",read_data);
---    read_bus(X"8D",read_data);
---    read_bus(X"8E",read_data);
---    read_bus(X"8F",read_data);
---    
---    read_bus(X"68",read_data);
---    read_bus(X"69",read_data);
-    for i in 3 downto 0 loop
-      write_bus(X"60",i*64);   -- Set Write-Page
-      write_bus(X"70",X"07");  -- Clear Screen
-      wait_ready;
-    end loop;
-    wait for 1500 us;
-    write_bus(X"75",X"04");  -- dx = 5
-    write_bus(X"71",X"03");  --  CTRL1 = 3
---    write_bus(X"72",X"01");  --  CTRL2 = 1
---    write_bus(X"70",X"00");
---    write_bus(X"70",X"02");
---    write_bus(X"70",X"11");
-    write_bus(X"70",X"10");  -- x+=5
-    wait_ready;
-    write_bus(X"70",X"E6");  -- x-=4
-    wait_ready;
-    write_bus(X"70",X"A6");  -- x-=2
-    wait_ready;
-    write_bus(X"70",X"80");  -- x+=1
-    wait_ready;
---    write_bus(X"70",X"F9");  -- x+=4, Y+=4
-    write_bus(X"75",X"ff");  -- dx = 255
---    write_bus(X"70",X"19");  -- x+=255
-    wait_ready;
-
-    write_bus(X"70",X"05");  -- x,y=0
-    write_bus(X"73",X"11");  -- CSIZE = 0x22
-    write_bus(X"72",X"20");  -- Raster also bg
-    write_bus(X"A1",X"05");
-    write_bus(X"70",X"21");  --
-    wait_ready;
-    write_bus(X"70",X"7f");  --
-    wait_ready;
-    write_bus(X"72",X"00");  -- Raster only fg
-    write_bus(X"70",X"41");  --
-    wait_ready;
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"70",X"0A");  -- 5x8
-    wait_ready;
-    write_bus(X"72",X"00");  --
-    write_bus(X"79",X"64");  -- x=100
-    write_bus(X"7B",X"64");  -- y=100
-    write_bus(X"70",X"E0");  -- x+=4 draw marker
-    wait_ready;
-    write_bus(X"79",X"64");  -- x=100
-    write_bus(X"70",X"9C");  -- y-=4 draw marker
-    wait_ready;
-    write_bus(X"79",X"32");  -- x=50
-    write_bus(X"7B",X"32");  -- y=50
-    write_bus(X"72",X"04");  --
-    write_bus(X"70",X"41");  --
-    wait_ready;
-    write_bus(X"79",X"32");  -- x=50
-    wait_ready;
-    write_bus(X"72",X"0C");  --
-    write_bus(X"79",X"64");  -- x=100
-    write_bus(X"7B",X"64");  -- y=100
-    write_bus(X"70",X"41");  --
-    wait_ready;
-    
---    write_bus(X"71",X"0B");  --  CTRL1 = b, neverLeave=1
-    write_bus(X"79",X"A0");  -- 
-    write_bus(X"78",X"01");  -- x=0x1A0
-    write_bus(X"7B",X"64");  -- y=100
-    write_bus(X"77",X"10");  -- dy = 10
-    write_bus(X"70",X"11");  -- x+=255, y+=10
-    wait_ready;
-    write_bus(X"70",X"0E");  -- y = 0
-    write_bus(X"70",X"0D");  -- x = 0
-    wait_ready;
-    write_bus(X"72",X"00");  -- CTRL2 = 0
-    write_bus(X"79",X"16");  -- x=22
-    write_bus(X"70",X"01");  -- Löschstift
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"79",X"20");  -- x=32
-    write_bus(X"70",X"00");  -- Schreibstift
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"72",X"04");  -- CTRL2 = 4
-    write_bus(X"79",X"28");  -- x=40
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
-    write_bus(X"60",X"01");  -- XOR Mode
-    write_bus(X"79",X"05");   -- x=5
-    write_bus(X"72",X"00");  -- CTRL2 = 0
-    write_bus(X"70",X"0B");  -- 4x4
-    wait_ready;
---    line(47,75,30,88);
-    write_bus(X"A0",X"04"); -- fg
-    write_bus(X"A1",X"08"); -- bg
-    line(100,65,94,79);
-    line(94,79, 94,70);
-    line(0,0,511,0);
-    line(0,0,0,255);
-    line(100,2,105,-5);
-    line(511,0,511,255);
-
-    write_bus(X"A0",X"0A"); -- fg
-    write_bus(X"A1",X"08"); -- bg
-    line(1,1,510,1);
-    line(1,1,1,254);
-    line(510,1,510,254);
-    
-    
-    write_bus(X"78",X"00");        -- x msb
---    write_bus(X"79",X"10");        -- x lsb
-    write_bus(X"79",X"64");        -- x lsb
---    write_bus(X"7A",X"0F");        -- y msb
---    write_bus(X"7B",X"FA");       -- y lsb
-    write_bus(X"7A",X"00");        -- y msb
-    write_bus(X"7B",X"05");       -- y lsb
-    write_bus(X"75",X"0A");        -- dx
-    write_bus(X"77",X"0A");        -- dy
-    write_bus(X"70",17+1*2+1*4);
---    line(511,0,511,255);
-    
-    write_bus(X"70",X"0E");  -- y = 0
-    write_bus(X"70",X"0D");  -- x = 0
-    write_bus(X"70",X"0f");  -- DMA
-    wait_ready;
-    read_bus(X"60",read_data); 
-    write_bus(X"79",X"08");  -- x=8
-    write_bus(X"70",X"0f");  -- DMA
-    wait_ready;
-    read_bus(X"60",read_data);
-    
-    write_bus(X"60",3*64);   -- Set Write-Page
-    write_bus(X"70",X"0C");  -- Fill Screen
-    wait_ready;
-    
-    read_bus(X"68",read_data);
-    read_bus(X"69",read_data);
-    
-    -- test write to char_rom
-    write_bus(X"79",X"DB");         -- x = 1
-    write_bus(X"78",X"01");         -- x msb
-    write_bus(X"7E",X"FF");         -- 
-    write_bus(X"7E",X"FF");
-    write_bus(X"72",X"10");         -- CTRL2 = 0x10   
-
+--    write_bus(X"72",X"10");         -- CTRL2 = 0x10   
+--
     do_dump <= true;
     wait for 1 us;
     assert false report "End of simulation" severity failure;
     wait;
+
+    --write_bus(COL_MODE_REG_c, X"01");  -- switch to 8bit color mode
+    write_bus(X"A0",X"55"); -- fg
+    write_bus(X"A1","01001001"); -- bg
+    write_bus(X"70",X"07");  -- Clear Screen
+    wait_ready;
+    write_bus(X"71",X"03");  --  CTRL1 = 3
+
+    write_bus(X"A0",X"E0"); -- fg red
+    write_bus(X"A1",X"29"); -- bg light grey
+--    line(100,65,94,79);
+--    line(94,79, 94,70);
+--    line(0,0,511,0);
+--    line(0,0,0,255);
+--    line(100,2,105,-5);
+    line(0,0,0,511);
+    line(0,0,255,0);
+    write_bus(X"A0",X"F5"); -- fg 
+    write_bus(X"61",X"02"); -- scroll
+    line(1,0,1,511);
+    do_dump <= true;
+    wait for 1 us;
+    assert false report "End of simulation" severity failure;
+    wait; -- for 10 ms;
   end process WaveGen_Proc;
 
   Ps2Clk <= 'H';
