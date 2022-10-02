@@ -34,8 +34,8 @@ int main(int argc, char **argp, char **envp)
  // Change to drive A
  jd_set_drive(DISK_A);
  {
- 	uint8_t buf[4096];
- 	uint8_t result = jd_directory((void*)buf, (void*)"*.*", 0u, 4u, sizeof(buf));
+ 	char buf[4096];
+ 	uint8_t result = jd_directory(buf, "*.*", 0u, 4u, sizeof(buf));
  	iprintf("Result: 0x%x\r\n%s",result,buf);
  }
  puts("Bitte Dateinamen eingeben");
