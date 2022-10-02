@@ -14,7 +14,7 @@ int main(int argc, char **argp, char **envp)
 
 	puts("Hello World\n\r");
 	iprintf("Argumente: %d %s\n\r",argc,argp[0]);
-	for(int i=0;i<argc;i++) {
+	for(int i=1;i<argc;i++) {
 		iprintf("Arg %d: %s\n\r",i,argp[i]);
 	}
 
@@ -50,13 +50,13 @@ int main(int argc, char **argp, char **envp)
 	char * p_buf = NULL;
 	if (result ==0) {
 		result = jd_fileinfo(&myfcb, &info);
-
-		iprintf("Fileinfo-Result: 0x%X length: %u date:0x%lX, att:0x%X\r\n",result, info.length, info.date, info.attribute);
-		p_buf = malloc(info.length);
-		p_buf[0]='\0';
+		iprintf("Fileinfo-Result: 0x%X length: %u date:0x%lX, att:0x%X\r\n",result, (unsigned int)info.length, info.date, info.attribute);
 	}
 	
-	if (p_buf!=NULL) {
+	if (result==0) {
+		p_buf = malloc(info.length);
+		p_buf[0]='\0';
+
 		result = jd_fileload(&myfcb, p_buf);
 		//p_buf[100]=0;
 		iprintf("Fileread-Result: 0x%X\r\n%s\r\n",result, p_buf);
