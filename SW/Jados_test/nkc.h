@@ -1035,7 +1035,7 @@ static inline __attribute__((always_inline)) uint32_t jd_getversi(void) {
   return jados_version;
 }
 
-static inline __attribute__((always_inline)) uint8_t jd_directory(void* pbuf, void* ppattern, uint8_t attrib, uint16_t columns, uint16_t size) {
+static inline __attribute__((always_inline)) uint8_t jd_directory(char * const p_buf, const char * const p_pattern, uint8_t attrib, uint16_t columns, uint16_t size) {
   uint8_t ret = 0u;
   asm volatile(
     "# asm"                      "\n\t" \
@@ -1050,7 +1050,7 @@ static inline __attribute__((always_inline)) uint8_t jd_directory(void* pbuf, vo
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     "move.b %%d0,%0"             "\n\t" \
     : "=g"(ret)        /* outputs */    \
-    : "g"(__directory),"g"(pbuf),"g"(ppattern),"g"(attrib),"g"(columns),"g"(size)    /* inputs */    \
+    : "g"(__directory),"g"(p_buf),"g"(p_pattern),"g"(attrib),"g"(columns),"g"(size)    /* inputs */    \
     : "d0","d1","d2","d3","d7","a0","a1"             /* clobbered regs */ \
     );
     return ret;
