@@ -7,6 +7,7 @@
 volatile char gp_csts(void);
 volatile void gp_co(char x);
 volatile char gp_ci(void);
+time_t _gettime(void);
 
 /* TRAP-NUMMERN DES GP TRAP #1 (V7.0) */
 
@@ -1053,8 +1054,153 @@ static inline __attribute__((always_inline)) uint8_t jd_directory(void* pbuf, vo
     : "d0","d1","d2","d3","d7","a0","a1"             /* clobbered regs */ \
     );
     return ret;
+
 }
+
+// Disks and Drives
+  #define DISK_RAM 0u
+  #define DISK_1  1u
+  #define DISK_2  2u
+  #define DISK_3  3u
+  #define DISK_4  4u
+  #define DISK_A  5u
+  #define DISK_B  6u
+  #define DISK_C  7u
+  #define DISK_D  8u
+  #define DISK_E  9u
+  #define DISK_F  10u
+  #define DISK_G  11u
+  #define DISK_H  12u
+  #define DISK_I  13u
+
+//
+static inline __attribute__((always_inline)) void jd_set_drive(const uint16_t drive) {
+  asm volatile(
+    "# asm"                           "\n\t" \
+    "movem.l %%d7/%%a5-%%a6,-(%%sp)"  "\n\t" \
+    "moveq %0,%%d7"                   "\n\t" \
+    "movew %1,%%d0"                   "\n\t" \
+    "trap #6"                         "\n\t" \
+    "movem.l (%%sp)+, %%d7/%%a5-%%a6" "\n\t" \
+    :                               /* outputs */    \
+    : "g"(__setdrive),"g"(drive)    /* inputs */    \
+    : "d0","d7"                     /* clobbered regs */ \
+    );
+}
+
+/* FCB */
+struct jdfcb{
+	uint16_t 	lw;		/* 00..01 */
+	char 		filename[8];	/* 02..09 */
+	uint16_t 	reserverd01;	/* 10..11 */
+	char 		fileext[3];	/* 12..14 */
+	uint8_t	reserved02;	/* 15 	  */
+	uint16_t 	starttrack;	/* 16..17 */ // number of first track
+	uint16_t 	endsec;		/* 18..19 */ // number of last sector in last track  (track relative ! 10 sectors/track with HD and 5 sec/track with FD))
+	uint16_t 	endbyte;	/* 20..21 */ // always 0
+	unsigned int	date;		/* 22..25 */
+	uint16_t 	length;		/* 26..27 */ // filelength in sectors
+	uint8_t	mode;		/* 28     */ // 0xE4 read only, 0xE5 read/write (not used correctly in current JADOS (always 0xE5)!!)
+	uint16_t 	reserved03;	/* 29..30 */
+	uint8_t  reserved04;	/* 31     */
+	uint16_t  dirsec;		/* 32..33 */
+	uint16_t  dirbyte;	/* 34..35 */
+	uint16_t  status;		/* 36..37 */
+	uint16_t  curtrack;	/* 38..39 */ // current track (Track-Relativ !)
+	uint16_t  cursec;		/* 40..41 */ // current sector in current track (track relative)
+	uint16_t  lasttrack;	/* 42..43 */ // last track
+	uint8_t  *pbuffer;	/* 44..47 */	
+}__attribute__ ((packed));				/* otherwise datafields would be aligned ... */
+typedef struct jdfcb jdfcb_t ;
+
+static inline __attribute__((always_inline)) uint8_t jd_fillfcb(jdfcb_t * const p_FCB,char * const p_name)
+{
+   uint8_t ret = 0u;
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %1,%%d7"              "\n\t" \
+    "moveal %4,%%a0"             "\n\t" \
+    "moveal %3,%%a1"             "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #6"                    "\n\t" \
+    "moveq %2,%%d7"              "\n\t" \
+    "trap #6"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    "move.b %%d0,%0"             "\n\t" \
+    : "=g"(ret)        /* outputs */    \
+    : "g"(__uppercas),"g"(__fillfcb),"g"(p_FCB),"g"(p_name)    /* inputs */    \
+    : "d0","d7","a0","a1"             /* clobbered regs */ \
+    );
+    return ret;
+}
+
+struct jd_fi_date {
+  uint8_t reserved;
+  uint16_t year;
+  uint8_t month;
+  uint8_t day;
+} __attribute__ ((packed));
+typedef struct jd_fi_date jd_fi_date_t; 
+
+struct jdfile_info {
+	uint32_t length;
+  /*union {
+    jd_fi_date_t date;
+    uint32_t date_l;
+  } __attribute__ ((packed));*/
+  //uint8_t date[4];
+  uint32_t date;
+  uint8_t attribute;
+} __attribute__ ((packed));				/* otherwise datafields would be aligned ... */
+typedef struct jdfile_info jdfile_info_t;
+
+static inline __attribute__((always_inline)) uint8_t jd_fileinfo(jdfcb_t * const p_FCB, volatile jdfile_info_t * p_info)
+{
+   uint8_t ret = 0u;
+
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %4,%%d7"              "\n\t" \
+    "moveal %5,%%a1"             "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #6"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    "moveb %%d0,%0"              "\n\t" \
+    "movel %%d1,%1"              "\n\t" \
+    "movel %%d2,%2"              "\n\t" \
+    "moveb %%d3,%3"              "\n\t" \
+    : "=g"(ret),"=g"(p_info->length),"=g"(p_info->date),"=g"(p_info->attribute)        /* outputs */    \
+    : "g"(__fileinfo),"g"(p_FCB)    /* inputs */    \
+    : "d0","d1","d2","d3","d7","a1"             /* clobbered regs */ \
+    );
+
+    return ret;
+}
+
+static inline __attribute__((always_inline)) uint8_t jd_fileload(jdfcb_t * const p_FCB,char * const p_buf)
+{
+   uint8_t ret = 0u;
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %1,%%d7"              "\n\t" \
+    "moveal %3,%%a0"             "\n\t" \
+    "moveal %2,%%a1"             "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #6"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    "moveb %%d0,%0"              "\n\t" \
+    : "=g"(ret)                                /* outputs */    \
+    : "g"(__fileload),"g"(p_FCB),"g"(p_buf)    /* inputs */    \
+    : "d0","d7","a0","a1"                      /* clobbered regs */ \
+    );
+    return ret;
+}
+
+
+
 #endif
+
+
 
 #endif
 
