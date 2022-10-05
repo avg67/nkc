@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <ndrcomp/target.h>
 #include <ndrcomp/sysclock.h>
-#include "../../nkc_common/nkc/llnkc.h"
+//#include "../../nkc_common/nkc/llnkc.h"
 #include "../../nkc_common/nkc/nkc.h"
 #include <time.h>
 //#include "sound.h"
@@ -48,8 +48,12 @@ extern time_t _gettime(void);
 //#define SetCurrentColor gp_setcolor
 #define SetCurrentColor SetCurrentFgColor
 #define BGCOLOR (WHITE|DARK)
+#define MAX_NAME_LENGTH (24u)
+#define MAX_ENTRIES (31u)
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0u]))
+
+#define HS_TABLE_LENGTH (41-4+MAX_NAME_LENGTH)
 
 // global variables
 // board[cols][rows]
@@ -68,6 +72,19 @@ typedef struct{
    uint8_t cols;
    const uint8_t * const p_pattern;
 } Stone_t;
+
+typedef struct{
+   time_t   date;
+   uint16_t points;
+   uint16_t level;
+   char     name[MAX_NAME_LENGTH]; // 32-8
+} __attribute__ ((packed)) highscore_entry_t; // total length 32bytes
+
+typedef struct{
+   uint16_t nr_entries;
+   highscore_entry_t hs[MAX_ENTRIES];
+}highscore_t;
+
 
 static const uint8_t s_stone_pattern[]={0u,1u,1u, 1u,1u,0u};
 static const Stone_t s_stone = {
@@ -516,7 +533,125 @@ void copy_stone(const uint8_t row, const uint8_t col, const Stone_t* const p_sto
    }*/
 }
 
+#define HIGHSORCE_FILE_NAME "tet_hsc.bin"
+bool load_highscore(highscore_t * const p_highscore, const size_t hs_buf_len) {
+   jdfcb_t myfcb={0};
+	uint8_t result = jd_fillfcb(&myfcb,HIGHSORCE_FILE_NAME);
+   if (result==0) {
+      jdfile_info_t info __attribute__ ((aligned (4))) = {0u};
+      
+      result = jd_fileinfo(&myfcb, &info);
+      //iprintf("Fileinfo-Result: 0x%X length: %u %u date:0x%lX, att:0x%X\r\n",result, (unsigned int)info.length, hs_buf_len, info.date, info.attribute);
+      if ((result==0) && (hs_buf_len>=info.length)) {
+         result = jd_fileload(&myfcb, (char*const)p_highscore);
+         //iprintf("Fileload-Result: %u filename:%s\r\n",result, myfcb.filename);
+      }
+   }
+   return (result==0)?true:false;
+}
 
+bool save_highscore(highscore_t * const p_highscore, const size_t hs_buf_len) {
+   jdfcb_t myfcb={0};
+	uint8_t result = jd_fillfcb(&myfcb,HIGHSORCE_FILE_NAME);
+   if (result==0) {
+      result = jd_filesave(&myfcb, (const char*const)p_highscore, hs_buf_len);
+      //iprintf("Filesave-Result: 0x%X\r\n",result);
+   }
+   return (result==0)?true:false;
+}
+
+void hs_insert_sorted(highscore_t * const p_hs, const highscore_entry_t * const p_entry)
+{
+    uint16_t found = 0u;
+    if ( p_hs->nr_entries>0u) {
+      for (uint16_t i=0u;i<p_hs->nr_entries;i++) {
+         if(p_hs->hs[i].points <= p_entry->points) {
+            found = i;
+            iprintf("Found: %u\r\n",i);
+            break;
+         }
+      }
+      const uint16_t nr_items = min(p_hs->nr_entries, MAX_ENTRIES-1u);
+
+      for (uint16_t j=nr_items;j>found;j--) {
+         memcpy(&p_hs->hs[j], &p_hs->hs[j-1], sizeof(highscore_entry_t));
+/*         p_hs->hs[j].date = p_hs->hs[j-1u].date;
+         p_hs->hs[j].level = p_hs->hs[j-1u].level;
+         p_hs->hs[j].points = p_hs->hs[j-1u].points;
+         strcpy(p_hs->hs[j].name, p_hs->hs[j-1u].name);*/
+      }
+   }
+   memcpy(&p_hs->hs[found],p_entry,sizeof(highscore_entry_t));
+   p_hs->nr_entries++;
+
+    
+}
+
+void write_with_bg(const char * const p_text, const uint8_t fg, const uint8_t bg, uint8_t length)
+{
+   gp_setcolor(fg,bg);
+   const size_t len = strlen(p_text);
+   puts(p_text);
+      
+   uint16_t x_pos=0u;
+   uint16_t y_pos=0u;
+   gp_getxy(&x_pos,&y_pos);
+   //gp_erapen();
+   gp_setxor(true);
+
+   uint16_t dx; //= (41-4+24)*6u;
+   if(!length) {
+      dx = (len*6u); // use text-length
+   }else{
+      dx = length*6u;
+   }
+   uint8_t loops=1u;
+   if(dx>=256u) {
+      dx/=2u;
+      loops++;
+   }
+
+   for(uint8_t page=0u;page<2u; page++) {
+      gp_newpage(page,0u);
+
+      uint16_t x = x_pos-(len*6u);
+      for(uint8_t j=0u;j<loops;j++) {
+         gp_draw_filled_rect(x,y_pos*2u,dx,16u);   // need to keep dx < 256 to prevent xor artifacts
+         x+=dx;
+      }
+      //gp_draw_filled_rect(x+dx,y_pos*2u,dx,16u);   // //(len*6u),16u);
+   }
+   //gp_setpen();
+   gp_setxor(false);
+}
+
+void display_hs(highscore_t * const p_hs) {
+   //puts("Highscore:\r\n**********\r\n");
+   write_with_bg("Highscore:",BLUE, BLACK, 0u);
+   puts("\r\n");
+   //gp_setcolor(RED,WHITE);
+ 
+
+   //iprintf("X:%u Y:%u\r\n",x_pos,y_pos);
+   //puts("Nr: LV   Points    Played at         Name");
+   write_with_bg("Nr: LV   Points    Played at         Name",RED,WHITE,HS_TABLE_LENGTH);   // 41 characters, name max 24 chars
+   gp_setcolor(BLACK,BLACK);
+   char timebuf[20];
+   char linebuf[80];
+   for (uint16_t i=0;i<p_hs->nr_entries;i++) {
+      const struct tm * const p_tm = localtime(&p_hs->hs[i].date);
+      //strftime(timebuf, sizeof(timebuf), "%d.%m.%y %H:%M:%S", localtime(&p_hs->hs[i].date));
+      siprintf(timebuf,"%02u.%02u.%02u %02u:%02u:%02u",p_tm->tm_mday,p_tm->tm_mon,p_tm->tm_year-100u,p_tm->tm_hour,p_tm->tm_min,p_tm->tm_sec);
+      siprintf(linebuf,"%-2u: %02u %8u %20s %s",i+1u, p_hs->hs[i].level, (unsigned int)p_hs->hs[i].points, timebuf, p_hs->hs[i].name);
+      if (i&1) {
+         write_with_bg(linebuf,GRAY,BLACK,HS_TABLE_LENGTH);
+      }else{
+         gp_setcolor(BLACK,BLACK);
+         puts(linebuf);
+      }
+   }
+   gp_setcolor(BLACK,BLACK);
+}
 
 int main(void)
 {
@@ -585,6 +720,7 @@ int main(void)
    bool refresh = false;
    bool new_stone = true;
    bool game_over = false;
+   bool abort     = false;
    Command_t command = none_e;
    clock_t end_time  = 0u;
    do {
@@ -694,6 +830,7 @@ int main(void)
       if (gp_csts()) {
          key = gp_ci();
          if(key=='x') {
+            abort=true;
             break;
          }
          switch(key) {
@@ -765,6 +902,52 @@ int main(void)
    GDP_Col.fg=1;
    GDP_Col.bg=0;
    gp_clearscreen();
+   {
+      char* hs_buf = malloc(1024); 
+      highscore_t* p_hs = (highscore_t*)hs_buf;
+      if (!load_highscore(p_hs,1024u)) {
+         puts("Highscore not found. Creating new...\r\n");
+         p_hs->nr_entries = 0u;
+/*         hs.nr_entries = 1u;
+         hs.hs[0].date = _gettime();
+         strcpy(hs.hs[0].name,"Andreas Voggeneder");
+         hs.hs[0].points = (uint32_t)points;         
+         (void)save_highscore(&hs,sizeof(hs));*/
+      }else{
+         iprintf("Loaded higscore...\r\n%u Entries\r\n",(unsigned int)p_hs->nr_entries);
+      }
+      {
+         char bfr[80u]={0u};
+         if(!abort) {
+            puts("Please enter your name for highscore list\r\n");
+            gets(bfr);
+            puts("\r\n");
+         }
+         if(!abort && (strlen(bfr)>0)) {
+/*            strncpy(p_hs->hs[p_hs->nr_entries].name,bfr,MAX_NAME_LENGTH-1u);
+            p_hs->hs[p_hs->nr_entries].name[MAX_NAME_LENGTH-1u]='\0';
+            p_hs->hs[p_hs->nr_entries].date    = _gettime();
+            p_hs->hs[p_hs->nr_entries].points  = points;
+            p_hs->hs[p_hs->nr_entries].level   = level+1u;
+            p_hs->nr_entries++;*/
+            highscore_entry_t hs_entry = {
+               .date  = _gettime(),
+               .level = level+1u,
+               .points = points,
+            };
+            strncpy(hs_entry.name,bfr,MAX_NAME_LENGTH-1u);
+            hs_insert_sorted(p_hs,&hs_entry);
+
+
+            (void)save_highscore(p_hs,sizeof(highscore_t));
+         }
+      }
+      display_hs(p_hs);
+      free(hs_buf);
+   }
+
+
+
    //iprintf("GDP.ctrl2: 0x%X\r\n", GDP.ctrl2 );
 /*   for (uint8_t i=BOARD_HEIGHT-1u;i!=0xffu;i--) {
       iprintf("%02u:",i);
