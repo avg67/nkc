@@ -47,13 +47,14 @@ extern time_t _gettime(void);
 #define CCNV_Y(Y) (((uint16_t)Y)*4u*Y_SCALE)
 //#define SetCurrentColor gp_setcolor
 #define SetCurrentColor SetCurrentFgColor
-#define BGCOLOR (WHITE|DARK)
-#define MAX_NAME_LENGTH (24u)
-#define MAX_ENTRIES (31u)
+#define BGCOLOR             (WHITE|DARK)
+#define MAX_NAME_LENGTH     (24u)
+#define MAX_ENTRIES         (31u)
+#define MAX_ENTRIES_TO_SHOW (10u)
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0u]))
 
-#define HS_TABLE_LENGTH (41-4+MAX_NAME_LENGTH)
+#define HS_TABLE_LENGTH (42-4+MAX_NAME_LENGTH)
 
 // global variables
 // board[cols][rows]
@@ -560,31 +561,35 @@ bool save_highscore(highscore_t * const p_highscore, const size_t hs_buf_len) {
    return (result==0)?true:false;
 }
 
-void hs_insert_sorted(highscore_t * const p_hs, const highscore_entry_t * const p_entry)
+uint8_t hs_insert_sorted(highscore_t * const p_hs, const highscore_entry_t * const p_entry)
 {
-    uint16_t found = 0u;
-    if ( p_hs->nr_entries>0u) {
+   uint16_t found_idx = 0u;
+   bool found = false;
+   if (p_hs->nr_entries>0u) {
       for (uint16_t i=0u;i<p_hs->nr_entries;i++) {
          if(p_hs->hs[i].points <= p_entry->points) {
-            found = i;
+            found_idx = i;
+            found     = true;
             iprintf("Found: %u\r\n",i);
             break;
          }
       }
       const uint16_t nr_items = min(p_hs->nr_entries, MAX_ENTRIES-1u);
-
-      for (uint16_t j=nr_items;j>found;j--) {
-         memcpy(&p_hs->hs[j], &p_hs->hs[j-1], sizeof(highscore_entry_t));
-/*         p_hs->hs[j].date = p_hs->hs[j-1u].date;
-         p_hs->hs[j].level = p_hs->hs[j-1u].level;
-         p_hs->hs[j].points = p_hs->hs[j-1u].points;
-         strcpy(p_hs->hs[j].name, p_hs->hs[j-1u].name);*/
+      if (found) {
+         for (uint16_t j=nr_items;j>found_idx;j--) {
+            memcpy(&p_hs->hs[j], &p_hs->hs[j-1], sizeof(highscore_entry_t));
+         }
+      }else if (p_hs->nr_entries < MAX_ENTRIES) {
+         // Append one item
+         found_idx = p_hs->nr_entries;
       }
    }
-   memcpy(&p_hs->hs[found],p_entry,sizeof(highscore_entry_t));
-   p_hs->nr_entries++;
+   memcpy(&p_hs->hs[found_idx],p_entry,sizeof(highscore_entry_t));
+   if(p_hs->nr_entries < MAX_ENTRIES) {
+      p_hs->nr_entries++;
+   }
 
-    
+   return found_idx;
 }
 
 void write_with_bg(const char * const p_text, const uint8_t fg, const uint8_t bg, uint8_t length)
@@ -616,7 +621,7 @@ void write_with_bg(const char * const p_text, const uint8_t fg, const uint8_t bg
 
       uint16_t x = x_pos-(len*6u);
       for(uint8_t j=0u;j<loops;j++) {
-         gp_draw_filled_rect(x,y_pos*2u,dx,16u);   // need to keep dx < 256 to prevent xor artifacts
+         gp_draw_filled_rect(x,y_pos*2u,dx,18u);   // need to keep dx < 256 to prevent xor artifacts
          x+=dx;
       }
       //gp_draw_filled_rect(x+dx,y_pos*2u,dx,16u);   // //(len*6u),16u);
@@ -625,30 +630,36 @@ void write_with_bg(const char * const p_text, const uint8_t fg, const uint8_t bg
    gp_setxor(false);
 }
 
-void display_hs(highscore_t * const p_hs) {
+void display_hs(highscore_t * const p_hs, const uint8_t new_entry) {
    //puts("Highscore:\r\n**********\r\n");
-   write_with_bg("Highscore:",BLUE, BLACK, 0u);
+   write_with_bg(" Highscore:",BLUE, BLACK, 0u);
    puts("\r\n");
    //gp_setcolor(RED,WHITE);
  
 
    //iprintf("X:%u Y:%u\r\n",x_pos,y_pos);
    //puts("Nr: LV   Points    Played at         Name");
-   write_with_bg("Nr: LV   Points    Played at         Name",RED,WHITE,HS_TABLE_LENGTH);   // 41 characters, name max 24 chars
+   write_with_bg(" Nr: LV   Points    Played at         Name",WHITE,BLACK,HS_TABLE_LENGTH);   // 41 characters, name max 24 chars
    gp_setcolor(BLACK,BLACK);
    char timebuf[20];
    char linebuf[80];
-   for (uint16_t i=0;i<p_hs->nr_entries;i++) {
+   // Display max first 10 HS items and highlight currently added one with green
+   for (uint16_t i=0;i<min(p_hs->nr_entries,MAX_ENTRIES_TO_SHOW);i++) {
       const struct tm * const p_tm = localtime(&p_hs->hs[i].date);
       //strftime(timebuf, sizeof(timebuf), "%d.%m.%y %H:%M:%S", localtime(&p_hs->hs[i].date));
       siprintf(timebuf,"%02u.%02u.%02u %02u:%02u:%02u",p_tm->tm_mday,p_tm->tm_mon,p_tm->tm_year-100u,p_tm->tm_hour,p_tm->tm_min,p_tm->tm_sec);
-      siprintf(linebuf,"%-2u: %02u %8u %20s %s",i+1u, p_hs->hs[i].level, (unsigned int)p_hs->hs[i].points, timebuf, p_hs->hs[i].name);
-      if (i&1) {
+      siprintf(linebuf," %-2u: %02u %8u %20s %s",i+1u, p_hs->hs[i].level, (unsigned int)p_hs->hs[i].points, timebuf, p_hs->hs[i].name);
+      uint8_t fg = (i&1u)?GRAY:WHITE|DARK;
+      if (i==new_entry) {
+         fg = GREEN;
+      }
+      write_with_bg(linebuf,fg,BLACK,HS_TABLE_LENGTH);
+      /*if (i&1) {
          write_with_bg(linebuf,GRAY,BLACK,HS_TABLE_LENGTH);
       }else{
          gp_setcolor(BLACK,BLACK);
          puts(linebuf);
-      }
+      }*/
    }
    gp_setcolor(BLACK,BLACK);
 }
@@ -777,6 +788,15 @@ int main(void)
                   copy_stone(current_row, current_col, &my_stone, color);
                   break;
                case rotate_e:
+                  {
+                     // get a temporary stone with new orientation to check if it collides
+                     const uint8_t temp_or = (orientation - 1u) & 0x03u;
+                     Stone_t temp_stone={.cols=0u,.rows=0u, .p_pattern = stone_data};
+                     get_stone(stones[stone_index], temp_or, &temp_stone);
+                     if (((current_col + temp_stone.cols) < BOARD_WIDTH) && !check_collision(current_row,current_col,&temp_stone)) {
+                        orientation = temp_or;
+                     }
+                  }
                   break;
                default:
                   break;
@@ -841,8 +861,8 @@ int main(void)
             case 'r':
                // delete old stone
                // fixme: check if stone exceeds board
-               orientation--;
-               orientation&=0x03;
+               /*orientation--;
+               orientation&=0x03;*/
                refresh=true;
                command = rotate_e;
                break;
@@ -916,6 +936,7 @@ int main(void)
       }else{
          iprintf("Loaded higscore...\r\n%u Entries\r\n",(unsigned int)p_hs->nr_entries);
       }
+      uint8_t new_entry = 0xFFu;
       {
          char bfr[80u]={0u};
          if(!abort) {
@@ -936,13 +957,13 @@ int main(void)
                .points = points,
             };
             strncpy(hs_entry.name,bfr,MAX_NAME_LENGTH-1u);
-            hs_insert_sorted(p_hs,&hs_entry);
+            new_entry = hs_insert_sorted(p_hs,&hs_entry);
 
 
             (void)save_highscore(p_hs,sizeof(highscore_t));
          }
       }
-      display_hs(p_hs);
+      display_hs(p_hs, new_entry);
       free(hs_buf);
    }
 

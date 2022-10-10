@@ -1062,10 +1062,10 @@ static inline __attribute__((always_inline)) uint32_t gp_system(void) {
    uint32_t systeminfo=0u;
    asm volatile(
     "# asm"                      "\n\t" \
-    "movem.l %%d7/%%a5-%%a6,-(%%sp)"  "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
     "moveb %1,%%d7"              "\n\t" \
     "trap #1"                    "\n\t" \
-    "movem.l (%%sp)+, %%d7/%%a5-%%a6" "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     "movel %%d0,%0"              "\n\t" \
     : "=g"(systeminfo)        /* outputs */    \
     : "g"(_SYSTEM)            /* inputs */    \
@@ -1116,6 +1116,36 @@ static inline __attribute__((always_inline)) void gp_writexy(uint16_t x, uint16_
     :                   /* outputs */    \
     : "g"(_WRITE),"g"(x), "g"(y), "g"(p_str), "g"(size)    /* inputs */    \
     : "%d0","%d1","%d2","%d7","%a0"    /* clobbered regs */ \
+    );
+}
+
+static inline __attribute__((always_inline)) void gp_setcurxy(const uint8_t x,const uint8_t y) {
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveb %1,%%d1"              "\n\t" \
+    "moveb %2,%%d2"              "\n\t" \
+    "moveq %0,%%d7"              "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    :                   /* outputs */    \
+    : "g"(_SETCURXY), "g"(x),"g"(y)    /* inputs */    \
+    : "%d1", "d2", "%d7"    /* clobbered regs */ \
+    );
+}
+
+static inline __attribute__((always_inline)) void gp_getcurxy(uint8_t* const p_x, uint8_t* const p_y) {
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %2,%%d7"              "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    "moveb %%d1,%0"              "\n\t" \
+    "moveb %%d2,%1"              "\n\t" \
+    : "=g"(*p_x),"=g"(*p_y)        /* outputs */    \
+    : "g"(_GETCURXY)                 /* inputs */    \
+    : "%d1", "%d2", "%d7"          /* clobbered regs */ \
     );
 }
 
