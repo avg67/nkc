@@ -47,7 +47,7 @@ LIBS =
 # Compile with debugging info (-g), with size optimization (-Os)
 # and 16-bit integers (-mshort)
 #CFLAGS=-g -Os -Wall -mshort -fomit-frame-pointer -std=gnu99 # -mrelax -nostartfiles
-CFLAGS=-g -Os -m68000 -Wall -fomit-frame-pointer -nostartfiles -std=gnu99 -Dndrcomp $(ISEARCH) #-ffunction-sections -fdata-sections
+CFLAGS=-g -Os -m68000 -Wall -fomit-frame-pointer -nostartfiles -std=gnu99 -Dndrcomp  -DUSE_JADOS $(ISEARCH) #-ffunction-sections -fdata-sections
 #CFLAGS=-std=gnu99 -t -save-temps -mc68000 -Dndrcomp  -mpcrel -aux-info funcs.h -fomit-frame-pointer -nostartfiles -Wno-attributes -T rm_ram1.ld -Wa,--w,--pcrel,-acdhls=file.asm -O5 -lm
 ASFLAGS= #-DM68000 
 
@@ -64,7 +64,8 @@ OBJCOPY_FLAGS=--only-section=.text \
               --only-section=.data
 
 # List of C sources
-CSRCS=  tetris.c
+CSRCS=  tetris.c \
+        sound.c
 
 ASM_SRCS= #$(COMMON_DIR)nkc/llnkc.s
 

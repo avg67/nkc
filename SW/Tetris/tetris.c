@@ -11,7 +11,7 @@
 //#include "../../nkc_common/nkc/llnkc.h"
 #include "../../nkc_common/nkc/nkc.h"
 #include <time.h>
-//#include "sound.h"
+#include "sound.h"
 
 
 // Declare your global variables here
@@ -52,9 +52,8 @@ extern time_t _gettime(void);
 #define MAX_ENTRIES         (31u)
 #define MAX_ENTRIES_TO_SHOW (10u)
 
-#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0u]))
-
 #define HS_TABLE_LENGTH (42-4+MAX_NAME_LENGTH)
+
 
 // global variables
 // board[cols][rows]
@@ -666,6 +665,9 @@ void display_hs(highscore_t * const p_hs, const uint8_t new_entry) {
 
 int main(void)
 {
+   setvbuf(stdin, NULL, _IONBF, 0);
+   setvbuf(stdout, NULL, _IONBF, 0);
+   setvbuf(stderr, NULL, _IONBF, 0);
    const uint32_t sysinfo = gp_system();
    if (!((sysinfo & (IS_08 | IS_00 | IS_20 | GDP_FPGA)) == ((IS_08 << PADDING) | GDP_FPGA))) {
       #if(cpu==1)
@@ -675,6 +677,8 @@ int main(void)
       #endif
       return 0;
    }
+   //playTest();
+
    //SetCurrentBgColor(GRAY | DARK);
    SetCurrentBgColor(BGCOLOR);
    gp_clearscreen();
@@ -684,7 +688,7 @@ int main(void)
    //GDP_Col.bg = GRAY | DARK;
    //GDP.ctrl2 |= (1u<<5u); // turn on BG mode
    
-   //initSound();
+   initSound();
 
 	char key;
 
@@ -702,10 +706,11 @@ int main(void)
    gp_writexy(CCNV_X(2u),CCNV_Y(BOARD_Y+BOARD_HEIGHT+2u),0x22, "Points: 0  ");
    gp_writexy(CCNV_X(2u),CCNV_Y(2u),0x11, "x = Exit");
    gp_writexy(CCNV_X(2u),CCNV_Y(3u),0x11, "p = Pause");
-   gp_writexy(CCNV_X(2u),CCNV_Y(5u),0x11, "down  = Drop");
-   gp_writexy(CCNV_X(2u),CCNV_Y(6u),0x11, "left  = Move Left");
-   gp_writexy(CCNV_X(2u),CCNV_Y(7u),0x11, "right = Move Right");
-   gp_writexy(CCNV_X(2u),CCNV_Y(8u),0x11, "up    = Rotate");
+   gp_writexy(CCNV_X(2u),CCNV_Y(4u),0x11, "m = Mute Sound on/off");
+   gp_writexy(CCNV_X(2u),CCNV_Y(6u),0x11, "down  = Drop");
+   gp_writexy(CCNV_X(2u),CCNV_Y(7u),0x11, "left  = Move Left");
+   gp_writexy(CCNV_X(2u),CCNV_Y(8u),0x11, "right = Move Right");
+   gp_writexy(CCNV_X(2u),CCNV_Y(9u),0x11, "up    = Rotate");
    
    
    uint16_t deleted_lines = 0u;
@@ -722,7 +727,6 @@ int main(void)
    uint8_t current_col=(BOARD_WIDTH/2u)-1u;
 
    draw_board();
-
    memset(board, 0u, sizeof(board));
 
    orientation = 0u;
@@ -735,7 +739,8 @@ int main(void)
    Command_t command = none_e;
    clock_t end_time  = 0u;
    do {
-      if (refresh || (_clock(NULL) >= end_time) ) {
+      const clock_t current_time = _clock(NULL);
+      if (refresh || (current_time >= end_time) ) {
          // 1. delete current stone
          if(!new_stone) {
             draw_stone(&my_stone, current_row, current_col, BGCOLOR);
@@ -770,7 +775,6 @@ int main(void)
             switch(command) {
                case move_left_e:
                   if ((current_col>0u) && !check_collision(current_row,current_col-1u,&my_stone)){
-
                      current_col--;
                   }
                   break;
@@ -870,8 +874,13 @@ int main(void)
                end_time=0u;
                break;
             case 'p':
-               while(!gp_csts()) {};
-               gp_ci();
+               {
+                  bool sound_mute_save = g_sound_mute;
+                  g_sound_mute = true;
+                  while(!gp_csts()) {};
+                  gp_ci();
+                  g_sound_mute = sound_mute_save;
+               }
                break;
             case LEFT:
             case 's':
@@ -896,6 +905,9 @@ int main(void)
             case 'c':
                GDP.ctrl2 &= ~(1u<<5u); // turn off BG mode
                GDP_Ctrl.page_dma = 0u;
+               break;
+            case 'm':
+               g_sound_mute = !g_sound_mute;
                break;
 /*            case 'i':
                old_level++;

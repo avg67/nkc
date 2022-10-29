@@ -1,13 +1,18 @@
 #ifndef __NKC_H
 #define __NKC_H
 
+#include <time.h>
+#include <stdbool.h>
 #include <ndrcomp/target.h>
 
 //Exportierte Symbole der NKCLIB
-volatile char gp_csts(void);
-volatile void gp_co(char x);
-volatile char gp_ci(void);
+//volatile char gp_csts(void);
+//volatile void gp_co(char x);
+//volatile char gp_ci(void);
 time_t _gettime(void);
+clock_t _clock(void (*clock_fu)(void));
+
+#define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0u]))
 
 /* TRAP-NUMMERN DES GP TRAP #1 (V7.0) */
 
@@ -897,6 +902,55 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
 #define GRAY        8u
 #define DARK        8u	// can be or'ed to colors to make them darker
 
+static inline __attribute__((always_inline)) char gp_csts(void)
+{
+    register long retvalue asm("%d0");            
+    asm volatile(
+    "# asm"             "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "moveq #_CSTS,%%d7" "\n\t" \
+    "trap #1"           "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    : "=r"(retvalue) /* outputs */    \
+    :                /* inputs */    \
+    : "%d7"    /* clobbered regs */ \
+    );
+    return retvalue;
+}
+
+static inline __attribute__((always_inline)) void gp_co(char x)
+{
+
+    asm volatile(
+    "# asm"                  "\n\t" \
+    "moveb %0,%%d0"          "\n\t" \
+    "moveq #_CO2,%%d7"       "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    :                /* outputs */    \
+    : "g"(x)          /* inputs */    \
+    : "%d0", "%d7"    /* clobbered regs */ \
+    );
+}
+
+static inline __attribute__((always_inline)) char gp_ci(void)
+{
+    register long retvalue asm("%d0"); 
+    asm volatile(
+    "# asm"            "\n\t" \
+    "moveq #_CI,%%d7"  "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"          "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    : "=r"(retvalue) /* outputs */    \
+    :                /* inputs */    \
+    : "%d7"    /* clobbered regs */ \
+    );
+    return retvalue;
+
+}
+
 /* --> gdplib/nkc_gdplib.h */
 static inline __attribute__((always_inline)) void gp_moveto(const uint16_t x, const uint16_t y) {
   asm volatile(
@@ -1311,7 +1365,7 @@ static inline __attribute__((always_inline)) uint8_t jd_fileinfo(jdfcb_t * const
     return ret;
 }
 
-static inline __attribute__((always_inline)) uint8_t jd_fileload(jdfcb_t * const p_FCB,char * const p_buf)
+static inline __attribute__((always_inline)) uint8_t jd_fileload(jdfcb_t * const p_FCB,void * const p_buf)
 {
    uint8_t ret = 0u;
   asm volatile(
@@ -1330,7 +1384,7 @@ static inline __attribute__((always_inline)) uint8_t jd_fileload(jdfcb_t * const
     return ret;
 }
 
-static inline __attribute__((always_inline)) uint8_t jd_filesave(jdfcb_t * const p_FCB,const char * const p_buf, const size_t length)
+static inline __attribute__((always_inline)) uint8_t jd_filesave(jdfcb_t * const p_FCB,const void * const p_buf, const size_t length)
 {
    uint8_t ret = 0u;
    uint16_t nr_blocks = (uint16_t)((1023uL+length)/1024u)-1u;
