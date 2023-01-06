@@ -18,6 +18,7 @@ class board
         bool check_done();
         uint8_t get_info(const uint16_t x, const uint16_t y);
         bool unhide(const uint16_t x, const uint16_t y);
+        bool is_hidden(const uint16_t x, const uint16_t y);
         void setInfo(const uint16_t x, const uint16_t y,const uint8_t info);
         uint8_t getInfo(const uint16_t x, const uint16_t y);
         uint8_t count_mines(const uint16_t x, const uint16_t y);

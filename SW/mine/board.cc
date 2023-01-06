@@ -31,6 +31,11 @@ bool board::unhide(const uint16_t x, const uint16_t y)
     return this->arr[x][y].unhide();
 }
 
+bool board::is_hidden(const uint16_t x, const uint16_t y)
+{
+    return this->arr[x][y].is_hidden();
+}
+
 void board::setInfo(const uint16_t x, const uint16_t y,const uint8_t info)
 {
     this->arr[x][y].setInfo(info);

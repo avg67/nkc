@@ -125,8 +125,10 @@ int16_t check_mouse(board& myboard) {
 
             }else if(((keys & ~old_mouse_keys) & R_BUTTON)!=0u) {
                 //arr[x][y].setInfo((arr[x][y].getInfo()!=0)?0u:0xFFu);
-                myboard.setInfo(x,y,(myboard.getInfo(x,y)!=0)?0u:0xFFu);
-                myboard.draw();
+                if(myboard.is_hidden(x,y)) {
+                    myboard.setInfo(x,y,(myboard.getInfo(x,y)!=0)?0u:0xFFu);
+                    myboard.draw();
+                }
             }
         }
         //iprintf("0x%X %03d %03d %02d %02d      \r", keys, this->mouse_x, this->mouse_y, x, y);

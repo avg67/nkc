@@ -10,8 +10,8 @@
 #define MINE_H
 
 
-#define BOARD_X_SIZE 8u
-#define BOARD_Y_SIZE 8u
+#define BOARD_X_SIZE 9u
+#define BOARD_Y_SIZE 9u
 #define NR_MINES 8u
 
 #define CCNV_X(X) (((uint16_t)X)*4u*X_SCALE)
