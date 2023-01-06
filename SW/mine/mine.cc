@@ -49,7 +49,16 @@ int main(void)
     //iprintf("Sizeof(field): %u\r\n",sizeof(field));
 
     int16_t result=0;
+    time_t time=0;
+    time_t start_time = _gettime();
     do {
+        const time_t now = _gettime();
+        if(now!=time) {
+            gp_setcurxy(1u,4u);
+            iprintf("Time: %u s\r",now-start_time);
+            time=now;
+        }
+
         result = check_mouse(myboard);
     }while(result==0);
 

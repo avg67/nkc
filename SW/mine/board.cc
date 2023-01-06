@@ -6,8 +6,8 @@
 board::board()
 {
     uint8_t nr_mines=0u;
-    this->mouse_x=256;
-    this->mouse_y=128;
+//    this->mouse_x=256;
+//    this->mouse_y=128;
     do {
         const uint16_t mine_pos = rand() % (BOARD_X_SIZE*BOARD_Y_SIZE);
         //iprintf("%u ",mine_pos);
@@ -19,6 +19,26 @@ board::board()
         }
     }while(nr_mines<NR_MINES);
     //iprintf("\r\n");
+}
+
+uint8_t board::get_info(const uint16_t x, const uint16_t y)
+{
+    return this->arr[x][y].getInfo();
+}
+
+bool board::unhide(const uint16_t x, const uint16_t y)
+{
+    return this->arr[x][y].unhide();
+}
+
+void board::setInfo(const uint16_t x, const uint16_t y,const uint8_t info)
+{
+    this->arr[x][y].setInfo(info);
+}
+
+uint8_t board::getInfo(const uint16_t x, const uint16_t y)
+{
+    return this->arr[x][y].getInfo();
 }
 
 void board::draw()
@@ -151,7 +171,7 @@ bool board::check_done()
     return (nr_hidden==0u);
 }
 
-
+#if 0
 int16_t board::check_mouse() {
     //static const uint8_t mouse_pointer[]= {0x7f,0x7e,0x71,0xf0,0};
     int16_t dx=0;
@@ -225,7 +245,7 @@ void board::draw_mouse_pointer()
     gp_drawto(this->mouse_x,this->mouse_y+5);
     gp_setxor(false);
 }
-
+#endif
 
 /*void board::game_over() {
     GDP.ctrl2 |= (1u<<5u); // turn on BG mode
