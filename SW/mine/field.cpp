@@ -6,6 +6,7 @@ field::field()
     this->isMine=false;
     this->info=0u;
     this->hidden=true;
+    this->hl=false;
 }
 
 void field::setInfo(const uint8_t info)
@@ -33,6 +34,11 @@ bool field::is_hidden()
     return this->hidden;
 }
 
+void field::highlight(const bool highlight)
+{
+    this->hl = highlight;
+}
+
 bool field::unhide()
 {
     this->hidden=false;
@@ -46,7 +52,9 @@ bool field::unhide()
 void field::draw(const uint16_t x, const uint16_t y)
 {
     uint8_t color = GRAY;
-    if(!this->hidden) {
+    if(this->hl) {
+        color = GREEN;
+    }else if(!this->hidden) {
         if (this->isMine) {
             color = RED;
         }else{

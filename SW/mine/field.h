@@ -13,6 +13,7 @@ class field
         bool isMine;
         uint8_t info;
         bool hidden;
+        bool hl;
 
     public:
         // class constructor
@@ -24,6 +25,7 @@ class field
         bool checkMine();
         bool unhide();
         bool is_hidden();
+        void highlight(const bool highlight);
         void draw(const uint16_t x, const uint16_t y);
 };
 

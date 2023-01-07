@@ -62,10 +62,10 @@ OBJCOPY_FLAGS=--only-section=.text \
 
 # List of C sources
 CSRCS=  gp_helper.c
-#CCSRCS= countbsp.cc
-CCSRCS= mine.cc \
-		field.cc \
-		board.cc
+# List of CPP sources
+CPPSRCS= mine.cpp \
+		field.cpp \
+		board.cpp
 
 ASM_SRCS=
 # Directory where the files are generated to (objects, list files, ...)
@@ -74,7 +74,7 @@ OBJPATH = ./obj
 
 # List of objects
 OBJS           = $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(CSRCS)))))
-OBJS          += $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(CCSRCS)))))
+OBJS          += $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(CPPSRCS)))))
 OBJS          += $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(ASM_SRCS)))))
 
 PROGS=$(OUTDIR)$(TARGET).elf
@@ -114,7 +114,7 @@ define COMPILE_CC_TEMPLATE
 $(OBJPATH)/$(notdir $(basename $(1))).o : $(1)
 	$(CPP) -c $$(CPPFLAGS) $$< -o $$@
 endef
-$(foreach src, $(filter %.cc, $(CCSRCS)), $(eval $(call COMPILE_CC_TEMPLATE, $(src))))
+$(foreach src, $(filter %.cpp, $(CPPSRCS)), $(eval $(call COMPILE_CC_TEMPLATE, $(src))))
 
 define COMPILE_ASM_TEMPLATE
 $(OBJPATH)/$(notdir $(basename $(1))).o : $(1)

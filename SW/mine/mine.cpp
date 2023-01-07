@@ -55,7 +55,7 @@ int main(void)
         const time_t now = _gettime();
         if(now!=time) {
             gp_setcurxy(1u,4u);
-            iprintf("Time: %u s\r",now-start_time);
+            iprintf("Time: %u s\r",(unsigned int)(now-start_time));
             time=now;
         }
 
@@ -80,7 +80,8 @@ int16_t check_mouse(board& myboard) {
     static uint8_t old_mouse_keys =0u;
     static bool mouse_init=true;
     const uint8_t keys = gp_get_mouse(&dx, &dy);
-    if((dx!=0) || (dy!=0) || (keys!=0)) {
+
+    if((dx!=0) || (dy!=0) || (keys!=0u)) {
         if(!mouse_init) {
             // delete old mouse pinter
             draw_mouse_pointer();
@@ -91,54 +92,25 @@ int16_t check_mouse(board& myboard) {
         uint16_t x = (mouse_x - CCNV_X(BOARD_X)) / (4u*X_SCALE);
         uint16_t y = (mouse_y - CCNV_Y(BOARD_Y)) / (4u*Y_SCALE);
 
-        /*uint8_t cur_x=0u, cur_y=0u;
-        gp_getcurxy(&cur_x,&cur_y);
-        gp_moveto(this->mouse_x,this->mouse_y);
-        gp_progzge(mouse_pointer);
-        gp_setcurxy(cur_x,cur_y);
-        */
-        if ((y<BOARD_Y_SIZE) && (x<BOARD_X_SIZE)) {
-            if(((keys & ~old_mouse_keys) & L_BUTTON)!=0u) {
-                //const uint16_t x_pos = CCNV_X(BOARD_X) + (x * 4u * X_SCALE);
-                //const uint16_t y_pos = CCNV_Y(BOARD_Y) + (y * 4u * Y_SCALE);
-                //if(arr[x][y].getInfo()!=0xFF) {
-                if(myboard.getInfo(x,y)!=0xFF) {
-                    //if(arr[x][y].unhide()) {
-                    if(myboard.unhide(x,y)) {
-                        result = -1;
-                    }
-                    if (result==0) {
-                        const uint8_t nr_mines = myboard.count_mines(x,y);
-                        //arr[x][y].setInfo(nr_mines);
-                        myboard.setInfo(x,y,nr_mines);
-                        myboard.unhide_surrounding(x,y,0u);
-                        //iprintf("Mines: %u         \r\n",nr_mines);
-                    }else{
-                        // Game is over - unhide all mines
-                        //iprintf("Game over!\r\n");
-                        myboard.unhide_all();
-                        //game_over();
-                    }
-                }
-                myboard.draw();
-                //arr[x][y].draw(x_pos,y_pos);
 
-            }else if(((keys & ~old_mouse_keys) & R_BUTTON)!=0u) {
-                //arr[x][y].setInfo((arr[x][y].getInfo()!=0)?0u:0xFFu);
-                if(myboard.is_hidden(x,y)) {
-                    myboard.setInfo(x,y,(myboard.getInfo(x,y)!=0)?0u:0xFFu);
-                    myboard.draw();
-                }
-            }
+        if((((keys & ~old_mouse_keys) & L_BUTTON)!=0u)) {
+            result = myboard.click_field(x,y);
+        }else if((((keys & ~old_mouse_keys) & R_BUTTON)!=0u)) {
+            myboard.mark_field(x,y);
         }
-        //iprintf("0x%X %03d %03d %02d %02d      \r", keys, this->mouse_x, this->mouse_y, x, y);
-        old_mouse_keys = keys;
         draw_mouse_pointer();
+
         if((result==0) && myboard.check_done()) {
             result=1;
         }
-
     }
+    if((((~keys & old_mouse_keys) & L_BUTTON)!=0u)) {
+        // left Mousebutton released
+        draw_mouse_pointer();
+        myboard.release();
+        draw_mouse_pointer();
+    }
+    old_mouse_keys = keys;
     return ((keys & (L_BUTTON | R_BUTTON))==(L_BUTTON | R_BUTTON))?0xffu:result;
 }
 

@@ -12,7 +12,7 @@
 
 #define BOARD_X_SIZE 9u
 #define BOARD_Y_SIZE 9u
-#define NR_MINES 8u
+#define NR_MINES 10u
 
 #define CCNV_X(X) (((uint16_t)X)*4u*X_SCALE)
 #define CCNV_Y(Y) (((uint16_t)Y)*4u*Y_SCALE)
@@ -23,7 +23,6 @@
 #define BOARD_Y	1u
 #define X_RES 512
 #define Y_RES 256
-
 
 static inline __attribute__((always_inline)) void gdp_ready(void) {
    while(!(GDP.cmd & 0x04u)) {};
