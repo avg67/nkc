@@ -34,6 +34,10 @@ int main(void)
     gp_setflip(10u,10u);
     GDP_Ctrl.page_dma = 0u;
 
+    /*{
+        field * p_field = new field;
+        delete p_field;
+    }*/
 
     //const clock_t start_time = _clock(NULL);
 

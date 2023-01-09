@@ -5,11 +5,11 @@
 
 board::board()
 {
+    last_clicked.x = 0;
+    last_clicked.y = 0;
+    last_clicked.marked = false;
     uint8_t nr_mines=0u;
     do {
-        last_clicked.x = 0;
-        last_clicked.y = 0;
-        last_clicked.marked = false;
         const uint16_t mine_pos = rand() % (BOARD_X_SIZE*BOARD_Y_SIZE);
         //iprintf("%u ",mine_pos);
         const uint8_t x_pos = (mine_pos % BOARD_X_SIZE);
@@ -74,9 +74,9 @@ uint8_t board::count_mines(const uint16_t x, const uint16_t y)
 uint8_t board::count_marked_mines()
 {
     uint8_t nr_marked_mines = 0u;
-    for(uint16_t y=0u;y<arr.size();y++) {
-        for(uint16_t x=0u;x<arr[y].size();x++) {
-            if(arr[x][y].getInfo()==0xff) {
+    for(auto y = arr.begin(); y != arr.end(); ++y) {
+        for(auto f = y->begin(); f != y->end(); ++f) {
+            if(f->getInfo()==0xff) {
                 nr_marked_mines++;
             }
         }
@@ -87,42 +87,44 @@ uint8_t board::count_marked_mines()
 // display all mines
 void board::unhide_all()
 {
-    for(uint16_t y=0u;y<arr.size();y++) {
-        for(uint16_t x=0u;x<arr[y].size();x++) {
-            arr[x][y].unhide();
+    for(auto y = arr.begin(); y != arr.end(); ++y) {
+        for(auto f = y->begin(); f != y->end(); ++f) {
+            f->unhide();
         }
     }
 }
 
 void board::unhide_surrounding(const uint16_t x, const uint16_t y, const uint16_t level) {
     const uint8_t mines = count_mines(x,y);
-    arr[x][y].unhide();
-    if (mines==0u) {
-        if(level<50u) {
-            const uint16_t x_start = (x>0u)?x-1u:x;
-            const uint16_t x_end = (x<(BOARD_X_SIZE-1u))?x+1:x;
-            const uint16_t y_start = (y>0u)?y-1:y;
-            const uint16_t y_end = (y<(BOARD_Y_SIZE-1u))?y+1:y;
-            for(uint16_t x1 = x_start; x1<=x_end;x1++) {
-                for(uint16_t y1 = y_start; y1<=y_end;y1++) {
-                    if(((x1!=x) || (y1!=y)) && arr[x1][y1].is_hidden()) {
-                        unhide_surrounding(x1,y1,level+1u);
+    field& f = arr[x][y];
+    if (f.getInfo()!=0xFF) {
+        f.unhide();
+        if (mines==0u) {
+            if(level<50u) {
+                const uint16_t x_start = (x>0u)?x-1u:x;
+                const uint16_t x_end = (x<(BOARD_X_SIZE-1u))?x+1:x;
+                const uint16_t y_start = (y>0u)?y-1:y;
+                const uint16_t y_end = (y<(BOARD_Y_SIZE-1u))?y+1:y;
+                for(uint16_t x1 = x_start; x1<=x_end;x1++) {
+                    for(uint16_t y1 = y_start; y1<=y_end;y1++) {
+                        if(((x1!=x) || (y1!=y)) && arr[x1][y1].is_hidden()) {
+                            unhide_surrounding(x1,y1,level+1u);
+                        }
                     }
                 }
             }
+        }else{
+            f.setInfo(mines);
         }
-    }else{
-        arr[x][y].setInfo(mines);
     }
 }
 
 bool board::check_done()
 {
     uint8_t nr_hidden=0u;
-    for(uint16_t y=0u;y<arr.size();y++) {
-        for(uint16_t x=0u;x<arr[y].size();x++) {
-            field& f = arr[x][y];
-            if (f.is_hidden() && (f.getInfo()!=0xFFu)){
+    for(auto y = arr.begin(); y != arr.end(); ++y) {
+        for(auto f = y->begin(); f != y->end(); ++f) {
+            if (f->is_hidden() && (f->getInfo()!=0xFFu)){
                 nr_hidden++;
             }
         }
@@ -154,17 +156,6 @@ int16_t board::click_field(const uint16_t x, const uint16_t y)
             }
         }else if (!f.is_hidden()) {
             show_fields(x,y,true);
-/*            const uint16_t x_start = (x>0u)?x-1u:x;
-            const uint16_t x_end = (x<(BOARD_X_SIZE-1u))?x+1:x;
-            const uint16_t y_start = (y>0u)?y-1:y;
-            const uint16_t y_end = (y<(BOARD_Y_SIZE-1u))?y+1:y;
-            for(uint16_t x1 = x_start; x1<=x_end;x1++) {
-                for(uint16_t y1 = y_start; y1<=y_end;y1++) {
-                    if((x1!=x) || (y1!=y))  {
-                        this->arr[x1][y1].highlight(true);
-                    }
-                }
-            }*/
         }
         draw();
         //arr[x][y].draw(x_pos,y_pos);
@@ -198,7 +189,7 @@ void board::mark_field(const uint16_t x, const uint16_t y)
 {
     if ((y<BOARD_Y_SIZE) && (x<BOARD_X_SIZE)) {
         field& f = arr[x][y];
-        if(f.is_hidden()) {
+        if(f.is_hidden() && ((f.getInfo()==0xFF) || (count_marked_mines()<NR_MINES))) {
             f.setInfo((f.getInfo()!=0)?0u:0xFFu);
             draw();
         }
