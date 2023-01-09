@@ -34,6 +34,7 @@ int main(void)
     gp_setflip(10u,10u);
     GDP_Ctrl.page_dma = 0u;
 
+
     //const clock_t start_time = _clock(NULL);
 
     srand((unsigned) _gettime());
@@ -72,6 +73,14 @@ int main(void)
 
 }
 
+static inline int16_t limit_value(const int16_t val, const int16_t min, const int16_t max)
+{
+    int16_t ret = val;
+    if(val<min) {ret=min;}
+    else if(val>max) {ret=max;}
+    return ret;
+}
+
 int16_t check_mouse(board& myboard) {
     //static const uint8_t mouse_pointer[]= {0x7f,0x7e,0x71,0xf0,0};
     int16_t dx=0;
@@ -87,11 +96,11 @@ int16_t check_mouse(board& myboard) {
             draw_mouse_pointer();
         }
         mouse_init=false;
-        mouse_x +=(dx*2);
-        mouse_y +=dy;
+        mouse_x = limit_value(mouse_x+(dx*2),0, X_RES-1);
+        mouse_y = limit_value(mouse_y+dy,0, Y_RES-1);
+
         uint16_t x = (mouse_x - CCNV_X(BOARD_X)) / (4u*X_SCALE);
         uint16_t y = (mouse_y - CCNV_Y(BOARD_Y)) / (4u*Y_SCALE);
-
 
         if((((keys & ~old_mouse_keys) & L_BUTTON)!=0u)) {
             result = myboard.click_field(x,y);
