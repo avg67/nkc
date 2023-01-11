@@ -9,8 +9,15 @@
 //volatile char gp_csts(void);
 //volatile void gp_co(char x);
 //volatile char gp_ci(void);
-time_t _gettime(void);
-clock_t _clock(void (*clock_fu)(void));
+
+#ifdef __cplusplus
+  extern "C" time_t _gettime(void);
+  extern "C" clock_t _clock(void (*clock_fu)(void));
+#else
+  time_t _gettime(void);
+  clock_t _clock(void (*clock_fu)(void));
+#endif
+
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0u]))
 
@@ -18,168 +25,168 @@ clock_t _clock(void (*clock_fu)(void));
 
 #define _GP_TRAP	 1
 
-#define _SCHREITE    1   
-#define _DREHE       2   
-#define _HEBE        3   
-#define _SENKE       4   
-#define _FIGURXY     5   
-#define _WRITELF     6   
-#define _SET         7   
-#define _MOVETO      8   
-#define _DRAWTO      9   
-#define _WRITE       10  
-#define _READ        11  
-#define _CI          12  
-#define _CSTS        13  
-#define _RI          14  
-#define _PO          15  
-#define _CLR         16  
-#define _CLPG        17  
-#define _WAIT        18  
-#define _SCHR16TEL   19  
-#define _CLRSCREEN   20  
-#define _CO          21  
-#define _LO          22  
-#define _SIN         23  
-#define _COS         24  
-#define _SIZE        25  
-#define _CMD         26  
-#define _NEWPAGE     27  
-#define _SYNC        28  
-#define _WERT        29  
-#define _ZUWEIS      30  
-#define _CIINIT2     31  
-#define _CI2         32  
-#define _CO2         33  
-#define _SETFLIP     34  
-#define _DELAY       35  
-#define _FIRSTTIME   36  
-#define _SETPEN      37  
-#define _ERAPEN      38  
-#define _GRAPOFF     39  
-#define _CMDPRINT    40  
-#define _PRINT2X     41  
-#define _PRINT4X     42  
-#define _PRINT6X     43  
-#define _PRINT8X     44  
-#define _PRINT8B     45  
-#define _PRINT4D     46  
-#define _HIDE        47  
-#define _SHOW        48  
-#define _CRT         49  
-#define _LST         50  
-#define _USR         51  
-#define _NIL         52  
-#define _SETERR      53  
-#define _GETERR      54  
-#define _SETPASS     55  
-#define _EDIT        56  
-#define _FIGUR       57  
-#define _SETFIG      58  
-#define _GETRAM      59  
-#define _AUTOFLIP    60  
-#define _CURSEIN     61  
-#define _CURSAUS     62  
-#define _CHAR        63  
-#define _PROGZGE     64  
-#define _ASSEMBLE    65  
-#define _GETSTX      66  
-#define _PUTSTX      67  
-#define _GETORG      68  
-#define _PUTORG      69  
-#define _PRINT8D     70  
-#define _PRINTV8D    71  
-#define _MULS32      72  
-#define _DIVS32      73  
-#define _FLINIT      74  
-#define _FLOPPY      75  
-#define _GETFLOP     76  
-#define _SETXOR      77  
-#define _GETXOR      78  
-#define _SETCOLOR    79  
-#define _GETCOLOR    80  
-#define _CURON       81  
-#define _CUROFF      82  
-#define _ADJ360      83  
-#define _PRTSYM      84  
-#define _SYMCLR      85  
-#define _GETSYM      86  
-#define _GETNEXT     87  
-#define _PUTNEXT     88  
-#define _GETBASIS    89  
-#define _GETVAR      90  
-#define _SETA5       91  
-#define _AUFXY       92  
-#define _KORXY       93  
-#define _AUFK        94  
-#define _GETK        95  
-#define _RND         96  
-#define _GETVERS     97  
-#define _GETSN       98  
-#define _CRLF        99  
-#define _GETLINE     100 
-#define _GETCURXY    101 
-#define _SETCURXY    102 
-#define _GETXY       103 
-#define _SI          104 
-#define _SO          105 
-#define _SISTS       106 
-#define _SOSTS       107 
-#define _SIINIT      108 
-#define _GETAD8      109 
-#define _GETAD10     110 
-#define _SETDA       111 
-#define _SPEAK       112 
-#define _SPEAK1      113 
-#define _SOUND       114 
-#define _GETUHR      115 
-#define _SETUHR      116 
-#define _LSTS        117 
-#define _RELAN       118 
-#define _RELAUS      119 
-#define _ASSERR      120 
-#define _PRINTFP0    121 
-#define _GETFLOAT    122 
-#define _READAUS     123 
-#define _GRUND       124 
-#define _HARDCOPY    125 
-#define _GRAFIK      126 
-#define _GDPVERS     127 
-#define _SER         128 
-#define _CO2SER      129 
-#define _CLUTINIT    130 
-#define _CLUT        131 
-#define _RELAIS      132 
-#define _RELAISIN    133 
-#define _SETDA12     134 
-#define _GETAD12     135 
-#define _DISASS      136 
-#define _SUCHBIBO    137 
-#define _SI2         138 
-#define _SYSTEM      139 
-#define _UHRPRINT    140 
-#define _HARDDISK    141 
-#define _HARDTEST    142 
-/*#define _            143 
+#define _SCHREITE    1
+#define _DREHE       2
+#define _HEBE        3
+#define _SENKE       4
+#define _FIGURXY     5
+#define _WRITELF     6
+#define _SET         7
+#define _MOVETO      8
+#define _DRAWTO      9
+#define _WRITE       10
+#define _READ        11
+#define _CI          12
+#define _CSTS        13
+#define _RI          14
+#define _PO          15
+#define _CLR         16
+#define _CLPG        17
+#define _WAIT        18
+#define _SCHR16TEL   19
+#define _CLRSCREEN   20
+#define _CO          21
+#define _LO          22
+#define _SIN         23
+#define _COS         24
+#define _SIZE        25
+#define _CMD         26
+#define _NEWPAGE     27
+#define _SYNC        28
+#define _WERT        29
+#define _ZUWEIS      30
+#define _CIINIT2     31
+#define _CI2         32
+#define _CO2         33
+#define _SETFLIP     34
+#define _DELAY       35
+#define _FIRSTTIME   36
+#define _SETPEN      37
+#define _ERAPEN      38
+#define _GRAPOFF     39
+#define _CMDPRINT    40
+#define _PRINT2X     41
+#define _PRINT4X     42
+#define _PRINT6X     43
+#define _PRINT8X     44
+#define _PRINT8B     45
+#define _PRINT4D     46
+#define _HIDE        47
+#define _SHOW        48
+#define _CRT         49
+#define _LST         50
+#define _USR         51
+#define _NIL         52
+#define _SETERR      53
+#define _GETERR      54
+#define _SETPASS     55
+#define _EDIT        56
+#define _FIGUR       57
+#define _SETFIG      58
+#define _GETRAM      59
+#define _AUTOFLIP    60
+#define _CURSEIN     61
+#define _CURSAUS     62
+#define _CHAR        63
+#define _PROGZGE     64
+#define _ASSEMBLE    65
+#define _GETSTX      66
+#define _PUTSTX      67
+#define _GETORG      68
+#define _PUTORG      69
+#define _PRINT8D     70
+#define _PRINTV8D    71
+#define _MULS32      72
+#define _DIVS32      73
+#define _FLINIT      74
+#define _FLOPPY      75
+#define _GETFLOP     76
+#define _SETXOR      77
+#define _GETXOR      78
+#define _SETCOLOR    79
+#define _GETCOLOR    80
+#define _CURON       81
+#define _CUROFF      82
+#define _ADJ360      83
+#define _PRTSYM      84
+#define _SYMCLR      85
+#define _GETSYM      86
+#define _GETNEXT     87
+#define _PUTNEXT     88
+#define _GETBASIS    89
+#define _GETVAR      90
+#define _SETA5       91
+#define _AUFXY       92
+#define _KORXY       93
+#define _AUFK        94
+#define _GETK        95
+#define _RND         96
+#define _GETVERS     97
+#define _GETSN       98
+#define _CRLF        99
+#define _GETLINE     100
+#define _GETCURXY    101
+#define _SETCURXY    102
+#define _GETXY       103
+#define _SI          104
+#define _SO          105
+#define _SISTS       106
+#define _SOSTS       107
+#define _SIINIT      108
+#define _GETAD8      109
+#define _GETAD10     110
+#define _SETDA       111
+#define _SPEAK       112
+#define _SPEAK1      113
+#define _SOUND       114
+#define _GETUHR      115
+#define _SETUHR      116
+#define _LSTS        117
+#define _RELAN       118
+#define _RELAUS      119
+#define _ASSERR      120
+#define _PRINTFP0    121
+#define _GETFLOAT    122
+#define _READAUS     123
+#define _GRUND       124
+#define _HARDCOPY    125
+#define _GRAFIK      126
+#define _GDPVERS     127
+#define _SER         128
+#define _CO2SER      129
+#define _CLUTINIT    130
+#define _CLUT        131
+#define _RELAIS      132
+#define _RELAISIN    133
+#define _SETDA12     134
+#define _GETAD12     135
+#define _DISASS      136
+#define _SUCHBIBO    137
+#define _SI2         138
+#define _SYSTEM      139
+#define _UHRPRINT    140
+#define _HARDDISK    141
+#define _HARDTEST    142
+/*#define _            143
 #define _            144   */
-#define _PRTFP0      145 
-#define _FPUWERT     146 
-#define _SETFPX      147 
-#define _SETFPY      148 
-#define _SETFPZ      149 
-#define _SETSER      150 
-#define _GETSER      151 
-#define _SETS2I      152 
-#define _GETS2I      153 
-#define _IDETEST     154 
-#define _IDEDISK     155 
-#define _SRDISK      156 
-#define _SETF2S      157 
-#define _GETF2S      158 
-#define _GETSRD      159 
-#define _SETSYS      160 
-#define _GETSYS      161 
-#define _PATCH       162 
+#define _PRTFP0      145
+#define _FPUWERT     146
+#define _SETFPX      147
+#define _SETFPY      148
+#define _SETFPZ      149
+#define _SETSER      150
+#define _GETSER      151
+#define _SETS2I      152
+#define _GETS2I      153
+#define _IDETEST     154
+#define _IDEDISK     155
+#define _SRDISK      156
+#define _SETF2S      157
+#define _GETF2S      158
+#define _GETSRD      159
+#define _SETSYS      160
+#define _GETSYS      161
+#define _PATCH       162
 /* SD-Card */
 #define _SDTEST      163
 #define _SDDISK      164
@@ -546,10 +553,10 @@ static inline __attribute__((always_inline)) unsigned short to_bendian16( unsign
 	1	0	1	0	1		cylinder high byte LBA[16.23]						idechi		1D
 	1	0	1	1	0		head and device	LBA[24..27]						idesdh		1E
 	1	0	1	1	1		command/status							        idecmd		1F
-	0	1	1	1	0		2nd status/interrupt/reset				                idesir		16 
-	0	1	1	1	1		active status of the IDE device			                        idestat		17 
-	
-	
+	0	1	1	1	0		2nd status/interrupt/reset				                idesir		16
+	0	1	1	1	1		active status of the IDE device			                        idestat		17
+
+
 -	head and device register (idesdh)
 	========================
 	A write register that sets the master/slave selection and the head number.
@@ -695,7 +702,7 @@ SD0_DO		SD_MISO_i	18
 SD0_CS 		SD_nCS_o	22
 SD0_SCLK	SD_SCK_o 	20
 
-constant SPI_BASE_ADDR_c    : std_logic_vector(7 downto 0) := X"00"; -- r/w 
+constant SPI_BASE_ADDR_c    : std_logic_vector(7 downto 0) := X"00"; -- r/w
 s_spi_cs <= not nIORQ when wbm_address(7 downto 1) =  SPI_BASE_ADDR_c(7 downto 1) else '0';
 => SPI == 00..01
 
@@ -761,7 +768,7 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
 /*  CS der ersten Hardware SD */
 #define		SPIH0_CS 5
 /*  CS der zweiten Hardware SD */
-#define		SPIH1_CS 6             
+#define		SPIH1_CS 6
 
 /* SD commands */
 
@@ -815,7 +822,7 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
 #define TIMER1_BASE       0xFFFFFFF4*cpu
 #define TIMER1_CTRL       0xFFFFFFF4*cpu
 #define TIMER1_HI         0xFFFFFFF5*cpu
-#define TIMER1_LO         0xFFFFFFF6*cpu	
+#define TIMER1_LO         0xFFFFFFF6*cpu
 
 /* ----------------------------------------------------------------------------- FLOPPY ------------------------------------------------------------------------------------------------------------- */
 
@@ -828,7 +835,7 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
 /* ----------------------------------------------------------------------------- SERIAL ------------------------------------------------------------------------------------------------------------- */
 
 /*
- * 
+ *
  * control register definition
  * ---------------------------
  * bit
@@ -851,11 +858,11 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
  * 				1101=7200
  * 				1110=9600
  * 				1111=1920
- * 
+ *
  * 8N1,9600 => 0001 1110 = 0x1e
  * 8N1, 115200 => 0001 0011 = 0x13
- * 
- * 
+ *
+ *
  * command register definitions
  * ----------------------------
  * bit
@@ -874,15 +881,15 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
  * 		11:	 disabled	 low		 transmit brk
  * 1		0 = IRQ enabled from bit 3 of status register, 1 = disable IRQ
  * 0		1 = enable receiver and all interrupts
- * 
+ *
  * no parity, receive/transmit enable, disable IRQ, no echo => 0000 1011 = 0x0b
- * 
- * 
+ *
+ *
  * status register definitions
  * ---------------------------
- * 
+ *
  * bit
- * 7		0 = no INT, 1 = INT 
+ * 7		0 = no INT, 1 = INT
  * 6		0 = DSR low, 1 = DSR high
  * 5		0 = DCD low, 1 = DCD high
  * 4		1 = transmit data register empty
@@ -890,8 +897,8 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
  * 2		1 = overrun error
  * 1		1 = framing error
  * 0		1 = parity error
- * 
- */ 
+ *
+ */
 
 #define NKC_SER1_BASE        0xFFFFFFF0*cpu
 #define NKC_SER1_CTRL        0xFFFFFFF3*cpu
@@ -936,7 +943,7 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
 
 static inline __attribute__((always_inline)) char gp_csts(void)
 {
-    register long retvalue asm("%d0");            
+    register long retvalue asm("%d0");
     asm volatile(
     "# asm"             "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
@@ -968,7 +975,7 @@ static inline __attribute__((always_inline)) void gp_co(char x)
 
 static inline __attribute__((always_inline)) char gp_ci(void)
 {
-    register long retvalue asm("%d0"); 
+    register long retvalue asm("%d0");
     asm volatile(
     "# asm"            "\n\t" \
     "moveq #_CI,%%d7"  "\n\t" \
@@ -981,6 +988,20 @@ static inline __attribute__((always_inline)) char gp_ci(void)
     );
     return retvalue;
 
+}
+
+static inline __attribute__((always_inline)) void gp_cmd(const uint8_t cmd) {
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "movew %0,%%d0"              "\n\t" \
+    "moveq %1,%%d7"              "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    :                        /* outputs */    \
+    : "g"(cmd), "g"(_CMD)    /* inputs */    \
+    : "%d7"                  /* clobbered regs */ \
+    );
 }
 
 /* --> gdplib/nkc_gdplib.h */
@@ -1073,7 +1094,7 @@ static inline __attribute__((always_inline)) void gp_settrans(const bool trans) 
     );
 }
 
-static inline __attribute__((always_inline)) void gp_setxor(const bool xor) {
+static inline __attribute__((always_inline)) void gp_setxor(const bool x) {
   asm volatile(
     "# asm"                      "\n\t" \
     "moveb %1,%%d0"              "\n\t" \
@@ -1082,7 +1103,7 @@ static inline __attribute__((always_inline)) void gp_setxor(const bool xor) {
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    :  "g"(_SETXOR), "g"((xor)?1u:0u)    /* inputs */    \
+    :  "g"(_SETXOR), "g"((x)?1u:0u)    /* inputs */    \
     : "%d0", "%d7"    /* clobbered regs */ \
     );
 }
@@ -1128,6 +1149,23 @@ static inline __attribute__((always_inline)) void gp_draw_filled_rect(const uint
     :                   /* outputs */    \
     :  "g"(_GRAFIK), "g"(x_pos), "g"(y_pos), "g"(dx), "g"(dy)    /* inputs */    \
     : "%d0","%d1","%d2","%d3","%d4", "%d7"    /* clobbered regs */ \
+    );
+}
+
+static inline __attribute__((always_inline)) void gp_draw_filled_circle(const uint16_t x_pos, const uint16_t y_pos, const uint16_t r) {
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq #8,%%d0"              "\n\t" \
+    "movew %1,%%d1"              "\n\t" \
+    "movew %2,%%d2"              "\n\t" \
+    "movew %3,%%d3"              "\n\t" \
+    "moveq %0,%%d7"              "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    :                                                  /* outputs */    \
+    :  "g"(_GRAFIK), "g"(x_pos), "g"(y_pos), "g"(r)    /* inputs */    \
+    : "%d0","%d1","%d2","%d3", "%d7"                   /* clobbered regs */ \
     );
 }
 
@@ -1221,21 +1259,59 @@ static inline __attribute__((always_inline)) void gp_setcurxy(const uint8_t x,co
 }
 
 static inline __attribute__((always_inline)) void gp_getcurxy(uint8_t* const p_x, uint8_t* const p_y) {
+  register uint8_t x  __asm__("%d1") =0;
+  register uint8_t y  __asm__("%d2") =0;
   asm volatile(
     "# asm"                      "\n\t" \
     "moveq %2,%%d7"              "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
-    "moveb %%d1,%0"              "\n\t" \
-    "moveb %%d2,%1"              "\n\t" \
-    : "=g"(*p_x),"=g"(*p_y)        /* outputs */    \
-    : "g"(_GETCURXY)                 /* inputs */    \
-    : "%d1", "%d2", "%d7"          /* clobbered regs */ \
+    : "=g"(x),"=g"(y)              /* outputs */    \
+    : "g"(_GETCURXY)               /* inputs */    \
+    : "%d7"          /* clobbered regs */ \
     );
+    *p_x = x;
+    *p_y = y;
 }
 
-//#ifdef USE_JADOS
+#define L_BUTTON 0x80u
+#define R_BUTTON 0x40u
+
+static inline __attribute__((always_inline)) uint8_t gp_get_mouse(int16_t* const p_x, int16_t* const p_y){
+  register uint8_t keys  __asm__("%d0") =0;
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %3,%%d7"              "\n\t" \
+    "moveq #0,%%d0"              "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    "moveb %%d0,%2"              "\n\t" \
+    "movew %%d1,%0"              "\n\t" \
+    "movew %%d2,%1"              "\n\t" \
+    : "=g"(*p_x),"=g"(*p_y),"=g"(keys)     /* outputs */    \
+    : "g"(_HARDCOPY)               /* inputs */    \
+    : "%d1", "%d2", "%d7"          /* clobbered regs */ \
+  );
+  return (keys^(L_BUTTON | R_BUTTON)) & (L_BUTTON | R_BUTTON);
+}
+
+static inline __attribute__((always_inline)) void gp_progzge(const uint8_t* const p_char){
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %0,%%d7"              "\n\t" \
+    "moveal %1,%%a0"             "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    :                              /* outputs */    \
+    : "g"(_PROGZGE),"g"(p_char)    /* inputs */    \
+    : "%a0","%d7"                  /* clobbered regs */ \
+  );
+}
+
+#ifdef USE_JADOS
 
 static inline __attribute__((always_inline)) uint32_t jd_getversi(void) {
   //uint32_t jados_version = 0;
@@ -1244,7 +1320,7 @@ static inline __attribute__((always_inline)) uint32_t jd_getversi(void) {
     "# asm"                      "\n\t" \
     "movem.l %%d2/%%d7/%%a5-%%a6,-(%%sp)"  "\n\t" \
     "moveq %1,%%d7"              "\n\t" \
-  
+
     "trap #6"                    "\n\t" \
     "movem.l (%%sp)+, %%d2/%%d7/%%a5-%%a6" "\n\t" \
     /*"move.l %%d0,%0" */            "\n\t" \
@@ -1347,7 +1423,7 @@ struct jdfcb{
 	uint16_t  curtrack;	/* 38..39 */ // current track (Track-Relativ !)
 	uint16_t  cursec;		/* 40..41 */ // current sector in current track (track relative)
 	uint16_t  lasttrack;	/* 42..43 */ // last track
-	uint8_t  *pbuffer;	/* 44..47 */	
+	uint8_t  *pbuffer;	/* 44..47 */
 }__attribute__ ((packed));				/* otherwise datafields would be aligned ... */
 typedef struct jdfcb jdfcb_t ;
 
@@ -1459,7 +1535,7 @@ struct jd_fi_date {
   uint8_t month;
   uint8_t day;
 } __attribute__ ((packed));
-typedef struct jd_fi_date jd_fi_date_t; 
+typedef struct jd_fi_date jd_fi_date_t;
 
 struct jdfile_info {
 	uint32_t length;
@@ -1743,7 +1819,7 @@ static inline __attribute__((always_inline)) void jd_setovwrt(void)
 
 
 
-//#endif
+#endif
 
 
 
