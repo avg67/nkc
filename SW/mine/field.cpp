@@ -1,3 +1,8 @@
+/*-
+ * Copyright (C) 2023	Andreas Voggeneder
+ */
+/*- Minesweeper field class */
+
 #include "field.h"
 
 // define the class constructor

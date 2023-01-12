@@ -1,8 +1,13 @@
-#include <stdint.h>
-#include "../../nkc_common/nkc/nkc.h"
+/*-
+ * Copyright (C) 2023	Andreas Voggeneder
+ */
+/*- Minesweeper GP helper functions */
 
 #ifndef GP_HELPER_H
 #define GP_HELPER_H
+
+#include <stdint.h>
+#include "../../nkc_common/nkc/nkc.h"
 
 #ifdef __cplusplus
   extern "C" void delay_ms(const uint16_t ms);

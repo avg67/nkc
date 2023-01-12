@@ -1,10 +1,15 @@
+/*-
+ * Copyright (C) 2023	Andreas Voggeneder
+ */
+/*- Minesweeper field class */
+
+#ifndef FIELD_H
+#define FIELD_H
+
 //#include <iostream>
 //#include <string>
 #include <stdint.h>
 #include "mine.h"
-
-#ifndef FIELD_H
-#define FIELD_H
 
 // one field in minesweeper
 class field

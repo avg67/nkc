@@ -1,5 +1,11 @@
+/*-
+ * Copyright (C) 2023	Andreas Voggeneder
+ */
+/*- Minesweeper main file */
+
 //#include <iostream>
 //#include <string>
+#include <string.h>
 #include "board.h"
 #include "mine.h"
 
@@ -7,14 +13,19 @@ static int16_t mouse_x;
 static int16_t mouse_y;
 
 
-int16_t check_mouse(board& myboard);
-void draw_mouse_pointer();
+static int16_t check_mouse(board& myboard);
+static void draw_mouse_pointer();
 
-int main(void)
+int main(int argc, char *argv[])
 {
     setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
+
+    bool beginner_mode = true;
+    if((argc>1) && (strcmp(argv[0],"-I")==0)) {
+        beginner_mode=false;
+    }
 
    const uint32_t sysinfo = gp_system();
    if (!((sysinfo & (IS_08 | IS_00 | IS_20 | GDP_FPGA)) == ((IS_08 << PADDING) | GDP_FPGA))) {
@@ -34,11 +45,6 @@ int main(void)
     gp_setflip(10u,10u);
     GDP_Ctrl.page_dma = 0u;
 
-    /*{
-        field * p_field = new field;
-        delete p_field;
-    }*/
-
     //const clock_t start_time = _clock(NULL);
 
     srand((unsigned) _gettime());
@@ -47,7 +53,7 @@ int main(void)
     gp_setcurxy(1u,3u);
     iprintf("Press both Mouse keys together to exit\r");
 
-    board myboard;
+    board myboard(beginner_mode);
     myboard.draw();
     //const clock_t end_time = _clock(NULL);
     //iprintf("Time to draw board: %u ms\r\n", 1000u*(end_time-start_time)/CLOCKS_PER_SEC);
@@ -66,13 +72,13 @@ int main(void)
 
         result = check_mouse(myboard);
     }while(result==0);
-
+    const uint8_t y_size = myboard.get_board_height() + 1;
     if(result<0) {
         SetCurrentFgColor(RED);
-        gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+BOARD_Y_SIZE+1),0x33u, "Game over - you died!");
+        gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+y_size),0x33u, "Game over - you died!");
     }else if(result==1u) {
         SetCurrentFgColor(GREEN);
-        gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+BOARD_Y_SIZE+1u),0x33u, "Game over -  you won!");
+        gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+y_size),0x33u, "Game over -  you won!");
     }
 
 }
@@ -85,7 +91,7 @@ static inline int16_t limit_value(const int16_t val, const int16_t min, const in
     return ret;
 }
 
-int16_t check_mouse(board& myboard) {
+static int16_t check_mouse(board& myboard) {
     //static const uint8_t mouse_pointer[]= {0x7f,0x7e,0x71,0xf0,0};
     int16_t dx=0;
     int16_t dy=0;
@@ -127,7 +133,7 @@ int16_t check_mouse(board& myboard) {
     return ((keys & (L_BUTTON | R_BUTTON))==(L_BUTTON | R_BUTTON))?0xffu:result;
 }
 
-void draw_mouse_pointer()
+static void draw_mouse_pointer()
 {
     gp_setxor(true);
     gp_moveto(mouse_x-5,mouse_y);

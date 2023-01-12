@@ -46,11 +46,11 @@ LIBS =
 # and 16-bit integers (-mshort)
 COMMON_FLAGS=-g -Os -m68000 -Wall -fomit-frame-pointer  -fno-stack-protector -Dndrcomp  -DUSE_JADOS $(ISEARCH) #-ffunction-sections -fdata-sections # -nostartfiles
 CFLAGS=$(COMMON_FLAGS) -std=gnu99
-CPPFLAGS=$(COMMON_FLAGS) -std=gnu++11 -fno-exceptions
+CPPFLAGS=$(COMMON_FLAGS) -std=gnu++11 -fno-exceptions #-fexceptions
 ASFLAGS= #-DM68000
 
 # Linker Flags
-LDFLAGS= -T $(COMMON_DIR)rm_ram1.ld -Wl,-Map,$(OUTDIR)$(TARGET).map,--gc-sections,-flto -lm $(LIBDIRS) $(LIBS) -fno-exceptions -lgcc -lstdc++
+LDFLAGS= -T $(COMMON_DIR)rm_ram1.ld -Wl,-Map,$(OUTDIR)$(TARGET).map,--gc-sections,-flto -lm $(LIBDIRS) $(LIBS) -lgcc -lstdc++ -fno-exceptions
 
 
 
@@ -89,7 +89,7 @@ createdirs:
 	-@mkdir $(OBJPATH) 2>/dev/null || echo "" >/dev/null
 $(PROGS):	$(OBJS)
 	$(CC) $(CFLAGS) -c -o $(OBJPATH)/crt0.o $(COMMON_DIR)crt0.c
-	#Link
+# Link
 	$(CPP) $(CPPFLAGS) $(LDFLAGS) -o $@ $(OBJS)
 #	$(MV) *.o $(OUTDIR)
 #	$(RM) $(LIST)

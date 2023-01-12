@@ -1,3 +1,11 @@
+/*-
+ * Copyright (C) 2023	Andreas Voggeneder
+ */
+/*- Minesweeper definitions */
+
+#ifndef MINE_H
+#define MINE_H
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -6,13 +14,11 @@
 #include <ndrcomp/sysclock.h>
 #include "../../nkc_common/nkc/nkc.h"
 
-#ifndef MINE_H
-#define MINE_H
 
 
-#define BOARD_X_SIZE 9u
-#define BOARD_Y_SIZE 9u
-#define NR_MINES 10u
+
+#define BOARD_X_SIZE 16u
+#define BOARD_Y_SIZE 16u
 
 #define CCNV_X(X) (((uint16_t)X)*4u*X_SCALE)
 #define CCNV_Y(Y) (((uint16_t)Y)*4u*Y_SCALE)
@@ -20,9 +26,16 @@
 #define X_SCALE 5u
 #define Y_SCALE 3u
 #define BOARD_X	1u
-#define BOARD_Y	1u
+#define BOARD_Y	0u
 #define X_RES 512
 #define Y_RES 256
+
+#define BEGINNER_X_SIZE 9u
+#define BEGINNER_Y_SIZE 9u
+#define BEGINNER_NR_MINES 10u
+#define INTERMEDIATE_X_SIZE 16u
+#define INTERMEDIATE_Y_SIZE 16u
+#define INTERMEDIATE_NR_MINES 40u
 
 static inline __attribute__((always_inline)) void gdp_ready(void) {
    while(!(GDP.cmd & 0x04u)) {};

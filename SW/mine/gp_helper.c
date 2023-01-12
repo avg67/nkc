@@ -1,3 +1,7 @@
+/*-
+ * Copyright (C) 2023	Andreas Voggeneder
+ */
+/*- Minesweeper GP helper functions */
 
 // Standard Input/Output functions
 #include <stdio.h>
