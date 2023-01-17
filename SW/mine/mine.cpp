@@ -36,6 +36,9 @@ int main(int argc, char *argv[])
       #endif
       return 0;
    }
+   // redefine Magenta as dark grey
+   GDP_set_clut(MAGENTA, 0b001001001);
+   GDP_set_clut(CYAN, 0b100100100);
 
     mouse_x=X_RES/2u;
     mouse_y=Y_RES/2u;
@@ -80,7 +83,8 @@ int main(int argc, char *argv[])
         SetCurrentFgColor(GREEN);
         gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+y_size),0x33u, "Game over -  you won!");
     }
-
+    GDP_set_clut(MAGENTA, 0b111000111);
+    GDP_set_clut(CYAN, 0b000111111);
 }
 
 static inline int16_t limit_value(const int16_t val, const int16_t min, const int16_t max)

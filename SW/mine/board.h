@@ -28,6 +28,7 @@ class board
         uint8_t count_marked_mines();
         uint8_t count_mines(const uint16_t x, const uint16_t y);
         void unhide_surrounding(const uint16_t x, const uint16_t y, const uint16_t level);
+        void update_mines_info();
     public:
         board(bool beginner=true);
 

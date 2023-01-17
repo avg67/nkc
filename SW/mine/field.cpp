@@ -89,4 +89,29 @@ void field::draw(const uint16_t x, const uint16_t y)
 
     gdp_ready();
     GDP.csize = csize_backup;
+    if(this->hidden) {
+        SetCurrentFgColor(MAGENTA); // very dark grey
+        /*GDP_moveto(x+CCNV_X(1u),y);
+        GDP_draw_line(-(int8_t)CCNV_X(1u),0u);
+        GDP_draw_line(0,CCNV_Y(1u));*/
+        GDP_moveto(x+1u,y+1u);
+        GDP_draw_line(CCNV_X(1u)-2u,0u);
+        GDP_draw_line(0,CCNV_Y(1u)-2u);
+        GDP_moveto(x,y);
+        GDP_draw_line(CCNV_X(1u)-1u,0u);
+        GDP_draw_line(0,CCNV_Y(1u));
+        SetCurrentFgColor(CYAN);    // Light grey
+        //SetCurrentFgColor(WHITE);
+        GDP_moveto(x+CCNV_X(1u)-2u,y+CCNV_Y(1u)-1u);
+        GDP_draw_line(-((int8_t)(CCNV_X(1u)-3u)),0u);
+        GDP_draw_line(0,-((int8_t)(CCNV_Y(1u)-3u)));
+    }else{
+        SetCurrentBgColor(BLACK);
+        GDP_erapen();
+        GDP_moveto(x+CCNV_X(1u),y);
+        GDP_draw_line(-(int8_t)CCNV_X(1u),0u);
+        GDP_draw_line(0,CCNV_Y(1u));
+        GDP_drawpen();
+    }
+
 }

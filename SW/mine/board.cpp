@@ -42,28 +42,30 @@ void board::draw()
 
     for(uint16_t y=0u;y<y_size;y++) {
         const uint16_t y_pos = CCNV_Y(BOARD_Y) + (y * 4u * Y_SCALE);
-        for(uint16_t x=0u;x<x_size;x++) {
+        //for(uint16_t x=0u;x<x_size;x++) {
+        for(uint16_t x=x_size-1u;x!=UINT16_MAX;x--) {
             const uint16_t x_pos = CCNV_X(BOARD_X) + (x * 4u * X_SCALE);
             arr[x][y].draw(x_pos,y_pos);
         }
-        SetCurrentBgColor(BLACK);
+        /*SetCurrentBgColor(BLACK);
         GDP_erapen();
         gp_moveto(CCNV_X(BOARD_X),CCNV_Y(BOARD_Y + y));
         gp_drawto(CCNV_X(BOARD_X+x_size),CCNV_Y(BOARD_Y + y));
-        GDP_drawpen();
+        GDP_drawpen();*/
 //		iprintf("\r\n");
     }
-    GDP_erapen();
+    /*GDP_erapen();
     for(uint16_t x=0;x<x_size;x++) {
         gp_moveto(CCNV_X(BOARD_X + x),CCNV_Y(BOARD_Y));
         gp_drawto(CCNV_X(BOARD_X + x),CCNV_Y(BOARD_Y + y_size));
     }
-    GDP_drawpen();
+    GDP_drawpen();*/
     //char bfr[50];
     //siprintf(bfr,"Mines: %u  ",(unsigned int)count_marked_mines());
     //gp_writexy(10u,240,0x11, bfr);
-    gp_setcurxy(1u,5u);
-    iprintf("Mines found: %2u of %2u    \r",(unsigned int)count_marked_mines(),tot_nr_mines);
+    /*gp_setcurxy(1u,5u);
+    iprintf("Mines found: %2u of %2u    \r",(unsigned int)count_marked_mines(),tot_nr_mines);*/
+    update_mines_info();
 
 }
 
@@ -102,6 +104,12 @@ uint8_t board::count_marked_mines()
         }
     }
     return nr_marked_mines;
+}
+
+void board::update_mines_info()
+{
+    gp_setcurxy(1u,5u);
+    iprintf("Mines found: %2u of %2u    \r",(unsigned int)count_marked_mines(),tot_nr_mines);
 }
 
 // display all mines
@@ -197,7 +205,10 @@ int16_t board::click_field(const uint16_t x, const uint16_t y)
             show_fields(x,y,true);
         }
         draw();
-        //arr[x][y].draw(x_pos,y_pos);
+        /*const uint16_t x_pos = CCNV_X(BOARD_X) + (x * 4u * X_SCALE);
+        const uint16_t y_pos = CCNV_Y(BOARD_Y) + (y * 4u * Y_SCALE);
+        f.draw(x_pos,y_pos);
+        update_mines_info();*/
     }
     return result;
 }
@@ -230,7 +241,11 @@ void board::mark_field(const uint16_t x, const uint16_t y)
         field& f = arr[x][y];
         if(f.is_hidden() && ((f.getInfo()==0xFF) || (count_marked_mines()<tot_nr_mines))) {
             f.setInfo((f.getInfo()!=0)?0u:0xFFu);
-            draw();
+            //draw();
+            const uint16_t x_pos = CCNV_X(BOARD_X) + (x * 4u * X_SCALE);
+            const uint16_t y_pos = CCNV_Y(BOARD_Y) + (y * 4u * Y_SCALE);
+            f.draw(x_pos,y_pos);
+            update_mines_info();
         }
     }
 }

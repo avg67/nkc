@@ -64,6 +64,7 @@
 #define GDP_Ctrl        (*(volatile GDP_Page *)(0xffffff60L <<PADDING))
 #define GDP             (*(volatile GDP9366 *)(0xffffff70L <<PADDING))
 #define GDP_Col         (*(volatile GDP_Col *)(0xffffffA0L <<PADDING))
+#define GDP_Clut        (*(volatile GDP_Clut *)(0xffffffA4L <<PADDING))
 #define SC              (*(volatile SC6551 *)(0xfffffff0L <<PADDING))
 #define SOUND           (*(volatile SOUNDCHIP *)(0xffffff50L <<PADDING))
 #define KEY             (*(volatile KEY *)(0xffffff68L <<PADDING))
