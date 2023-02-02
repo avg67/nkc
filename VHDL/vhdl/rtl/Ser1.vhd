@@ -124,6 +124,7 @@ architecture rtl of Ser1 is
   signal ov_err               : std_ulogic;
   signal set_tx_irq           : std_ulogic;
   signal tx_irq               : std_ulogic;
+  signal Intr_s,Intr_reg_s    : std_ulogic;
 --  signal rdr_full             : std_ulogic;
 
   component InputSync
@@ -165,16 +166,17 @@ begin
     Status(4) <= not Data_out_reg(8);
     Status(5) <= '0'; --dcd_sync;
     Status(6) <= cts_sync; -- dsr;
-    Status(7) <= '0';
+    Status(7) <= Intr_reg_s;
     
     DTR_o <= not Command_reg(0);
     RTS_o <= '1' when Command_reg(3 downto 2)="00" else
              '0';
     TxD_o <= TxD;
     
-    Intr_o <= (Data_in_reg(8) and not Command_reg(2)) or
+    Intr_s <= (Data_in_reg(8) and not Command_reg(1)) or
               tx_irq;
               
+    Intr_o <= Intr_reg_s;
               
     
     with to_integer(unsigned(Adr_i(1 downto 0))) select
@@ -447,6 +449,9 @@ begin
         elsif (en_i and Wr_i)='1' and Adr_i(1 downto 0)="00" then
           tx_irq <= '0';
         end if;
+        if(Command_reg(4 downto 2)/="001" then
+            tx_irq <= '0';
+        end if;
       end if;
     end process;
 
@@ -576,9 +581,10 @@ begin
 
         rx_bit_cnt      <= (others => '0');
         rx_sr           <= (others => '0');
+        Intr_reg_s      <= '0';
       elsif rising_edge(clk_i) then
-        rx_state <= next_rx_state;
-
+        rx_state   <= next_rx_state;
+        Intr_reg_s <= Intr_s;
         if set_rx_baud_divider='1' then
           rx_baud_divider <= next_rx_baud_divider;
         end if;

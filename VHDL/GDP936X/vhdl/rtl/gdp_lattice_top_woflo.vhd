@@ -408,6 +408,7 @@ architecture rtl of gdp_lattice_top is
   
   signal ser_cs            : std_ulogic;
   signal ser_data          : std_ulogic_vector(7 downto 0);
+  signal ser_int           : std_ulogic;
   
   signal snd_cs            : std_ulogic;
   signal snd_data          : std_ulogic_vector(7 downto 0); 
@@ -806,7 +807,7 @@ begin
         Rd_i        => gdp_Rd,
         Wr_i        => gdp_Wr,
         DataOut_o   => ser_data,
-        Intr_o      => open
+        Intr_o      => ser_int
       );
   end generate;
   no_ser1: if not use_ser1_c generate
@@ -814,6 +815,7 @@ begin
     ser_cs         <= '0';
     RTS_o          <= CTS_i;
     TxD_o          <= RxD_i;
+    ser_int        <= '0';
   end generate;      
      
   impl_sound : if use_sound_c generate
@@ -1017,7 +1019,7 @@ begin
 --  Green_o <= (others => VGA_pixel);
 --  Blue_o  <= (others => VGA_pixel);
 
-  nIRQ_o <= '0' when t1_irq='1' else
+  nIRQ_o <= '0' when (t1_irq or ser_int)='1' else
             'Z';
 --  sample_clk_o  <= clk_i;
 end rtl;
