@@ -449,7 +449,7 @@ begin
         elsif (en_i and Wr_i)='1' and Adr_i(1 downto 0)="00" then
           tx_irq <= '0';
         end if;
-        if(Command_reg(4 downto 2)/="001" then
+        if Command_reg(4 downto 2)/="001" then
             tx_irq <= '0';
         end if;
       end if;

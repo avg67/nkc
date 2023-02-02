@@ -808,24 +808,24 @@ begin  -- beh
 ----    read_bus(X"60",read_data);
 --
 --    
-----    write_bus(X"F3",X"1F"); -- 8 bit
-----    write_bus(X"F2",X"66"); -- 8,e,1 bit
-------    write_bus(X"FC",X"55");
-----    send_uart(X"55");
-----    send_uart(X"00");
-----    send_uart(X"02");
-----    send_uart(X"FF");
-----    wait_tx_empty;
-----    wait for 600 us;
-----    write_bus(X"F3",X"BF"); -- 7,n,2
-----    write_bus(X"F2",X"06"); -- 7,n,1 bit
-----    send_uart(X"55");
-----    send_uart(X"00");
-----    send_uart(X"02");
-----    
-----    read_bus(X"F0",read_data);
-----    
-----    send_uart(X"FF");
+    write_bus(X"F3",X"1F"); -- 8 bit
+    write_bus(X"F2",X"69"); -- 8,e,1 bit, RX-IRQ
+--    write_bus(X"FC",X"55");
+    send_uart(X"55");
+    send_uart(X"00");
+    send_uart(X"02");
+    send_uart(X"FF");
+    wait_tx_empty;
+    wait for 600 us;
+    write_bus(X"F3",X"BF"); -- 7,n,2
+    write_bus(X"F2",X"09"); -- 7,n,1 bit, RX-IRQ
+    send_uart(X"55");
+    send_uart(X"00");
+    send_uart(X"02");
+    
+    read_bus(X"F0",read_data);
+    
+    send_uart(X"FF");
 ----    
 ----    
 ----    
