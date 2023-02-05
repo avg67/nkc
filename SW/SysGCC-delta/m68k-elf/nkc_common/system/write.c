@@ -6,14 +6,14 @@
 #include <errno.h>
 #include <signal.h>
 
-long
-write(int fd, char *buffer, long n)
+int write(int fd, const void *bfr, size_t n)
 {
     int         j, flg = 0;
-    long        i;
+    size_t      i;
     char        c;
     PATH        *pp, *passoc;
     DEVICE      *dp;
+    const char* buffer = (const char*) bfr;
 
     if(fd<0 || fd>=_NPATH || !((pp=&_path[fd])->status & VALID) || 
                 !(dp = pp->devp)->p_write){

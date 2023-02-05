@@ -22,7 +22,7 @@ extern time_t _gettime(void);
 
 //extern clock_t _clock(void (*clock_fu)(void));
 #define TIME (_clock(NULL))
-#define HZ CLOCKS_PER_SEC 
+#define HZ CLOCKS_PER_SEC
 #define UP    0x05u
 #define DOWN  0x18u
 #define LEFT  0x13u
@@ -227,7 +227,7 @@ void draw_square(const uint8_t row, const uint8_t col, const uint8_t color) {
    const uint8_t csize_backup = GDP.csize;
    GDP.csize = ((X_SCALE)<<4u) |(Y_SCALE);   //0x32u;
    GDP_draw4x4(x_pos,y_pos);
-   
+
    if (color != BGCOLOR) {
       // schwarze umrahmung zeichnen
       SetCurrentColor(BLACK);
@@ -257,16 +257,16 @@ void draw_stone(const Stone_t* const p_stone, const uint8_t row, const uint8_t c
          p_data++;
       }
    }
-#if 0   
+#if 0
    if (color != BGCOLOR) {
-      SetCurrentColor(WHITE); 
+      SetCurrentColor(WHITE);
    }
    gp_moveto(CCNV_X(BOARD_X+col),CCNV_Y(BOARD_Y+row));               // Ursprung ist links unten
    gp_drawto(CCNV_X(BOARD_X+col),CCNV_Y(BOARD_Y+row+rows));          // up
    gp_drawto(CCNV_X(BOARD_X+col+cols),CCNV_Y(BOARD_Y+row+rows));     // right
    gp_drawto(CCNV_X(BOARD_X+col+cols),CCNV_Y(BOARD_Y+row));          //
    gp_drawto(CCNV_X(BOARD_X+col),CCNV_Y(BOARD_Y+row));
-#endif   
+#endif
 }
 
 
@@ -306,7 +306,7 @@ void get_stone(const Stone_t* const p_stone, const uint8_t orientation, Stone_t*
             cols = p_stone->rows;
             for (uint16_t i=0u;i<cols; i++) {
                for (uint16_t j=0u;j<rows; j++) {
-                  
+
                   //draw_square(row+(rows - j - 1u), col+(cols - i - 1u),color);
                   p_data_out[get_offset(j , (cols - i - 1u), rows, cols)] = *p_data;
                   p_data++;
@@ -391,7 +391,7 @@ void draw_board(void) {
    #endif
 }
 
-uint8_t check_board_lines(void) 
+uint8_t check_board_lines(void)
 {
    // search for first filled line and return it. If no filled line is found 0xff is returned
    for (uint8_t i=0u;i<BOARD_HEIGHT;i++) {
@@ -401,10 +401,10 @@ uint8_t check_board_lines(void)
          line_result += (pixel!=0u)?1u:0u;
       }
       if (line_result == BOARD_WIDTH) {
-/*         
+/*
          // filled line found!
          char bfr[16];
-         SetCurrentColor(WHITE); 
+         SetCurrentColor(WHITE);
          siprintf(bfr,"Complete %02u",i);
          WriteScreenxy(0,10,bfr); */
          return i;
@@ -462,13 +462,13 @@ bool check_collision(const uint8_t row, const uint8_t col, const Stone_t* const 
 
    //const uint8_t last_row_index = (rows-1u) * cols;
    if(row==0xffu) {
-#if 0      
-      SetCurrentColor(WHITE); 
+#if 0
+      SetCurrentColor(WHITE);
       char bfr[16];
       siprintf(bfr,"!row %u",er_count);
       WriteScreenxy(0,5,bfr);
       er_count++;
-#endif      
+#endif
       return true;
    }
    for (uint8_t i=0u;i<rows; i++) {
@@ -478,22 +478,22 @@ bool check_collision(const uint8_t row, const uint8_t col, const Stone_t* const 
          if ((current_row < BOARD_HEIGHT) && (current_col < BOARD_WIDTH)) {
             const uint8_t pixel = board[current_row][current_col] & 0x0fu;
             if ((*p_data!=0u) && (pixel!=0u)) {
-   #if 0            
+   #if 0
                char bfr[16];
                siprintf(bfr,"r:%02u c:%02u",row+(rows-i-1),col+j);
-               SetCurrentColor(WHITE); 
+               SetCurrentColor(WHITE);
                WriteScreenxy(0,0,bfr);
-   #endif            
+   #endif
                return true;
             }
          }
          p_data++;
       }
    }
-#if 0   
-   SetCurrentColor(WHITE); 
+#if 0
+   SetCurrentColor(WHITE);
    WriteScreenxy(0,5,"    ");
-#endif   
+#endif
    return false;
 }
 
@@ -506,18 +506,18 @@ void copy_stone(const uint8_t row, const uint8_t col, const Stone_t* const p_sto
 #if 0
    {
       char bfr[16];
-      SetCurrentColor(WHITE); 
+      SetCurrentColor(WHITE);
       siprintf(bfr,"copy %02u %02u %02u",row,col,color);
       WriteScreenxy(0,3,bfr);
    }
-#endif   
+#endif
    for (uint8_t i=0u;i<rows; i++) {
       for (uint8_t j=0u;j<cols; j++) {
          if (*p_data!=0u) {
 #if 0
             if (board[col+j][row+(rows-i-1)]!=0) {
                char bfr[16];
-               SetCurrentColor(WHITE); 
+               SetCurrentColor(WHITE);
                siprintf(bfr,"er %02u %02u",row+(rows-i-1),col+j);
                WriteScreenxy(0,2,bfr);
             }
@@ -536,10 +536,10 @@ void copy_stone(const uint8_t row, const uint8_t col, const Stone_t* const p_sto
 #define HIGHSORCE_FILE_NAME "tet_hsc.bin"
 bool load_highscore(highscore_t * const p_highscore, const size_t hs_buf_len) {
    jdfcb_t myfcb={0};
-	uint8_t result = jd_fillfcb(&myfcb,HIGHSORCE_FILE_NAME);
+   uint8_t result = jd_fillfcb(&myfcb,HIGHSORCE_FILE_NAME);
    if (result==0) {
       jdfile_info_t info __attribute__ ((aligned (4))) = {0u};
-      
+
       result = jd_fileinfo(&myfcb, &info);
       //iprintf("Fileinfo-Result: 0x%X length: %u %u date:0x%lX, att:0x%X\r\n",result, (unsigned int)info.length, hs_buf_len, info.date, info.attribute);
       if ((result==0) && (hs_buf_len>=info.length)) {
@@ -552,7 +552,7 @@ bool load_highscore(highscore_t * const p_highscore, const size_t hs_buf_len) {
 
 bool save_highscore(highscore_t * const p_highscore, const size_t hs_buf_len) {
    jdfcb_t myfcb={0};
-	uint8_t result = jd_fillfcb(&myfcb,HIGHSORCE_FILE_NAME);
+   uint8_t result = jd_fillfcb(&myfcb,HIGHSORCE_FILE_NAME);
    if (result==0) {
       result = jd_filesave(&myfcb, (const char*const)p_highscore, hs_buf_len);
       //iprintf("Filesave-Result: 0x%X\r\n",result);
@@ -596,7 +596,7 @@ void write_with_bg(const char * const p_text, const uint8_t fg, const uint8_t bg
    gp_setcolor(fg,bg);
    const size_t len = strlen(p_text);
    puts(p_text);
-      
+
    uint16_t x_pos=0u;
    uint16_t y_pos=0u;
    gp_getxy(&x_pos,&y_pos);
@@ -629,12 +629,24 @@ void write_with_bg(const char * const p_text, const uint8_t fg, const uint8_t bg
    gp_setxor(false);
 }
 
+void filter_string(char* p_string)
+{
+   char ch;
+   do {
+      ch = *p_string;
+      if (ch<' ') {
+         *p_string = '\0';
+      }
+      p_string++;
+   }while(ch!='\0');
+}
+
 void display_hs(highscore_t * const p_hs, const uint8_t new_entry) {
    //puts("Highscore:\r\n**********\r\n");
    write_with_bg(" Highscore:",BLUE, BLACK, 0u);
    puts("\r\n");
    //gp_setcolor(RED,WHITE);
- 
+
 
    //iprintf("X:%u Y:%u\r\n",x_pos,y_pos);
    //puts("Nr: LV   Points    Played at         Name");
@@ -645,8 +657,9 @@ void display_hs(highscore_t * const p_hs, const uint8_t new_entry) {
    // Display max first 10 HS items and highlight currently added one with green
    for (uint16_t i=0;i<min(p_hs->nr_entries,MAX_ENTRIES_TO_SHOW);i++) {
       const struct tm * const p_tm = localtime(&p_hs->hs[i].date);
+      filter_string(p_hs->hs[i].name);
       //strftime(timebuf, sizeof(timebuf), "%d.%m.%y %H:%M:%S", localtime(&p_hs->hs[i].date));
-      siprintf(timebuf,"%02u.%02u.%02u %02u:%02u:%02u",p_tm->tm_mday,p_tm->tm_mon,p_tm->tm_year-100u,p_tm->tm_hour,p_tm->tm_min,p_tm->tm_sec);
+      siprintf(timebuf,"%02u.%02u.%02u %02u:%02u:%02u",p_tm->tm_mday,p_tm->tm_mon+1u,p_tm->tm_year-100u,p_tm->tm_hour,p_tm->tm_min,p_tm->tm_sec);
       siprintf(linebuf," %-2u: %02u %8u %20s %s",i+1u, p_hs->hs[i].level, (unsigned int)p_hs->hs[i].points, timebuf, p_hs->hs[i].name);
       uint8_t fg = (i&1u)?GRAY:WHITE|DARK;
       if (i==new_entry) {
@@ -665,9 +678,9 @@ void display_hs(highscore_t * const p_hs, const uint8_t new_entry) {
 
 int main(void)
 {
-   setvbuf(stdin, NULL, _IONBF, 0);
+   /*setvbuf(stdin, NULL, _IONBF, 0);
    setvbuf(stdout, NULL, _IONBF, 0);
-   setvbuf(stderr, NULL, _IONBF, 0);
+   setvbuf(stderr, NULL, _IONBF, 0);*/
    const uint32_t sysinfo = gp_system();
    if (!((sysinfo & (IS_08 | IS_00 | IS_20 | GDP_FPGA)) == ((IS_08 << PADDING) | GDP_FPGA))) {
       #if(cpu==1)
@@ -679,18 +692,28 @@ int main(void)
    }
    //playTest();
 
+  /*{
+    char bfr[16];
+    fgets(bfr, sizeof(bfr), stdin);
+    iprintf("\r\n%s\r\n",bfr);
+    gp_ci();
+  }*/
+
    //SetCurrentBgColor(GRAY | DARK);
    SetCurrentBgColor(BGCOLOR);
    gp_clearscreen();
+
+
+
    gp_cursor_off();
-   gp_setflip(10u,10u);
+   gp_setflip(0u,0u);
    GDP_Ctrl.page_dma = 0u;
    //GDP_Col.bg = GRAY | DARK;
    //GDP.ctrl2 |= (1u<<5u); // turn on BG mode
-   
+
    initSound();
 
-	char key;
+   char key;
 
    srand((unsigned) _gettime());
 
@@ -711,8 +734,8 @@ int main(void)
    gp_writexy(CCNV_X(2u),CCNV_Y(7u),0x11, "left  = Move Left");
    gp_writexy(CCNV_X(2u),CCNV_Y(8u),0x11, "right = Move Right");
    gp_writexy(CCNV_X(2u),CCNV_Y(9u),0x11, "up    = Rotate");
-   
-   
+
+
    uint16_t deleted_lines = 0u;
    uint8_t level = 0u;
    uint8_t old_level = level;
@@ -730,7 +753,7 @@ int main(void)
    memset(board, 0u, sizeof(board));
 
    orientation = 0u;
-   
+
    bool stop = false;
    bool refresh = false;
    bool new_stone = true;
@@ -748,7 +771,7 @@ int main(void)
          if (!refresh) {
 
             end_time  = _clock(NULL) + ((SPEED_DELAY - speed)*CLOCKS_PER_SEC)/1000u;
-            
+
             if (new_stone) {
                if (check_finish()) {
                   game_over=true;
@@ -811,7 +834,7 @@ int main(void)
          get_stone(stones[stone_index], orientation, &my_stone);
          if ((current_col + my_stone.cols)>= BOARD_WIDTH) {
             current_col -= ((current_col + my_stone.cols) - BOARD_WIDTH);
-         }   
+         }
          draw_stone(&my_stone, current_row, current_col, color);
          if(new_stone) {
             uint8_t filled_line = check_board_lines();
@@ -821,7 +844,7 @@ int main(void)
                delete_board_line(filled_line);
                deleted_lines++;
                currently_deleted_lines++;
-               SetCurrentColor(WHITE);                
+               SetCurrentColor(WHITE);
                siprintf(bfr,"Lines: %u  ",deleted_lines);
                gp_writexy(CCNV_X(BOARD_X+BOARD_WIDTH+2u),CCNV_Y(BOARD_Y),0x11, bfr);
                // check if there are more lines to delete
@@ -843,9 +866,9 @@ int main(void)
                //speed = SPEED_DELAY - speed_temp;
                old_level = level;
             }
-            siprintf(bfr,"Speed: %u  ",(unsigned int)speed); //(unsigned int)SPEED_CALC(level+1u));  
+            siprintf(bfr,"Speed: %u  ",(unsigned int)speed); //(unsigned int)SPEED_CALC(level+1u));
             gp_writexy(CCNV_X(BOARD_X+BOARD_WIDTH+2u),CCNV_Y(BOARD_Y+4u),0x11, bfr);
-            siprintf(bfr,"Points: %u  ",points); 
+            siprintf(bfr,"Points: %u  ",points);
             gp_writexy(CCNV_X(2u),CCNV_Y(BOARD_Y+BOARD_HEIGHT+2u),0x22, bfr);
          }
 
@@ -913,11 +936,11 @@ int main(void)
                old_level++;
                break;*/
          }
-         
+
       }
    }while (!stop);
    if (game_over) {
-      
+
       GDP.ctrl2 |= (1u<<5u); // turn on BG mode
       do {
          SetCurrentColor(RED);
@@ -934,8 +957,9 @@ int main(void)
    GDP_Col.fg=1;
    GDP_Col.bg=0;
    gp_clearscreen();
+   g_sound_mute=true;
    {
-      char* hs_buf = malloc(1024); 
+      char* hs_buf = malloc(1024);
       highscore_t* p_hs = (highscore_t*)hs_buf;
       if (!load_highscore(p_hs,1024u)) {
          puts("Highscore not found. Creating new...\r\n");
@@ -943,7 +967,7 @@ int main(void)
 /*         hs.nr_entries = 1u;
          hs.hs[0].date = _gettime();
          strcpy(hs.hs[0].name,"Andreas Voggeneder");
-         hs.hs[0].points = (uint32_t)points;         
+         hs.hs[0].points = (uint32_t)points;
          (void)save_highscore(&hs,sizeof(hs));*/
       }else{
          iprintf("Loaded higscore...\r\n%u Entries\r\n",(unsigned int)p_hs->nr_entries);
@@ -952,11 +976,17 @@ int main(void)
       {
          char bfr[80u]={0u};
          if(!abort) {
+            gp_setflip(10u,10u);
+            gp_cursor_on();
             puts("Please enter your name for highscore list\r\n");
             //gets(bfr);
             fgets(bfr, sizeof(bfr), stdin);
             puts("\r\n");
+            filter_string(bfr);
+            gp_cursor_off();
+            gp_setflip(0u,0u);
          }
+
          if(!abort && (strlen(bfr)>0)) {
 /*            strncpy(p_hs->hs[p_hs->nr_entries].name,bfr,MAX_NAME_LENGTH-1u);
             p_hs->hs[p_hs->nr_entries].name[MAX_NAME_LENGTH-1u]='\0';
@@ -978,6 +1008,7 @@ int main(void)
       }
       display_hs(p_hs, new_entry);
       free(hs_buf);
+      gp_setflip(10u,0u);
    }
 
 

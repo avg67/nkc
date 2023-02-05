@@ -9,6 +9,10 @@
 //volatile char gp_csts(void);
 //volatile void gp_co(char x);
 //volatile char gp_ci(void);
+int ioctl(int fd, int code, void* buf);
+int write(int fd, const void *buffer, size_t n);
+int read(int fd, void *bfr, size_t n);
+int close(int fd);
 
 #ifdef __cplusplus
   extern "C" time_t _gettime(void);
@@ -1222,6 +1226,19 @@ static inline __attribute__((always_inline)) void gp_cursor_off(void) {
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
     : "g"(_CUROFF)      /* inputs */    \
+    : "%d7"             /* clobbered regs */ \
+    );
+}
+
+static inline __attribute__((always_inline)) void gp_cursor_on(void) {
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %0,%%d7"              "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    :                   /* outputs */    \
+    : "g"(_CURON)       /* inputs */    \
     : "%d7"             /* clobbered regs */ \
     );
 }

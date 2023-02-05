@@ -6,18 +6,19 @@
 #include <errno.h>
 #include <ctype.h>
 #include <signal.h>
+#include "nkc/nkc.h"
 
 static void outdelchar();
-long write(int fd, char *buffer, long n);
+//int write(int fd, char *buffer, size_t n);
 
-long
-read(int fd, char *buffer, long n)
+int read(int fd, void *bfr, size_t n)
 {
     int         j = 0, lineend = 0;
-    long        i;
+    size_t      i;
     char        c;
     PATH        *pp, *passoc;
     DEVICE      *dp;
+    char * buffer = (char *)bfr;
 
     if(fd<0 || fd>=_NPATH || !((pp=&_path[fd])->status & VALID) || 
                 !(dp = pp->devp)->p_read){
@@ -85,8 +86,9 @@ read(int fd, char *buffer, long n)
         /* fill buffer */
         buffer[i++] = c;
         /* echo character */
-        if(pp->flag & ECHO && passoc!=NULL && isascii(c) && isprint(c)) 
+        if((pp->flag & ECHO) && (passoc!=NULL) && isascii(c) && isprint(c)) {
             write(pp->assoc, &c, 1);
+        }
     }
     return i;
 }

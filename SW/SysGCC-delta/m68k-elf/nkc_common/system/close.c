@@ -5,9 +5,7 @@
 #include <sys/path.h>
 #include <errno.h>
 
-int
-close(fd)
-int fd;
+int close(int fd)
 {
     PATH *pp;
     

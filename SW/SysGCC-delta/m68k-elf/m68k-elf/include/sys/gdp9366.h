@@ -24,6 +24,7 @@
 // CMD-Register - Sign bits for Line command
 #define SX_BIT 2u
 #define SY_BIT 4u
+#define CHAR_SIZE 5u
 
 typedef struct gdp {
     _(cmd)
@@ -40,7 +41,7 @@ typedef struct gdp {
     _(yl)
     _(xlp)
     _(ylp)
-    _(res3)
+    _(char_def)
     _(res4)
 } GDP9366;
 
