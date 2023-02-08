@@ -196,6 +196,8 @@ begin
     
 --    x2s <= std_ulogic_vector(signed(x1_i) + to_integer(signed(dx_i)) - xincr);
 --    y2s <= std_ulogic_vector(signed(y1_i) + to_integer(signed(dy_i)) - yincr);
+
+    -- maybe store x2s,y2s in line setup to allow next update during running bresenham
     x2s <= std_ulogic_vector(signed(x1_i) + to_integer(signed(dx_i)));
     y2s <= std_ulogic_vector(signed(y1_i) + to_integer(signed(dy_i)));
     

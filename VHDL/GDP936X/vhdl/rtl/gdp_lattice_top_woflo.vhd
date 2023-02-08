@@ -33,7 +33,11 @@ entity gdp_lattice_top is
        nkc_nIORQ_i   : in std_ulogic;
        driver_nEN_o  : out std_ulogic;
        driver_DIR_o  : out std_ulogic;
-       nIRQ_o        : out std_ulogic;
+       nIRQ_o        : out std_logic;	   	   
+	   --nNMI_o		 : out std_logic; 	   
+	   IRQ0_o	 	 : out std_logic; 
+	   IRQ1_o	 	 : out std_logic; 
+	   
 	   --UDS_SIZ0_i	 : in std_logic;
 	   --LDS_SIZ1_i	 : in std_logic;
 	   is68000_o	 : out std_logic; 
@@ -418,6 +422,7 @@ architecture rtl of gdp_lattice_top is
   
   signal ser_cs            : std_ulogic;
   signal ser_data          : std_ulogic_vector(7 downto 0);
+  signal ser_int           : std_ulogic;
   
   signal snd_cs            : std_ulogic;
   signal snd_data          : std_ulogic_vector(7 downto 0); 
@@ -811,7 +816,7 @@ begin
         Rd_i        => gdp_Rd,
         Wr_i        => gdp_Wr,
         DataOut_o   => ser_data,
-        Intr_o      => open
+        Intr_o      => ser_int
       );
   end generate;
   no_ser1: if not use_ser1_c generate
@@ -819,6 +824,7 @@ begin
     ser_cs         <= '0';
     RTS_o          <= CTS_i;
     TxD_o          <= RxD_i;
+    ser_int        <= '0';
   end generate;      
      
   impl_sound : if use_sound_c generate
@@ -1024,8 +1030,10 @@ begin
 --    SRAM1_nWR      <= not (GDP_SRAM_we);
 --  end generate;
   
-  nIRQ_o <= '0' when t1_irq='1' else
+  nIRQ_o <= '0' when (t1_irq or ser_int)='1' else
             '1';
+  IRQ0_o <= '1';
+  IRQ1_o <= '1';
 --  sample_clk_o  <= clk_i;
   is68000_o   <= '1';
   nkc_nWAIT_o <= '1';
