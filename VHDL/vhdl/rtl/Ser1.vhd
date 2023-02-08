@@ -196,7 +196,7 @@ begin
     process (Clk_i, reset_n_i) is
     begin  -- process
       if reset_n_i = ResetActive_c then
-        Command_reg        <= (others => '0');
+        Command_reg        <= "00000010";
         Control_reg        <= (others => '0');
         Data_out_reg       <= (others => '0');
         Data_in_reg        <= (others => '0');

@@ -818,7 +818,7 @@ begin  -- beh
     wait_tx_empty;
     wait for 600 us;
     write_bus(X"F3",X"BF"); -- 7,n,2
-    write_bus(X"F2",X"09"); -- 7,n,1 bit, RX-IRQ
+    write_bus(X"F2",X"09"); -- 7,n,1 bit, RX-IRQ 
     send_uart(X"55");
     send_uart(X"00");
     send_uart(X"02");
