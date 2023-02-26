@@ -31,20 +31,16 @@
 #include <string.h>
 #include "cs8900_eth.h"
 //#define _DEBUG_
+#ifdef _DEBUG_
+//#define LEVEL2_DEBUG
+#endif
 //-----------------------------------------------------------------------------
+
 const uint8_t mymac[6] __attribute__ ((aligned (2))) = {MYMAC1, MYMAC2, MYMAC3, MYMAC4, MYMAC5, MYMAC6};
-//unsigned char mymac[6];
-//unsigned char enc_revid = 0;
-//extern unsigned char mymac[6];
-/*static const uint16_t cs_mac[3u] = {
-    MYMAC1 | (MYMAC2 << 8u),
-    MYMAC3 | (MYMAC4 << 8u),
-    MYMAC5 | (MYMAC6 << 8u),
-};*/
 
 uint8_t remote_mac[6] __attribute__ ((aligned (2))) = {0u};  // used as temp.
 //-----------------------------------------------------------------------------
-#ifdef _DEBUG_
+#ifdef LEVEL2_DEBUG
   typedef struct {
     uint16_t nr_frames;
     uint8_t* p_buf[16];
@@ -124,7 +120,7 @@ void  read_frame_data(uint8_t* ps, const uint16_t len)
             const uint8_t temp_h = CS8900.rxtx_data0_h;
             *p_ptr++ = temp_l; //CS8900.rxtx_data0_l;
             *p_ptr++ = temp_h; //CS8900.rxtx_data0_h;
-#ifdef _DEBUG_
+#ifdef LEVEL2_DEBUG
             *p_debug++= temp_l;
             *p_debug++= temp_h;
 #endif
@@ -233,7 +229,7 @@ uint16_t __attribute__((optimize("-O3"))) cs_receive_packet( uint16_t bufsize, u
     - 2 bytes length or Type
     - 46 bytes of data
     */
-#ifdef _DEBUG_
+#ifdef LEVEL2_DEBUG
     char ch;
     do {
         ch = gp_ci();
@@ -276,7 +272,7 @@ uint16_t __attribute__((optimize("-O3"))) cs_receive_packet( uint16_t bufsize, u
     uint16_t len = rx_hdr.us[1u];
 
 #ifdef _DEBUG_
-    uint16_t status               = *((uint16_t*)&rxheader[0]);
+    uint16_t status               = rx_hdr.us[0u]; //*((uint16_t*)&rxheader[0]);
 
     CS_DEBUG("HEADER: 0x%04X 0x%04X\r\n",status,len);
 #endif

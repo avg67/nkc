@@ -26,7 +26,7 @@
 #define _STACK_H
 
 #include <stdio.h>
-
+#include "config.h"
 //#define DEBUG iprintf	//mit Debugausgabe
 #define DEBUG(...) 			//ohne Debugausgabe
 
