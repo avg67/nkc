@@ -10,15 +10,15 @@
 //#define TFTP_DEBUG iprintf
 #define TFTP_DEBUG(...)
 
-bool data_ready = false;
-unsigned short data_len =0;
+static bool data_ready = false;
+static unsigned short data_len =0;
 
 static inline uint16_t min(const uint16_t a, const uint16_t b) {
     return (a<=b)?a:b;
 }
 
 //Wertet message vom TFTP Server aus
-void tftp_get (void)
+static void tftp_get (void)
 {
   //struct TFTPHDR  *msg;
   struct IP_Header *ip;
@@ -40,7 +40,7 @@ void tftp_get (void)
 }
 
 //Sendet TFTP messages
-void tftp_message (unsigned long server_ip, unsigned short request, const char * name, const char * mode)
+static void tftp_message (unsigned long server_ip, unsigned short request, const char * name, const char * mode)
 {
     TFTPHDR *msg;
 
@@ -63,7 +63,7 @@ void tftp_message (unsigned long server_ip, unsigned short request, const char *
     create_new_udp_packet((u_int)cp - (u_int)msg,TFTP_SERVER_PORT, TFTP_CLIENT_PORT,server_ip);
 }
 
-void tftp_ack (unsigned long server_ip, unsigned short tport, unsigned short block_nr)
+static inline void tftp_ack (unsigned long server_ip, unsigned short tport, unsigned short block_nr)
 {
     TFTPHDR *msg;
 
@@ -83,15 +83,14 @@ void tftp_ack (unsigned long server_ip, unsigned short tport, unsigned short blo
  *
  * \return 0 on success, -1 otherwise.
  */
-int TftpRecv(unsigned long server_ip, char* const p_file_name, const bool dry_run)
+bool TftpRecv(const unsigned long server_ip, const char* const p_file_name, const bool dry_run)
 {
     unsigned short tport = TFTP_CLIENT_PORT;
     unsigned short block = 0u;
 
 
-    iprintf("TFTP1 %s ", p_file_name);
     if (dry_run) {
-        iprintf("dry-run!");
+        iprintf(" with a dry-run!");
     }
     iprintf("\r\n");
 
@@ -99,6 +98,7 @@ int TftpRecv(unsigned long server_ip, char* const p_file_name, const bool dry_ru
     char* block_buf = malloc(JD_BLOCKSIZE);
     uint16_t block_size = 0u;
     bool done = false;
+    bool error = false;
     uint32_t total_size = 0u;
 
     //Port in Anwendungstabelle eintragen für eingehende ´TFTP Daten!
@@ -138,7 +138,7 @@ int TftpRecv(unsigned long server_ip, char* const p_file_name, const bool dry_ru
         }while(!data_ready && _clock(NULL)<timeout);
         if (!data_ready) {
             iprintf("Timeout!\r\n");
-            return -1;
+            return false;
         }
         /*
          * Send file request or acknowledge and receive
@@ -150,7 +150,12 @@ int TftpRecv(unsigned long server_ip, char* const p_file_name, const bool dry_ru
                 done = true;
             }
             TFTPHDR  *msg = (TFTPHDR *)&eth_buffer[UDP_DATA_START];
-            if(htons(msg->th_opcode) != TFTP_DATA) {
+
+            if(htons(msg->th_opcode) == TFTP_ERROR) {
+                iprintf("TFTP-Error '%u': %s\r\n",msg->th_u.tu_code,msg->th_data);
+                error=true;
+                break;
+            }else if(htons(msg->th_opcode) != TFTP_DATA) {
                 //iprintf("No data-block - ignore\r\n");
                 //return -1;
                 gp_co('i');
@@ -206,15 +211,17 @@ int TftpRecv(unsigned long server_ip, char* const p_file_name, const bool dry_ru
             done=false;
         }
     } while(!done);
-    const clock_t end_time = _clock(NULL);
-    if (!dry_run) {
-        jd_close(&myfcb);
+    if (!error) {
+        const clock_t end_time = _clock(NULL);
+        if (!dry_run) {
+            jd_close(&myfcb);
+        }
+        free(block_buf);
+        const uint32_t duration = (uint32_t)(1000u*(end_time - start_time)/CLOCKS_PER_SEC);
+        iprintf("\r\nDuration for %u Bytes: %u ms with %u kB/s\r\n",(unsigned int)total_size, (unsigned int)duration,(unsigned int)((total_size/1024u)*1000u/duration));
     }
-    free(block_buf);
-    const uint32_t duration = (uint32_t)(1000u*(end_time - start_time)/CLOCKS_PER_SEC);
-    iprintf("\r\nDuration for %u Bytes: %u ms with %u kB/s\r\n",(unsigned int)total_size, (unsigned int)duration,(unsigned int)((total_size/1024u)*1000u/duration));
 
-    return 0;
+    return !error;
 }
 
 

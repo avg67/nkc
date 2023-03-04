@@ -28,6 +28,6 @@ typedef struct tftphdr {
 
 /*@}*/
 
-int TftpRecv(unsigned long server_ip, char* const p_file_name, const bool dry_run);
+bool TftpRecv(const unsigned long server_ip, const char* const p_file_name, const bool dry_run);
 
 #endif

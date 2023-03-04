@@ -1,9 +1,8 @@
 
 #include <ndrcomp/target.h>
 #include <stdio.h>
-
-
 #include <string.h>
+#include <stdlib.h>
 #include <malloc.h>
 //#include <sys/ndrclock.h>
 #include <time.h>
@@ -34,6 +33,7 @@ extern volatile clock_t _clock_value;
 
 volatile int timer_flag=0;
 static const char* p_file_name = NULL;
+static const char* p_server_ip_string = NULL;
 static bool dry_run = false;
 
 void timer_func() {
@@ -56,22 +56,65 @@ void _delay_ms(const uint16_t delay) {
     };
 }
 
+static inline const char* parse_string(const int argc, char **argp, const uint16_t index)
+{
+    const char* p_string = NULL;
+    if (argc>(index+1u)) {
+        p_string = argp[index + 1u];
+    }
+    return p_string;
+}
 
+uint32_t parse_ip_string(const char* const ip_str)
+{
+    uint8_t s_idx=0;
+    uint8_t part=0;
+    char bfr[8]= {0};
+    const size_t len = strlen(ip_str);
+
+    IP_ADR ip;
+    ip.ipl=0u;
+    while(s_idx<len) {
+        // 1. search for '.' or '\0'
+        uint8_t d_idx=0u;
+        for(uint16_t i=0u;i<10u;i++) {
+            const char ch=ip_str[s_idx++];
+            if(!ch || ch=='.') {
+                bfr[d_idx]='\0';
+                break;
+            }
+            bfr[d_idx]=ch;
+            d_idx++;
+        }
+        // 2. convert string in bfr into decimal value
+        const int number = atoi(bfr);
+        ip.bytes[part++]=(unsigned char)number;
+    }
+
+    return ip.ipl;
+}
 
 static bool parse_args(const int argc, char **argp)
 {
     uint16_t i = 1u;
+    // 5 parameters max possible in Jados
     while(i<argc)
     {
         //iprintf("arg: %u: %s\r\n",i, argp[i]);
         if (argp[i][0] == '-'){
             switch(argp[i][1]) {
                 case 'F':
-                    i++;
-                    p_file_name = argp[i];
+                    /*if (argc>(i+1u)) {
+                        i++;
+                        p_file_name = argp[i];
+                    }*/
+                    p_file_name = parse_string(argc, argp, i);
                     break;
                 case 'D':
                     dry_run = true;
+                    break;
+                case 'S':
+                    p_server_ip_string = parse_string(argc, argp, i);
                     break;
             }
         }
@@ -103,7 +146,6 @@ int main(int argc, char **argp, char **envp)
     return -1;
   }
 
-
     stack_init();
 
  #if USE_DHCP
@@ -124,14 +166,30 @@ int main(int argc, char **argp, char **envp)
 
   print_ip();
 
-  static const IP_ADR server_ip = {
+  IP_ADR server_ip = {
     .bytes[0]= 192,
     .bytes[1]= 168,
     .bytes[2]= 0,
     .bytes[3]= 166
   };
-  TftpRecv(server_ip.ipl, p_file_name, dry_run); //"TESTFILE.68K");
-  iprintf("TFTP done\r\n");
+    /*{
+        unsigned int arr[4]={0u};
+        if(p_server_ip_string!=NULL) {
+            if(siscanf(p_server_ip_string, "%u.%u.%u.%u", &arr[0],&arr[1],&arr[2],&arr[3])==4u){
+                server_ip.bytes[0]=(unsigned char)arr[0];
+                server_ip.bytes[1]=(unsigned char)arr[1];
+                server_ip.bytes[2]=(unsigned char)arr[2];
+                server_ip.bytes[3]=(unsigned char)arr[3];
+            }
+        }
+    }*/
+  if(p_server_ip_string!=NULL) {
+    server_ip.ipl = parse_ip_string(p_server_ip_string);
+  }
+  iprintf("TFTP1 %s from %u.%u.%u.%u", p_file_name,server_ip.bytes[0],server_ip.bytes[1],server_ip.bytes[2],server_ip.bytes[3] );
+  if(TftpRecv(server_ip.ipl, p_file_name, dry_run)) {
+    iprintf("TFTP done\r\n");
+  }
 
   char ch=' ';
   while(ch!='x') {
