@@ -31,24 +31,13 @@
 #include <string.h>
 #include "cs8900_eth.h"
 //#define _DEBUG_
-#ifdef _DEBUG_
-//#define LEVEL2_DEBUG
-#endif
+
 //-----------------------------------------------------------------------------
 
 const uint8_t mymac[6] __attribute__ ((aligned (2))) = {MYMAC1, MYMAC2, MYMAC3, MYMAC4, MYMAC5, MYMAC6};
 
 uint8_t remote_mac[6] __attribute__ ((aligned (2))) = {0u};  // used as temp.
 //-----------------------------------------------------------------------------
-#ifdef LEVEL2_DEBUG
-  typedef struct {
-    uint16_t nr_frames;
-    uint8_t* p_buf[16];
-  } t_debug;
-  t_debug* p_debug_info = NULL;
-  //uint8_t** p_debug_buf_ptr = NULL;
-  uint8_t* p_debug = NULL;
-#endif
 
 typedef union {
     uint16_t us[2];
@@ -91,47 +80,91 @@ static inline void cs_reset(void)
     return false;	// MATCH!
 }*/
 
+#if (cpu==2)
+    // optimized version - only for 68000 (16bit)
+    void write_frame_data(const uint8_t* ps, const uint16_t len)
+    {
+        register uint16_t nr_words asm("%d1") = (len>>1u)-1u;   // prepare for dbra
+        register const uint8_t* addr asm("%a1") = ps;
 
-void __attribute__((optimize("-O3"))) write_frame_data(const uint8_t* ps, const uint16_t len)
-{
-    uint16_t nr_words = len>>1u;
-    const uint8_t* p_ptr = ps;
-    while(nr_words) {
-        //const uint8_t hib=*ps++;
-        //const uint8_t lob=*ps++;
-        //Write_Frame_word(((uint16_t)hib<<8u) | lob);
-        CS8900.rxtx_data0_l = *p_ptr++;
-        CS8900.rxtx_data0_h = *p_ptr++;
-        nr_words--;
+            asm volatile(
+            "# asm"                 "\n\t" \
+            "lea %0,%%a0"           "\n\t" /*CS8900.data0_l*/ \
+    "wf1_%=: movew %%a1@+,%%d0"     "\n\t" \
+            "movepw %%d0,0(%%a0)"   "\n\t" \
+            "dbra %%d1,wf1_%="      "\n\t" \
+            "movew %1,%%d0"         "\n\t" /*len*/ \
+            "btstb #0,%%d0"         "\n\t" \
+            "beqs wf2_%="           "\n\t" \
+            "moveb %%a1@,(%%a0)"    "\n\t" \
+    "wf2_%=:" \
+            : "=m"(CS8900.rxtx_data0_l) /* outputs */    \
+            : "g"(len),"g"(nr_words),"g"(addr)               /* inputs */    \
+            : "d0","a0"    /* clobbered regs */ \
+            );
     }
-    // write also last byte if len is odd
-    if(len&1u) {
-        CS8900.rxtx_data0_l = *p_ptr;
-    }
-}
 
-void  read_frame_data(uint8_t* ps, const uint16_t len)
-{
-    uint16_t nr_words = len>>1u;
-    uint8_t* p_ptr = (uint8_t*)ps;
-    if (nr_words > 0u) {
-        do {
-            const uint8_t temp_l = CS8900.rxtx_data0_l;
-            const uint8_t temp_h = CS8900.rxtx_data0_h;
-            *p_ptr++ = temp_l; //CS8900.rxtx_data0_l;
-            *p_ptr++ = temp_h; //CS8900.rxtx_data0_h;
-#ifdef LEVEL2_DEBUG
-            *p_debug++= temp_l;
-            *p_debug++= temp_h;
+    // optimized version - only for 68000 (16bit)
+    void  read_frame_data(uint8_t* ps, const uint16_t len)
+    {
+        register uint16_t nr_words asm("%d1") = (len>>1u)-1u;   // prepare for dbra
+        register uint8_t* addr asm("%a1") = ps;
+
+            asm volatile(
+            "# asm"                  "\n\t" \
+            "lea %0,%%a0"            "\n\t" /*CS8900.data0_l*/ \
+    "rf1_%=: movepw 0(%%a0),%%d0"    "\n\t" \
+            "movew %%d0,%%a1@+"      "\n\t" \
+            "dbra %%d1,rf1_%="       "\n\t" \
+            "movew %1,%%d0"          "\n\t" /*len*/ \
+            "btstb #0,%%d0"          "\n\t" \
+            "beqs rf2_%="            "\n\t" \
+            "moveb (%%a0),%%a1@"     "\n\t" \
+    "rf2_%=:" \
+            : "=m"(CS8900.rxtx_data0_l) /* outputs */    \
+            : "g"(len),"g"(nr_words),"g"(addr)               /* inputs */    \
+            : "d0","a0"    /* clobbered regs */ \
+            );
+    }
+#else
+    void __attribute__((optimize("-O3"))) write_frame_data(const uint8_t* ps, const uint16_t len)
+    {
+        uint16_t nr_words = len>>1u;
+        const uint8_t* p_ptr = ps;
+        while(nr_words) {
+            //const uint8_t hib=*ps++;
+            //const uint8_t lob=*ps++;
+            //Write_Frame_word(((uint16_t)hib<<8u) | lob);
+            CS8900.rxtx_data0_l = *p_ptr++;
+            CS8900.rxtx_data0_h = *p_ptr++;
+            nr_words--;
+        }
+        // write also last byte if len is odd
+        if(len&1u) {
+            CS8900.rxtx_data0_l = *p_ptr;
+        }
+    }
+
+    void  read_frame_data(uint8_t* ps, const uint16_t len)
+    {
+        uint16_t nr_words = len>>1u;
+        uint8_t* p_ptr = (uint8_t*)ps;
+        if (nr_words > 0u) {
+            do {
+                const uint8_t temp_l = CS8900.rxtx_data0_l;
+                const uint8_t temp_h = CS8900.rxtx_data0_h;
+                *p_ptr++ = temp_l; //CS8900.rxtx_data0_l;
+                *p_ptr++ = temp_h; //CS8900.rxtx_data0_h;
+                //*p_ptr++ = (uint16_t)CS8900.rxtx_data0_l | (((uint16_t)CS8900.rxtx_data0_h << 8u));
+            }while(--nr_words);
+        }
+        // read also last byte if len is odd
+        if(len & 1u) {
+            *p_ptr++ = CS8900.rxtx_data0_l;
+        }
+    }
 #endif
-            //*p_ptr++ = (uint16_t)CS8900.rxtx_data0_l | (((uint16_t)CS8900.rxtx_data0_h << 8u));
-        }while(--nr_words);
-    }
-    // read also last byte if len is odd
-    if(len & 1u) {
-        *p_ptr++ = CS8900.rxtx_data0_l;
-    }
-}
+
 
 /*void print_reg(uint16_t reg, uint8_t nr) {
     if(!nr) return;

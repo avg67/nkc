@@ -67,8 +67,8 @@ OBJCOPY_FLAGS=--only-section=.text \
 CSRCS=  boot.c \
         Stack/stack.c  \
         Stack/dhcpc.c  \
-        cs8900_eth.c \
-        tftp.c
+        tftp.c \
+        cs8900_eth.c
         #spi.c
         #enc28j60.c
 
@@ -83,8 +83,6 @@ OBJPATH = ./obj
 OBJS           = $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(CSRCS)))))
 OBJS          += $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(ASM_SRCS)))))
 
-# ACU program start
-#ACU_PGM_START=0xA600
 
 
 PROGS=$(OUTDIR)$(TARGET).elf
@@ -102,7 +100,7 @@ createdirs:
 	-@mkdir $(OUTDIR) 2>/dev/null || echo "" >/dev/null
 	-@mkdir $(OBJPATH) 2>/dev/null || echo "" >/dev/null
 $(PROGS):	$(OBJS) #llnkc.o
-	$(CC) $(CFLAGS) -Os -c -o $(OBJPATH)/crt0.o $(COMMON_DIR)crt0.c
+	$(CC) $(CFLAGS) -c -o $(OBJPATH)/crt0.o $(COMMON_DIR)crt0.c
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJS)
 #	$(MV) *.o $(OUTDIR)
 #	$(RM) $(LIST)

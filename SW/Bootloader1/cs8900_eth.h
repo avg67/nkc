@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "../../nkc_common/nkc/nkc.h"
+#include <ndrcomp/target.h>
 //
 #include "config.h"
 
@@ -248,13 +249,47 @@
     #define Read_8900(addr) \
         ((uint16_t)addr | ((uint16_t)(*((uint8_t*)&addr+(PADDING+1u)) << 8u)));
 
+#if (cpu==2)
+    static inline uint16_t Read_PP_8900(const uint16_t addr)
+    {
+        register uint16_t ret asm("%d0");
+        uint16_t addr_swp = to_bendian16(addr);
+        asm volatile(
+        "# asm"                 "\n\t" \
+        "movew %3,%%d0"         "\n\t" \
+        "lea %1,%%a0"           "\n\t" \
+        "movepw %%d0,0(%%a0)"   "\n\t" \
+        "movepw 2*2(%%a0),%0"   "\n\t" \
+        /*"rolw #8,%%d0"*/      "\n\t" \
+        : "=r"(ret),"=m"(CS8900.add_l),"=m"(CS8900.data0_l) /* outputs */    \
+        : "g"(addr_swp)               /* inputs */    \
+        : "a0"    /* clobbered regs */ \
+        );
+        return to_bendian16(ret);
+    }
+    static inline void Write_PP_8900(const uint16_t addr, const uint16_t data)
+    {
+        uint16_t addr_swp = to_bendian16(addr);
+        uint16_t data_swp = to_bendian16(data);
+        asm volatile(
+        "# asm"                 "\n\t" \
+        "movew %2,%%d0"         "\n\t" \
+        "lea %0,%%a0"           "\n\t" \
+        "movepw %%d0,0(%%a0)"   "\n\t" \
+        "movew %3,%%d0"         "\n\t" \
+        "movepw %%d0,2*2(%%a0)"   "\n\t" \
+        : "=m"(CS8900.add_l),"=m"(CS8900.data0_l) /* outputs */    \
+        : "g"(addr_swp),"g"(data_swp)               /* inputs */    \
+        : "a0"    /* clobbered regs */ \
+        );
+    }
+#else
     static inline uint16_t Read_PP_8900(const uint16_t addr)
     {
         CS8900.add_l = LO8(addr);
         CS8900.add_h = HI8(addr);
         return ((uint16_t)CS8900.data0_l) | ((uint16_t)CS8900.data0_h << 8u);
     }
-
     static inline void Write_PP_8900(const uint16_t addr, const uint16_t data)
     {
         CS8900.add_l = LO8(addr);
@@ -262,9 +297,10 @@
         CS8900.data0_l = LO8(data);
         CS8900.data0_h = HI8(data);
     }
+#endif
 
     // writes a word in little-endian byte order to the frame register
-    static inline void Write_Frame_word(const uint16_t data)
+    /*static inline void Write_Frame_word(const uint16_t data)
     {
         CS8900.rxtx_data0_l = HI8(data);
         CS8900.rxtx_data0_h = LO8(data);
@@ -294,7 +330,7 @@
     {
         return ((uint32_t)Read_Frame_word() << 16u) | Read_Frame_word();
 
-    }
+    }*/
 
 
 	/*************************************************************

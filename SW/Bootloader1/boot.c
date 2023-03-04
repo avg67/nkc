@@ -1,17 +1,21 @@
 
 #include <ndrcomp/target.h>
 #include <stdio.h>
-#if USE_ENC28J60
-    #include "enc28j60.h"
-#endif
+
+
 #include <string.h>
 #include <malloc.h>
 //#include <sys/ndrclock.h>
 #include <time.h>
+
 #include "stack/stack.h"
 #include "stack/dhcpc.h"
 #include "../../nkc_common/nkc/nkc.h"
 #include "tftp.h"
+#if USE_ENC28J60
+    #include "enc28j60.h"
+    #include "spi.h"
+#endif
 
 #if USE_MMC
   #include "sdkarte/fat16.h"
@@ -29,6 +33,8 @@ extern volatile unsigned char gp_timer;
 extern volatile clock_t _clock_value;
 
 volatile int timer_flag=0;
+static const char* p_file_name = NULL;
+static bool dry_run = false;
 
 void timer_func() {
   static short _prescaler = CLOCKS_PER_SEC;
@@ -43,12 +49,40 @@ void timer_func() {
     while(_clock(NULL) < end_time) {};
 }*/
 
-void _delay_ms(uint16_t delay) {
+void _delay_ms(const uint16_t delay) {
     const uint32_t end_time = _clock_value + (((uint32_t)delay * CLOCKS_PER_SEC) / 1000uL);
     //iprintf("time %d - %d",_clock_value,end_time);
     while(_clock_value < end_time) {
     };
- }
+}
+
+
+
+static bool parse_args(const int argc, char **argp)
+{
+    uint16_t i = 1u;
+    while(i<argc)
+    {
+        //iprintf("arg: %u: %s\r\n",i, argp[i]);
+        if (argp[i][0] == '-'){
+            switch(argp[i][1]) {
+                case 'F':
+                    i++;
+                    p_file_name = argp[i];
+                    break;
+                case 'D':
+                    dry_run = true;
+                    break;
+            }
+        }
+        i++;
+    }
+    return (p_file_name!=NULL);
+}
+
+static void usage(void) {
+    iprintf("Usage: 'bootldr -f <filename> [-d]'\r\n");
+}
 
 int main(int argc, char **argp, char **envp)
 {
@@ -64,10 +98,11 @@ int main(int argc, char **argp, char **envp)
   iprintf("Compiliert am "__DATE__" um "__TIME__"\r\n");
   iprintf("Compiliert mit GCC Version "__VERSION__"\r\n");
 
-  if (argc<2) {
-    iprintf("Usage: 'bootldr <filename>'\r\n");
+  if ((argc<3) || !(parse_args(argc, argp))) {
+    usage();
     return -1;
   }
+
 
     stack_init();
 
@@ -89,14 +124,13 @@ int main(int argc, char **argp, char **envp)
 
   print_ip();
 
-  //TftpRecv(unsigned long server_ip)
   static const IP_ADR server_ip = {
     .bytes[0]= 192,
     .bytes[1]= 168,
     .bytes[2]= 0,
     .bytes[3]= 166
   };
-  TftpRecv(server_ip.ipl, argp[1]); //"TESTFILE.68K");
+  TftpRecv(server_ip.ipl, p_file_name, dry_run); //"TESTFILE.68K");
   iprintf("TFTP done\r\n");
 
   char ch=' ';

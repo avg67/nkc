@@ -83,33 +83,40 @@ void tftp_ack (unsigned long server_ip, unsigned short tport, unsigned short blo
  *
  * \return 0 on success, -1 otherwise.
  */
-int TftpRecv(unsigned long server_ip, char* const p_file_name)
+int TftpRecv(unsigned long server_ip, char* const p_file_name, const bool dry_run)
 {
     unsigned short tport = TFTP_CLIENT_PORT;
-    unsigned short block = 0;
+    unsigned short block = 0u;
 
 
-    iprintf("TFTP1 %s\r\n", p_file_name);
+    iprintf("TFTP1 %s ", p_file_name);
+    if (dry_run) {
+        iprintf("dry-run!");
+    }
+    iprintf("\r\n");
 
     // Buffer for one sector
     char* block_buf = malloc(JD_BLOCKSIZE);
     uint16_t block_size = 0u;
     bool done = false;
-    uint32_t total_size = 0;
+    uint32_t total_size = 0u;
 
     //Port in Anwendungstabelle eintragen für eingehende ´TFTP Daten!
     add_udp_app (TFTP_SERVER_PORT, (void(*)(unsigned char))tftp_get);
 
-    jdfcb_t myfcb={0};
-	uint8_t result = jd_fillfcb(&myfcb,p_file_name);
-    if(result!=0) {
-        iprintf("Error %u creating FCB!\r\n", result);
-        return -1;
-    }
-    result = jd_create(&myfcb);
-    if(result!=0) {
-        iprintf("Error %u creating File!\r\n", result);
-        return -1;
+    jdfcb_t myfcb={0u};
+    uint8_t result = 0u;
+    if (!dry_run) {
+        result = jd_fillfcb(&myfcb,p_file_name);
+        if(result!=0) {
+            iprintf("Error %u creating FCB!\r\n", result);
+            return -1;
+        }
+        result = jd_create(&myfcb);
+        if(result!=0) {
+            iprintf("Error %u creating File!\r\n", result);
+            return -1;
+        }
     }
 
     const clock_t start_time = _clock(NULL);
@@ -165,7 +172,7 @@ int TftpRecv(unsigned long server_ip, char* const p_file_name)
             * However, if we missed the first block, return
             * with an error.
             */
-            if(htons(msg->th_u.tu_block) != block + 1) {
+            if(htons(msg->th_u.tu_block) != (block + 1u)) {
                 if(block == 0)
                     return -1;
                 continue;
@@ -185,7 +192,9 @@ int TftpRecv(unsigned long server_ip, char* const p_file_name)
             tftp_ack(server_ip, tport, block);
             // In the meanwhile write block to disk
             if (store) {
-                result = jd_blockwrite(&myfcb, block_buf, 1u);
+                if (!dry_run) {
+                    result = jd_blockwrite(&myfcb, block_buf, 1u);
+                }
                 block_size -= min(JD_BLOCKSIZE,block_size);
                 TFTP_DEBUG("disk write: 0x%X remaining: %u\r\n", result, block_size);
                 gp_co('.');
@@ -198,11 +207,14 @@ int TftpRecv(unsigned long server_ip, char* const p_file_name)
         }
     } while(!done);
     const clock_t end_time = _clock(NULL);
-    jd_close(&myfcb);
+    if (!dry_run) {
+        jd_close(&myfcb);
+    }
     free(block_buf);
-    iprintf("\r\nDuration for %u Bytes: %u ms\r\n",(unsigned int)total_size, (unsigned int)(1000u*(end_time - start_time)/CLOCKS_PER_SEC));
+    const uint32_t duration = (uint32_t)(1000u*(end_time - start_time)/CLOCKS_PER_SEC);
+    iprintf("\r\nDuration for %u Bytes: %u ms with %u kB/s\r\n",(unsigned int)total_size, (unsigned int)duration,(unsigned int)((total_size/1024u)*1000u/duration));
 
     return 0;
 }
 
-/*@}*/
+
