@@ -1,0 +1,51 @@
+<html>
+<head>
+<meta http-equiv="Content-Language" content="de">
+
+<title>Zeichnen</title>
+<script type="text/javascript">
+<!-- 
+function DoIt(p) {
+	var aForm;
+    aForm = oForm.elements;
+	if(window.event.offsetX>=0 && window.event.offsetY>=0 &&
+	window.event.offsetX<256 && window.event.offsetY<128) {
+		if(aForm.T1.value) {
+			aForm.T1.value+=";"
+		}
+		aForm.T1.value+=
+		Math.round(window.event.offsetX/2)+","+Math.round(window.event.offsetY/2);
+	}
+}
+</script>
+</head>
+
+<body bgcolor="#3366FF">
+<p align="center">&nbsp;</p>
+<form ID="oForm" method="get" action="draw.htm" >
+  <p align="center"><img border="2" src="sc.bmp" width="256" height="128" onMouseDown="DoIt()"></p>
+  <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="100%" id="AutoNumber1">
+    <tr>
+      <td width="31%">
+  <p align="right">Linientyp:</td>
+      <td width="35%">
+  <p align="left"><input type="radio" value="A" checked name="R1">Ausgezogen<br>
+  <input type="radio" name="R1" value="S">Gestrichelt<br>
+  <input type="radio" name="R1" value="D">Strichpunkt<br>
+  <input type="radio" name="R1" value="P">Punktiert</p>
+      </td>
+      <td width="84%">&nbsp;</td>
+    </tr>
+  </table>
+  <p align="center">Linien:<input TYPE="text" name="T1" size="100">&nbsp; </p>
+  <p align="center"><input type="submit" value="Zeichnen" name="B1"></p>
+</form>
+
+<form method="get" action="draw.htm">
+  <p align="center">
+  <input type="submit" value="Bildschirm löschen" name="CLS"></p>
+</form>
+
+</body>
+
+</html>

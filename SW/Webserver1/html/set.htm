@@ -1,0 +1,29 @@
+<html><head><title>Embedded Webserver - Dynamic Form</title></head>
+<body bgcolor=#0073FF text=#FFFFFF vlink=#FFFFFF link=#FFFFFF alink=#FFFFFF>
+<table align="center">
+<tr><td width="640">
+<hr noshade size="3" color="#00AAFF">
+<p align="center"><img border="0" src="fh.gif" width="194" height="86"> </p>
+<hr noshade size="3" color="#00AAFF">
+<p><b><h2><i>Embedded Webserver</i></h2></b></p>
+<p>Dynamic Form. Set Clock and LEDs. An invalid Time will be ignored. The Hardware contains two LEDs (3+4), which can be controlled by the user. Each Set receives an ID, which will be displayed as "ID" on several pages. So you can see, if the current settings are yours.<br>(Current) ID:@id@
+</p><form action="reply.htm" method="get">
+<table width=300><tr><td>Clock:
+<input type=text name="A1" maxlength=2 value=@hr@ size=2> :
+<input type=text name="A2" maxlength=2 value=@min@ size=2> :
+<input type=text name="A3" maxlength=2 value=@sec@ size=2>
+</td><td align=right><input type=submit value="Set Clock" name="A9">
+</td></tr></table></form>
+<form action="reply.htm" method="get">
+<table width=300><tr>
+<td><input type=hidden name="A4">
+LED3: <input type=checkbox name="A5" @L3@ value="ON"></td>
+<td>LED4: <input type=checkbox name="A6" @L4@ value="ON"></td>
+<td align=right><input type=submit value="Set LEDs" name="A9">
+</td></tr></table></form>
+<b><a href="index.htm">Exit and Home...</a></b>
+<hr noshade size="3" color="#00AAFF">
+</td></tr>
+<tr><td width="640">
+&nbsp;</td></tr></table>
+</body></html>

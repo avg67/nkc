@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>Sandbox Peripherals</title>
+<script type="text/javascript">
+<!-- 
+function SetKeys(img,k) {
+	if (k) {
+		document[img].src="key_p.gif";
+	} else
+		document[img].src="key_u.gif";
+}
+</script>
+</head>
+<body stylesrc="index.htm" bgcolor="#3366ff" text="#ffffff" link="#79fbfb" vlink="#79fbfb" alink="#79fbfb">
+<p align="center"><b><u><font size="6"><img border="0" src="fh.gif" align="left" width="194" height="86"><img border="0" src="hsse.jpg" align="right" width="108" height="108">Sandbox Peripherals</font></u></b>
+<p>&nbsp;</p>
+<p></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><b><font size="4">A/D Converter-Channel 0 :</font></b></p>
+<table bgcolor="#00ff00" border="5" cellpadding="0" cellspacing="0" width="500">
+<tr><td>
+<table width="AD0%" border="0" cellpadding="0" cellspacing="0">
+<tr><td bgcolor="#ff0000">&nbsp;</td></tr>
+</table></td></tr></table>
+<table border="0" width="500"><tr>
+<td width="20%">0V</td>
+<td width="20%">0.5V</td>
+<td width="20%">1V</td>
+<td width="20%">1.5V</td>
+<td width="20%">2V</td>
+<td width="20%">2.5V</td>
+</tr></table><br>
+<p><b><font size="4">A/D Converter-Channel 1 :</font></b></p>
+<table bgcolor="#00ff00" border="5" cellpadding="0" cellspacing="0" width="500">
+<tr><td>
+<table width="AD1%" border="0" cellpadding="0" cellspacing="0">
+<tr><td bgcolor="#ff0000">&nbsp;</td></tr>
+</table></td></tr></table>
+<table border="0" width="500"><tr>
+<td width="20%"> 0V</td>
+<td width="20%">0.5V</td>
+<td width="20%">1V</td>
+<td width="20%">1.5V</td>
+<td width="20%">2V</td>
+<td width="20%">2.5V</td></tr></table>
+<form method="POST" action="FormIO">
+  <p><font size="4"><b>7-Segmentanzeige :</b></font></p>
+  <p>Low ein <input type="checkbox" name="CLOW" value="ON" CL%    >&nbsp;&nbsp;&nbsp;
+  HIGH ein&nbsp; <input type="checkbox" name="CHIGH" value="ON" CH%    ></p>
+  <p>Wert (hex)&nbsp; <input type="text" name="SevenSeg" size="2" value="7S%"></p>
+  <table border="0" width="100%">
+    <tr><td width="19%"></td>
+      <td width="20%"><table border="0" width="15%">
+          <tr><td width="33%" bgcolor="#FFFFFF"><img name="k0" border="0" onMouseUp="SetKeys('k0',0)" onMouseDown="SetKeys('k0',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k1" border="0" onMouseUp="SetKeys('k1',0)" onMouseDown="SetKeys('k1',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k2" border="0" onMouseUp="SetKeys('k2',0)" onMouseDown="SetKeys('k2',1)" src="key_u.gif" width="39" height="39"></td></tr>
+          <tr><td width="33%" bgcolor="#FFFFFF"><img name="k3" border="0" onMouseUp="SetKeys('k3',0)" onMouseDown="SetKeys('k3',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k4" border="0" onMouseUp="SetKeys('k4',0)" onMouseDown="SetKeys('k4',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k5" border="0" onMouseUp="SetKeys('k5',0)" onMouseDown="SetKeys('k5',1)" src="key_u.gif" width="39" height="39"></td></tr>
+          <tr><td width="33%" bgcolor="#FFFFFF"><img name="k6" border="0" onMouseUp="SetKeys('k6',0)" onMouseDown="SetKeys('k6',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k7" border="0" onMouseUp="SetKeys('k7',0)" onMouseDown="SetKeys('k7',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k8" border="0" onMouseUp="SetKeys('k8',0)" onMouseDown="SetKeys('k8',1)" src="key_u.gif" width="39" height="39"></td></tr>
+          <tr><td width="33%" bgcolor="#FFFFFF"><img name="k9" border="0" onMouseUp="SetKeys('k9',0)" onMouseDown="SetKeys('k9',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k10" border="0" onMouseUp="SetKeys('k10',0)" onMouseDown="SetKeys('k10',1)" src="key_u.gif" width="39" height="39"></td>
+          <td width="33%" bgcolor="#FFFFFF"><img name="k11" border="0" onMouseUp="SetKeys('k11',0)" onMouseDown="SetKeys('k11',1)" src="key_u.gif" width="39" height="39"></td></tr>
+          </table></td>
+      <td width="61%"><table border="0" width="17%" cellspacing="3">
+          <tr><td width="100%">Led 7 <input type="checkbox" name="C7" value="ON" C7%    ></td></tr>
+          <tr><td width="100%">Led 6 <input type="checkbox" name="C6" value="ON" C6%    ></td></tr>
+          <tr><td width="100%">Led 5 <input type="checkbox" name="C5" value="ON" C5%    ></td></tr>
+          <tr><td width="100%">Led 4 <input type="checkbox" name="C4" value="ON" C4%    ></td></tr>
+          <tr><td width="100%">Led 3 <input type="checkbox" name="C3" value="ON" C3%    ></td></tr>
+          <tr><td width="100%">Led 2 <input type="checkbox" name="C2" value="ON" C2%    ></td></tr>
+          <tr><td width="100%">Led 1 <input type="checkbox" name="C1" value="ON" C1%    ></td></tr>
+          <tr><td width="100%">Led 0 <input type="checkbox" name="C0" value="ON" C0%    ></td></tr>
+  </table></td></tr></table>
+  <p>Kommentar: <input type="text" name="Kommentar" size="50"></p>
+  <p>&nbsp;</p>
+  <p><input type="submit" value="Peripherals Setzen" name="B1"><input type="reset" value="Zurücksetzen" name="B2"></p>
+</form>
+<p><a href="index.htm">Zurück zur Übersicht</a></p>
+</body></html>
