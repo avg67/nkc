@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Project     : Single Chip NDR Computer
--- Module      : GDP 936X Display processor - Toplevel for Lattice FPGA
--- File        : GDP_kernel.vhd
+-- Module      : 68k System on chip - Toplevel for HPE_MINI_LEC
+-- File        : soc_top.vhd
 -- Description :
 --------------------------------------------------------------------------------
 -- Author       : Andreas Voggeneder
@@ -9,7 +9,7 @@
 -- Department   : Hardware/Software Systems Engineering
 -- Language     : VHDL'87
 --------------------------------------------------------------------------------
--- Copyright (c) 2007 by Andreas Voggeneder
+-- Copyright (c) 2023 by Andreas Voggeneder
 --------------------------------------------------------------------------------
 library IEEE;
 
