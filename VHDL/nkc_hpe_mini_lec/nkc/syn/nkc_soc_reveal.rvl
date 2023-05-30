@@ -1,0 +1,150 @@
+<Project ModBy="Inserter" SigType="0" Name="C:/working/_nkc_git_avg/nkc_hpe_mini_lec/nkc/syn/nkc_soc_reveal.rvl" Date="2023-05-26">
+    <IP Version="1_6_042617"/>
+    <Design DesignEntry="Schematic/Mixed HDL" Synthesis="synplify" DeviceFamily="LatticeECP" DesignName="nkc_hpe_mini"/>
+    <Core InsertDataset="0" Insert="1" Reveal_sig="494200531" Name="soc_top_LA0" ID="0">
+        <Setting>
+            <Clock SampleClk="clk_i" SampleEnable="0" EnableClk="" EnableClk_Pri="0"/>
+            <TraceBuffer Implementation="0" BitTimeStamp="0" hasTimeStamp="0" IncTrigSig="0" BufferDepth="1024"/>
+            <Capture Mode="0" MinSamplesPerTrig="8"/>
+            <Event CntEnable="1" MaxEventCnt="8"/>
+            <TrigOut Polarity="0" MinPulseWidth="0" TrigOutNetType="1" EnableTrigOut="0" TrigOutNet="reveal_debug_soc_top_LA0_net"/>
+            <DistRAM Disable="0"/>
+        </Setting>
+        <Dataset Name="Base">
+            <Trace>
+                <Bus Name="cpu_addr">
+                    <Sig Type="SIG" Name="cpu_addr:0"/>
+                    <Sig Type="SIG" Name="cpu_addr:1"/>
+                    <Sig Type="SIG" Name="cpu_addr:2"/>
+                    <Sig Type="SIG" Name="cpu_addr:3"/>
+                    <Sig Type="SIG" Name="cpu_addr:4"/>
+                    <Sig Type="SIG" Name="cpu_addr:5"/>
+                    <Sig Type="SIG" Name="cpu_addr:6"/>
+                    <Sig Type="SIG" Name="cpu_addr:7"/>
+                    <Sig Type="SIG" Name="cpu_addr:8"/>
+                    <Sig Type="SIG" Name="cpu_addr:9"/>
+                    <Sig Type="SIG" Name="cpu_addr:10"/>
+                    <Sig Type="SIG" Name="cpu_addr:11"/>
+                    <Sig Type="SIG" Name="cpu_addr:12"/>
+                    <Sig Type="SIG" Name="cpu_addr:13"/>
+                    <Sig Type="SIG" Name="cpu_addr:14"/>
+                    <Sig Type="SIG" Name="cpu_addr:15"/>
+                    <Sig Type="SIG" Name="cpu_addr:16"/>
+                    <Sig Type="SIG" Name="cpu_addr:17"/>
+                    <Sig Type="SIG" Name="cpu_addr:18"/>
+                    <Sig Type="SIG" Name="cpu_addr:19"/>
+                    <Sig Type="SIG" Name="cpu_addr:20"/>
+                    <Sig Type="SIG" Name="cpu_addr:21"/>
+                    <Sig Type="SIG" Name="cpu_addr:22"/>
+                    <Sig Type="SIG" Name="cpu_addr:23"/>
+                    <Sig Type="SIG" Name="cpu_addr:24"/>
+                    <Sig Type="SIG" Name="cpu_addr:25"/>
+                    <Sig Type="SIG" Name="cpu_addr:26"/>
+                    <Sig Type="SIG" Name="cpu_addr:27"/>
+                    <Sig Type="SIG" Name="cpu_addr:28"/>
+                    <Sig Type="SIG" Name="cpu_addr:29"/>
+                    <Sig Type="SIG" Name="cpu_addr:30"/>
+                    <Sig Type="SIG" Name="cpu_addr:31"/>
+                </Bus>
+                <Bus Name="cpu_datain">
+                    <Sig Type="SIG" Name="cpu_datain:0"/>
+                    <Sig Type="SIG" Name="cpu_datain:1"/>
+                    <Sig Type="SIG" Name="cpu_datain:2"/>
+                    <Sig Type="SIG" Name="cpu_datain:3"/>
+                    <Sig Type="SIG" Name="cpu_datain:4"/>
+                    <Sig Type="SIG" Name="cpu_datain:5"/>
+                    <Sig Type="SIG" Name="cpu_datain:6"/>
+                    <Sig Type="SIG" Name="cpu_datain:7"/>
+                    <Sig Type="SIG" Name="cpu_datain:8"/>
+                    <Sig Type="SIG" Name="cpu_datain:9"/>
+                    <Sig Type="SIG" Name="cpu_datain:10"/>
+                    <Sig Type="SIG" Name="cpu_datain:11"/>
+                    <Sig Type="SIG" Name="cpu_datain:12"/>
+                    <Sig Type="SIG" Name="cpu_datain:13"/>
+                    <Sig Type="SIG" Name="cpu_datain:14"/>
+                    <Sig Type="SIG" Name="cpu_datain:15"/>
+                </Bus>
+                <Bus Name="cpu_dataout">
+                    <Sig Type="SIG" Name="cpu_dataout:0"/>
+                    <Sig Type="SIG" Name="cpu_dataout:1"/>
+                    <Sig Type="SIG" Name="cpu_dataout:2"/>
+                    <Sig Type="SIG" Name="cpu_dataout:3"/>
+                    <Sig Type="SIG" Name="cpu_dataout:4"/>
+                    <Sig Type="SIG" Name="cpu_dataout:5"/>
+                    <Sig Type="SIG" Name="cpu_dataout:6"/>
+                    <Sig Type="SIG" Name="cpu_dataout:7"/>
+                    <Sig Type="SIG" Name="cpu_dataout:8"/>
+                    <Sig Type="SIG" Name="cpu_dataout:9"/>
+                    <Sig Type="SIG" Name="cpu_dataout:10"/>
+                    <Sig Type="SIG" Name="cpu_dataout:11"/>
+                    <Sig Type="SIG" Name="cpu_dataout:12"/>
+                    <Sig Type="SIG" Name="cpu_dataout:13"/>
+                    <Sig Type="SIG" Name="cpu_dataout:14"/>
+                    <Sig Type="SIG" Name="cpu_dataout:15"/>
+                </Bus>
+                <Sig Type="SIG" Name="cpu_lds"/>
+                <Sig Type="SIG" Name="cpu_uds"/>
+                <Sig Type="SIG" Name="cpu_r_w"/>
+                <Sig Type="SIG" Name="cpu_run1"/>
+                <Sig Type="SIG" Name="sram_ncs_o"/>
+                <Sig Type="SIG" Name="sram_noe_o"/>
+                <Sig Type="SIG" Name="sram_nwr_o"/>
+                <Bus Name="sram_nbe_o">
+                    <Sig Type="SIG" Name="sram_nbe_o:0"/>
+                    <Sig Type="SIG" Name="sram_nbe_o:1"/>
+                    <Sig Type="SIG" Name="sram_nbe_o:2"/>
+                    <Sig Type="SIG" Name="sram_nbe_o:3"/>
+                </Bus>
+                <Bus Name="sram_db_io">
+                    <Sig Type="SIG" Name="sram_db_io:0"/>
+                    <Sig Type="SIG" Name="sram_db_io:1"/>
+                    <Sig Type="SIG" Name="sram_db_io:2"/>
+                    <Sig Type="SIG" Name="sram_db_io:3"/>
+                    <Sig Type="SIG" Name="sram_db_io:4"/>
+                    <Sig Type="SIG" Name="sram_db_io:5"/>
+                    <Sig Type="SIG" Name="sram_db_io:6"/>
+                    <Sig Type="SIG" Name="sram_db_io:7"/>
+                    <Sig Type="SIG" Name="sram_db_io:8"/>
+                    <Sig Type="SIG" Name="sram_db_io:9"/>
+                    <Sig Type="SIG" Name="sram_db_io:10"/>
+                    <Sig Type="SIG" Name="sram_db_io:11"/>
+                    <Sig Type="SIG" Name="sram_db_io:12"/>
+                    <Sig Type="SIG" Name="sram_db_io:13"/>
+                    <Sig Type="SIG" Name="sram_db_io:14"/>
+                    <Sig Type="SIG" Name="sram_db_io:15"/>
+                    <Sig Type="SIG" Name="sram_db_io:16"/>
+                    <Sig Type="SIG" Name="sram_db_io:17"/>
+                    <Sig Type="SIG" Name="sram_db_io:18"/>
+                    <Sig Type="SIG" Name="sram_db_io:19"/>
+                    <Sig Type="SIG" Name="sram_db_io:20"/>
+                    <Sig Type="SIG" Name="sram_db_io:21"/>
+                    <Sig Type="SIG" Name="sram_db_io:22"/>
+                    <Sig Type="SIG" Name="sram_db_io:23"/>
+                    <Sig Type="SIG" Name="sram_db_io:24"/>
+                    <Sig Type="SIG" Name="sram_db_io:25"/>
+                    <Sig Type="SIG" Name="sram_db_io:26"/>
+                    <Sig Type="SIG" Name="sram_db_io:27"/>
+                    <Sig Type="SIG" Name="sram_db_io:28"/>
+                    <Sig Type="SIG" Name="sram_db_io:29"/>
+                    <Sig Type="SIG" Name="sram_db_io:30"/>
+                    <Sig Type="SIG" Name="sram_db_io:31"/>
+                </Bus>
+                <Bus Name="state">
+                    <Sig Type="SIG" Name="state:0"/>
+                </Bus>
+                <Sig Type="SIG" Name="ready"/>
+                <Sig Type="SIG" Name="cpu_req"/>
+                <Sig Type="SIG" Name="cpu_ack"/>
+                <Sig Type="SIG" Name="exsel_rd_r"/>
+                <Bus Name="flash_nryby_sync">
+                    <Sig Type="SIG" Name="flash_nryby_sync:0"/>
+                    <Sig Type="SIG" Name="flash_nryby_sync:1"/>
+                </Bus>
+            </Trace>
+            <Trigger>
+                <TU Serialbits="0" Type="0" ID="1" Sig="(BUS)cpu_addr[31:0],"/>
+                <TE MaxSequence="1" MaxEvnCnt="1" ID="1" Resource="1"/>
+            </Trigger>
+        </Dataset>
+    </Core>
+</Project>

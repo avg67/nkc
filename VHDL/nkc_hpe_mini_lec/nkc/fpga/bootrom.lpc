@@ -1,0 +1,51 @@
+[Device]
+Family=latticeecp
+PartType=LFECP33E
+PartName=LFECP33E-3F484C
+SpeedGrade=3
+Package=FPBGA484
+OperatingCondition=COM
+Status=S
+
+[IP]
+VendorName=Lattice Semiconductor Corporation
+CoreType=LPM
+CoreStatus=Demo
+CoreName=ROM
+CoreRevision=5.4
+ModuleName=bootrom
+SourceFormat=VHDL
+ParameterFileVersion=1.0
+Date=05/01/2023
+Time=21:34:23
+
+[Parameters]
+Verilog=0
+VHDL=1
+EDIF=1
+Destination=Synplicity
+Expression=BusA(0 to 7)
+Order=Big Endian [MSB:LSB]
+IO=0
+Address=4096
+Data=16
+adPipeline=0
+inPipeline=0
+outPipeline=0
+MOR=0
+InData=Registered
+AdControl=Registered
+MemFile=c:/working/_nkc_git_avg/nkc_hpe_mini_lec/nkc/firmware/test.mem
+MemFormat=hex
+Reset=Sync
+Pad=0
+GSR=Enabled
+EnECC=0
+Optimization=Speed
+Pipeline=0
+
+[FilesGenerated]
+c:/working/_nkc_git_avg/nkc_hpe_mini_lec/nkc/firmware/test.mem=mem
+
+[Command]
+cmd_line= -w -n bootrom -lang vhdl -synth synplify -bus_exp 7 -bb -arch ep5g00p -type romblk -device LFECP33E -addr_width 12 -data_width 16 -num_words 4096 -resetmode SYNC -memfile c:/working/_nkc_git_avg/nkc_hpe_mini_lec/nkc/firmware/test.mem -memformat hex -cascade -1

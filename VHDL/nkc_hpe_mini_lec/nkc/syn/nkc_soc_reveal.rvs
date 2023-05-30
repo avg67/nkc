@@ -1,0 +1,149 @@
+<Project ModBy="Analyzer" Name="C:/working/_nkc_git_avg/nkc_hpe_mini_lec/nkc/syn/nkc_soc_reveal.rvs" Date="2023-05-30">
+ <Core Name="soc_top_LA0">
+  <Setting>
+   <Capture SamplesPerTrig="1024" NumTrigsCap="1"/>
+   <Event EventCnt="0" CntEnableRun="0"/>
+   <TrigSetting PreTrgSamples="" AND_ALL="0" PostTrgSamples="" TURadix="0"/>
+  </Setting>
+  <Dataset Name="Base">
+   <Trace>
+    <Bus Name="cpu_addr" Radix="0">
+     <Sig Name="cpu_addr:0"/>
+     <Sig Name="cpu_addr:1"/>
+     <Sig Name="cpu_addr:2"/>
+     <Sig Name="cpu_addr:3"/>
+     <Sig Name="cpu_addr:4"/>
+     <Sig Name="cpu_addr:5"/>
+     <Sig Name="cpu_addr:6"/>
+     <Sig Name="cpu_addr:7"/>
+     <Sig Name="cpu_addr:8"/>
+     <Sig Name="cpu_addr:9"/>
+     <Sig Name="cpu_addr:10"/>
+     <Sig Name="cpu_addr:11"/>
+     <Sig Name="cpu_addr:12"/>
+     <Sig Name="cpu_addr:13"/>
+     <Sig Name="cpu_addr:14"/>
+     <Sig Name="cpu_addr:15"/>
+     <Sig Name="cpu_addr:16"/>
+     <Sig Name="cpu_addr:17"/>
+     <Sig Name="cpu_addr:18"/>
+     <Sig Name="cpu_addr:19"/>
+     <Sig Name="cpu_addr:20"/>
+     <Sig Name="cpu_addr:21"/>
+     <Sig Name="cpu_addr:22"/>
+     <Sig Name="cpu_addr:23"/>
+     <Sig Name="cpu_addr:24"/>
+     <Sig Name="cpu_addr:25"/>
+     <Sig Name="cpu_addr:26"/>
+     <Sig Name="cpu_addr:27"/>
+     <Sig Name="cpu_addr:28"/>
+     <Sig Name="cpu_addr:29"/>
+     <Sig Name="cpu_addr:30"/>
+     <Sig Name="cpu_addr:31"/>
+    </Bus>
+    <Bus Name="cpu_datain" Radix="0">
+     <Sig Name="cpu_datain:0"/>
+     <Sig Name="cpu_datain:1"/>
+     <Sig Name="cpu_datain:2"/>
+     <Sig Name="cpu_datain:3"/>
+     <Sig Name="cpu_datain:4"/>
+     <Sig Name="cpu_datain:5"/>
+     <Sig Name="cpu_datain:6"/>
+     <Sig Name="cpu_datain:7"/>
+     <Sig Name="cpu_datain:8"/>
+     <Sig Name="cpu_datain:9"/>
+     <Sig Name="cpu_datain:10"/>
+     <Sig Name="cpu_datain:11"/>
+     <Sig Name="cpu_datain:12"/>
+     <Sig Name="cpu_datain:13"/>
+     <Sig Name="cpu_datain:14"/>
+     <Sig Name="cpu_datain:15"/>
+    </Bus>
+    <Bus Name="cpu_dataout" Radix="0">
+     <Sig Name="cpu_dataout:0"/>
+     <Sig Name="cpu_dataout:1"/>
+     <Sig Name="cpu_dataout:2"/>
+     <Sig Name="cpu_dataout:3"/>
+     <Sig Name="cpu_dataout:4"/>
+     <Sig Name="cpu_dataout:5"/>
+     <Sig Name="cpu_dataout:6"/>
+     <Sig Name="cpu_dataout:7"/>
+     <Sig Name="cpu_dataout:8"/>
+     <Sig Name="cpu_dataout:9"/>
+     <Sig Name="cpu_dataout:10"/>
+     <Sig Name="cpu_dataout:11"/>
+     <Sig Name="cpu_dataout:12"/>
+     <Sig Name="cpu_dataout:13"/>
+     <Sig Name="cpu_dataout:14"/>
+     <Sig Name="cpu_dataout:15"/>
+    </Bus>
+    <Sig Name="cpu_lds"/>
+    <Sig Name="cpu_uds"/>
+    <Sig Name="cpu_r_w"/>
+    <Sig Name="cpu_run1"/>
+    <Sig Name="sram_ncs_o"/>
+    <Sig Name="sram_noe_o"/>
+    <Sig Name="sram_nwr_o"/>
+    <Bus Name="sram_nbe_o" Radix="0">
+     <Sig Name="sram_nbe_o:0"/>
+     <Sig Name="sram_nbe_o:1"/>
+     <Sig Name="sram_nbe_o:2"/>
+     <Sig Name="sram_nbe_o:3"/>
+    </Bus>
+    <Bus Name="sram_db_io" Radix="0">
+     <Sig Name="sram_db_io:0"/>
+     <Sig Name="sram_db_io:1"/>
+     <Sig Name="sram_db_io:2"/>
+     <Sig Name="sram_db_io:3"/>
+     <Sig Name="sram_db_io:4"/>
+     <Sig Name="sram_db_io:5"/>
+     <Sig Name="sram_db_io:6"/>
+     <Sig Name="sram_db_io:7"/>
+     <Sig Name="sram_db_io:8"/>
+     <Sig Name="sram_db_io:9"/>
+     <Sig Name="sram_db_io:10"/>
+     <Sig Name="sram_db_io:11"/>
+     <Sig Name="sram_db_io:12"/>
+     <Sig Name="sram_db_io:13"/>
+     <Sig Name="sram_db_io:14"/>
+     <Sig Name="sram_db_io:15"/>
+     <Sig Name="sram_db_io:16"/>
+     <Sig Name="sram_db_io:17"/>
+     <Sig Name="sram_db_io:18"/>
+     <Sig Name="sram_db_io:19"/>
+     <Sig Name="sram_db_io:20"/>
+     <Sig Name="sram_db_io:21"/>
+     <Sig Name="sram_db_io:22"/>
+     <Sig Name="sram_db_io:23"/>
+     <Sig Name="sram_db_io:24"/>
+     <Sig Name="sram_db_io:25"/>
+     <Sig Name="sram_db_io:26"/>
+     <Sig Name="sram_db_io:27"/>
+     <Sig Name="sram_db_io:28"/>
+     <Sig Name="sram_db_io:29"/>
+     <Sig Name="sram_db_io:30"/>
+     <Sig Name="sram_db_io:31"/>
+    </Bus>
+    <Bus Name="state" Radix="RVL_ENUM_state">
+     <Sig Name="state:0"/>
+    </Bus>
+    <Sig Name="ready"/>
+    <Sig Name="cpu_req"/>
+    <Sig Name="cpu_ack"/>
+    <Sig Name="exsel_rd_r"/>
+    <Bus Name="flash_nryby_sync" Radix="0">
+     <Sig Name="flash_nryby_sync:0"/>
+     <Sig Name="flash_nryby_sync:1"/>
+    </Bus>
+   </Trace>
+   <Trigger>
+    <TU Operator="0" Name="TU1" ID="1" Value="0080082C" Radix="3"/>
+    <TE Enable="1" Expression="TU1" Name="TE1" ID="1"/>
+   </Trigger>
+  </Dataset>
+ </Core>
+ <Token width="1" type="ENUM" name="RVL_ENUM_state">
+  <entry key="IDLE_e" value="0"/>
+  <entry key="REQ_e" value="1"/>
+ </Token>
+</Project>

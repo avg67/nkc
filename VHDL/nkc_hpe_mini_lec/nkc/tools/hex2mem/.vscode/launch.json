@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python: Aktuelle Datei",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["C:\working\_nkc_git_avg\nkc_hpe_mini_lec\nkc\Firmware\test.bin","test_rom.v"]
+            //"args": ["-b","19200","-u","rs232d.asm"]
+        }
+    ]
+}

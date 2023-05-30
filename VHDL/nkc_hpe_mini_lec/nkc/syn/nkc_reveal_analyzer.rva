@@ -1,0 +1,179 @@
+<!DOCTYPE ispTLA>
+<ispTLA>
+ <CreationDate>Do 11. Mai 21:28:09 2023</CreationDate>
+ <XCFFileName/>
+ <CableSetting>
+  <IsTRSTConnected val="false"/>
+  <TRSTSetting val="0"/>
+  <IsBSCANConnected val="false"/>
+  <BSCANSetting val="0"/>
+  <CableType val="USB"/>
+  <PortAddress val="0"/>
+  <PortSetting val="0"/>
+  <TCKDelay val="1"/>
+ </CableSetting>
+ <DeviceCount>1</DeviceCount>
+ <Device>
+  <DeviceIndex>0</DeviceIndex>
+  <DeviceName>1. LFEC/ECP33E</DeviceName>
+  <DeviceID>0x11246043</DeviceID>
+  <HasIspTRACY>true</HasIspTRACY>
+  <HasJTAG2WB>false</HasJTAG2WB>
+  <SERDES/>
+  <IRBypassLen>8</IRBypassLen>
+  <RVLFileName>nkc_soc_reveal.rvl</RVLFileName>
+  <RVSFileName>nkc_soc_reveal.rvs</RVSFileName>
+  <LACoreCount>1</LACoreCount>
+  <WinUI CoreIndex="0">
+   <TraceSigTreeData>
+    <TraceSignal IsHidden="false" Name="cpu_addr" NodeType="1" PortIndex="0">
+     <BusRadix Radix="3"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="cpu_addr:0" NodeType="2" PortIndex="0"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:1" NodeType="2" PortIndex="1"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:2" NodeType="2" PortIndex="2"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:3" NodeType="2" PortIndex="3"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:4" NodeType="2" PortIndex="4"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:5" NodeType="2" PortIndex="5"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:6" NodeType="2" PortIndex="6"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:7" NodeType="2" PortIndex="7"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:8" NodeType="2" PortIndex="8"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:9" NodeType="2" PortIndex="9"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:10" NodeType="2" PortIndex="10"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:11" NodeType="2" PortIndex="11"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:12" NodeType="2" PortIndex="12"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:13" NodeType="2" PortIndex="13"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:14" NodeType="2" PortIndex="14"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:15" NodeType="2" PortIndex="15"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:16" NodeType="2" PortIndex="16"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:17" NodeType="2" PortIndex="17"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:18" NodeType="2" PortIndex="18"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:19" NodeType="2" PortIndex="19"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:20" NodeType="2" PortIndex="20"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:21" NodeType="2" PortIndex="21"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:22" NodeType="2" PortIndex="22"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:23" NodeType="2" PortIndex="23"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:24" NodeType="2" PortIndex="24"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:25" NodeType="2" PortIndex="25"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:26" NodeType="2" PortIndex="26"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:27" NodeType="2" PortIndex="27"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:28" NodeType="2" PortIndex="28"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:29" NodeType="2" PortIndex="29"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:30" NodeType="2" PortIndex="30"/>
+    <TraceSignal IsHidden="false" Name="cpu_addr:31" NodeType="2" PortIndex="31"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain" NodeType="1" PortIndex="32">
+     <BusRadix Radix="3"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="cpu_datain:0" NodeType="2" PortIndex="32"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:1" NodeType="2" PortIndex="33"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:2" NodeType="2" PortIndex="34"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:3" NodeType="2" PortIndex="35"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:4" NodeType="2" PortIndex="36"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:5" NodeType="2" PortIndex="37"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:6" NodeType="2" PortIndex="38"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:7" NodeType="2" PortIndex="39"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:8" NodeType="2" PortIndex="40"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:9" NodeType="2" PortIndex="41"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:10" NodeType="2" PortIndex="42"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:11" NodeType="2" PortIndex="43"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:12" NodeType="2" PortIndex="44"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:13" NodeType="2" PortIndex="45"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:14" NodeType="2" PortIndex="46"/>
+    <TraceSignal IsHidden="false" Name="cpu_datain:15" NodeType="2" PortIndex="47"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout" NodeType="1" PortIndex="48">
+     <BusRadix Radix="3"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:0" NodeType="2" PortIndex="48"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:1" NodeType="2" PortIndex="49"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:2" NodeType="2" PortIndex="50"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:3" NodeType="2" PortIndex="51"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:4" NodeType="2" PortIndex="52"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:5" NodeType="2" PortIndex="53"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:6" NodeType="2" PortIndex="54"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:7" NodeType="2" PortIndex="55"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:8" NodeType="2" PortIndex="56"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:9" NodeType="2" PortIndex="57"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:10" NodeType="2" PortIndex="58"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:11" NodeType="2" PortIndex="59"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:12" NodeType="2" PortIndex="60"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:13" NodeType="2" PortIndex="61"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:14" NodeType="2" PortIndex="62"/>
+    <TraceSignal IsHidden="false" Name="cpu_dataout:15" NodeType="2" PortIndex="63"/>
+    <TraceSignal IsHidden="false" Name="cpu_lds" NodeType="0" PortIndex="64"/>
+    <TraceSignal IsHidden="false" Name="cpu_uds" NodeType="0" PortIndex="65"/>
+    <TraceSignal IsHidden="false" Name="cpu_r_w" NodeType="0" PortIndex="66"/>
+    <TraceSignal IsHidden="false" Name="cpu_run1" NodeType="0" PortIndex="67"/>
+    <TraceSignal IsHidden="false" Name="sram_ncs_o" NodeType="0" PortIndex="68"/>
+    <TraceSignal IsHidden="false" Name="sram_noe_o" NodeType="0" PortIndex="69"/>
+    <TraceSignal IsHidden="false" Name="sram_nwr_o" NodeType="0" PortIndex="70"/>
+    <TraceSignal IsHidden="false" Name="sram_nbe_o" NodeType="1" PortIndex="71">
+     <BusRadix Radix="0"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="sram_nbe_o:0" NodeType="2" PortIndex="71"/>
+    <TraceSignal IsHidden="false" Name="sram_nbe_o:1" NodeType="2" PortIndex="72"/>
+    <TraceSignal IsHidden="false" Name="sram_nbe_o:2" NodeType="2" PortIndex="73"/>
+    <TraceSignal IsHidden="false" Name="sram_nbe_o:3" NodeType="2" PortIndex="74"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io" NodeType="1" PortIndex="75">
+     <BusRadix Radix="3"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="sram_db_io:0" NodeType="2" PortIndex="75"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:1" NodeType="2" PortIndex="76"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:2" NodeType="2" PortIndex="77"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:3" NodeType="2" PortIndex="78"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:4" NodeType="2" PortIndex="79"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:5" NodeType="2" PortIndex="80"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:6" NodeType="2" PortIndex="81"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:7" NodeType="2" PortIndex="82"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:8" NodeType="2" PortIndex="83"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:9" NodeType="2" PortIndex="84"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:10" NodeType="2" PortIndex="85"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:11" NodeType="2" PortIndex="86"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:12" NodeType="2" PortIndex="87"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:13" NodeType="2" PortIndex="88"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:14" NodeType="2" PortIndex="89"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:15" NodeType="2" PortIndex="90"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:16" NodeType="2" PortIndex="91"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:17" NodeType="2" PortIndex="92"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:18" NodeType="2" PortIndex="93"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:19" NodeType="2" PortIndex="94"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:20" NodeType="2" PortIndex="95"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:21" NodeType="2" PortIndex="96"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:22" NodeType="2" PortIndex="97"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:23" NodeType="2" PortIndex="98"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:24" NodeType="2" PortIndex="99"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:25" NodeType="2" PortIndex="100"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:26" NodeType="2" PortIndex="101"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:27" NodeType="2" PortIndex="102"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:28" NodeType="2" PortIndex="103"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:29" NodeType="2" PortIndex="104"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:30" NodeType="2" PortIndex="105"/>
+    <TraceSignal IsHidden="false" Name="sram_db_io:31" NodeType="2" PortIndex="106"/>
+    <TraceSignal IsHidden="false" Name="state" NodeType="1" PortIndex="107">
+     <BusRadix Radix="RVL_ENUM_state"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="state:0" NodeType="2" PortIndex="107"/>
+    <TraceSignal IsHidden="false" Name="ready" NodeType="0" PortIndex="108"/>
+    <TraceSignal IsHidden="false" Name="cpu_req" NodeType="0" PortIndex="109"/>
+    <TraceSignal IsHidden="false" Name="cpu_ack" NodeType="0" PortIndex="110"/>
+    <TraceSignal IsHidden="false" Name="exsel_rd_r" NodeType="0" PortIndex="111"/>
+    <TraceSignal IsHidden="false" Name="flash_nryby_sync" NodeType="1" PortIndex="112">
+     <BusRadix Radix="0"/>
+     <IsExpanded Expand="false"/>
+    </TraceSignal>
+    <TraceSignal IsHidden="false" Name="flash_nryby_sync:0" NodeType="2" PortIndex="112"/>
+    <TraceSignal IsHidden="false" Name="flash_nryby_sync:1" NodeType="2" PortIndex="113"/>
+   </TraceSigTreeData>
+   <TriggerUI UserSelect="0" PreSelectType="1" PreSelect="1" UserSelectPos="0"/>
+   <CoreRun Run="true"/>
+   <CoreWndUIData>
+    <ClockFrequency Unit="ns" Frequency="-1.0"/>
+   </CoreWndUIData>
+  </WinUI>
+ </Device>
+</ispTLA>

@@ -1,0 +1,13 @@
+MODULE boot_rom DEFIN boot_rom.vhd
+	SUBMODULE SP8KA
+		INSTANCE boot_rom_0_3_0
+	SUBMODULE VLO
+		INSTANCE scuba_vlo_inst
+	SUBMODULE SP8KA
+		INSTANCE boot_rom_0_2_1
+	SUBMODULE SP8KA
+		INSTANCE boot_rom_0_1_2
+	SUBMODULE SP8KA
+		INSTANCE boot_rom_0_0_3
+	SUBMODULE VHI
+		INSTANCE scuba_vhi_inst

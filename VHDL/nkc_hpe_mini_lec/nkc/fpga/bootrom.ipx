@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DiamondModule name="bootrom" module="ROM" VendorName="Lattice Semiconductor Corporation" generator="IPexpress" date="2023 05 01 21:34:26.606" version="5.4" type="Module" synthesis="synplify" source_format="VHDL">
+  <Package>
+		<File name="" type="" modified="2023 05 01 21:34:26.340"/>
+		<File name="bootrom.lpc" type="lpc" modified="2023 05 01 21:34:23.231"/>
+		<File name="bootrom.vhd" type="top_level_vhdl" modified="2023 05 01 21:34:23.356"/>
+		<File name="bootrom_tmpl.vhd" type="template_vhdl" modified="2023 05 01 21:34:23.356"/>
+		<File name="c:/working/_nkc_git_avg/nkc_hpe_mini_lec/nkc/firmware/test.mem" type="mem" modified="2023 05 01 21:15:39.065"/>
+		<File name="tb_bootrom_tmpl.vhd" type="testbench_vhdl" modified="2023 05 01 21:34:23.356"/>
+  </Package>
+</DiamondModule>
