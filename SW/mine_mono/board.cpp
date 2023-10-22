@@ -8,7 +8,7 @@
 #include "board.h"
 #include "gp_helper.h"
 
-board::board(bool beginner)
+board::board(const bool beginner)
 {
     if(beginner) {
         x_size = BEGINNER_X_SIZE;
@@ -22,6 +22,7 @@ board::board(bool beginner)
     last_clicked.x = 0;
     last_clicked.y = 0;
     last_clicked.marked = false;
+    mark_x = mark_y = 0u;
     uint8_t nr_mines=0u;
     do {
         const uint16_t mine_pos = rand() % (x_size*y_size);
@@ -35,11 +36,20 @@ board::board(bool beginner)
     }while(nr_mines<tot_nr_mines);
     //iprintf("\r\n");
 }
+#ifndef USE_GDP_FPGA
+inline void board::draw_field_border(void)
+{
+    GDP_drawpen();
+    gp_moveto(CCNV_X(BOARD_X),CCNV_Y(BOARD_Y));
+    gp_drawto(CCNV_X(BOARD_X + x_size),CCNV_Y(BOARD_Y));
+    gp_drawto(CCNV_X(BOARD_X + x_size),CCNV_Y(BOARD_Y + y_size));
+    gp_drawto(CCNV_X(BOARD_X),CCNV_Y(BOARD_Y + y_size));
+    gp_drawto(CCNV_X(BOARD_X),CCNV_Y(BOARD_Y));
+}
+#endif
 
 void board::draw()
 {
-    //auto begin{ arr.begin() };
-
     for(uint16_t y=0u;y<y_size;y++) {
         const uint16_t y_pos = CCNV_Y(BOARD_Y) + (y * 4u * Y_SCALE);
         //for(uint16_t x=0u;x<x_size;x++) {
@@ -55,31 +65,16 @@ void board::draw()
 //		iprintf("\r\n");
     }
 #ifndef USE_GDP_FPGA
-    GDP_drawpen();
-    gp_moveto(CCNV_X(BOARD_X),CCNV_Y(BOARD_Y));
-    gp_drawto(CCNV_X(BOARD_X + x_size),CCNV_Y(BOARD_Y));
-    gp_drawto(CCNV_X(BOARD_X + x_size),CCNV_Y(BOARD_Y + y_size));
-    gp_drawto(CCNV_X(BOARD_X),CCNV_Y(BOARD_Y + y_size));
-    gp_drawto(CCNV_X(BOARD_X),CCNV_Y(BOARD_Y));
+    draw_field_border();
 #endif
 
-    /*GDP_erapen();
-    for(uint16_t x=0;x<x_size;x++) {
-        gp_moveto(CCNV_X(BOARD_X + x),CCNV_Y(BOARD_Y));
-        gp_drawto(CCNV_X(BOARD_X + x),CCNV_Y(BOARD_Y + y_size));
-    }
-    GDP_drawpen();*/
-    //char bfr[50];
-    //siprintf(bfr,"Mines: %u  ",(unsigned int)count_marked_mines());
-    //gp_writexy(10u,240,0x11, bfr);
-    /*gp_setcurxy(1u,5u);
-    iprintf("Mines found: %2u of %2u    \r",(unsigned int)count_marked_mines(),tot_nr_mines);*/
+
     update_mines_info();
 
 }
 
 // Count surrounding mines
-uint8_t board::count_mines(const uint16_t x, const uint16_t y)
+uint8_t board::count_mines(const uint16_t x, const uint16_t y, const bool count_marked=false)
 {
     uint8_t nrm = 0u;
     const uint16_t x_start = (x>0u)?x-1u:x;
@@ -88,7 +83,8 @@ uint8_t board::count_mines(const uint16_t x, const uint16_t y)
     const uint16_t y_end = (y<(y_size-1u))?y+1:y;
     for(uint16_t x1 = x_start; x1<=x_end;x1++) {
         for(uint16_t y1 = y_start; y1<=y_end;y1++) {
-            if(((x1!=x) || (y1!=y)) && (this->arr[x1][y1].checkMine())) {
+            field& f = this->arr[x1][y1];
+            if(((x1!=x) || (y1!=y)) && (((!count_marked && f.checkMine())) || (count_marked && f.getInfo()==0xff))) {
                 nrm++;
             }
         }
@@ -122,18 +118,6 @@ void board::update_mines_info()
 }
 
 // display all mines
-/*void board::unhide_all()
-{
-    //for(auto y = arr.begin(); y != arr.end(); ++y) {
-    for(uint16_t y=0u;y<y_size;y++) {
-        //for(auto f = y->begin(); f != y->end(); ++f) {
-        for(uint16_t x=0u;x<x_size;x++) {
-            //f->unhide();
-            arr[x][y].unhide();
-        }
-    }
-}*/
-
 void board::unhide_all()
 {
     uint16_t y; auto py = arr.begin();
@@ -222,6 +206,13 @@ int16_t board::click_field(const uint16_t x, const uint16_t y)
     return result;
 }
 
+int16_t board::click_marked(void)
+{
+    const int16_t result = click_field(mark_x, mark_y);
+    set_mark(true);
+    return result;
+}
+
 void board::show_fields(const uint16_t x, const uint16_t y, const bool hold)
 {
     field& f = arr[x][y];
@@ -244,19 +235,59 @@ void board::show_fields(const uint16_t x, const uint16_t y, const bool hold)
     }
 }
 
-void board::mark_field(const uint16_t x, const uint16_t y)
+int16_t board::rclick_field(const uint16_t x, const uint16_t y)
 {
+    int16_t result = 0;
     if ((y<y_size) && (x<x_size)) {
         field& f = arr[x][y];
-        if(f.is_hidden() && ((f.getInfo()==0xFF) || (count_marked_mines()<tot_nr_mines))) {
+        if(f.is_hidden()) {
+            if((f.getInfo()==0xFF) || (count_marked_mines()<tot_nr_mines)) {
             f.setInfo((f.getInfo()!=0)?0u:0xFFu);
             //draw();
             const uint16_t x_pos = CCNV_X(BOARD_X) + (x * 4u * X_SCALE);
             const uint16_t y_pos = CCNV_Y(BOARD_Y) + (y * 4u * Y_SCALE);
             f.draw(x_pos,y_pos);
             update_mines_info();
+            }
+        }else{
+            const uint8_t marked_mines = count_mines(x,y, true);
+            if (f.getInfo() == marked_mines) {
+                const uint16_t x_start = (x>0u)?x-1u:x;
+                const uint16_t x_end = (x<(x_size-1u))?x+1:x;
+                const uint16_t y_start = (y>0u)?y-1:y;
+                const uint16_t y_end = (y<(y_size-1u))?y+1:y;
+                bool exit = false;
+                for(uint16_t x1 = x_start; x1<=x_end && !exit;x1++) {
+                    for(uint16_t y1 = y_start; y1<=y_end;y1++) {
+                        field& f = arr[x1][y1];
+                        if(f.getInfo()!=0xFF && f.is_hidden()) {
+                            if(f.unhide()) {
+                                result = -1;
+                            }
+                            if (result==0) {
+                                const uint8_t nr_mines = count_mines(x1,y1);
+                                f.setInfo(nr_mines);
+                                unhide_surrounding(x1,y1,0u);
+                            }else{
+                                unhide_all();
+                                exit=true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                draw();
+            }
         }
     }
+    return result;
+}
+
+int16_t board::rclick_marked(void)
+{
+    const int16_t result = rclick_field(mark_x, mark_y);
+    set_mark(true);
+    return result;
 }
 
 void board::release()
@@ -270,4 +301,63 @@ void board::release()
 uint8_t board::get_board_height()
 {
     return this->y_size;
+}
+
+void board::set_mark(const bool visible)
+{
+    if ((mark_y < y_size) && (mark_x < x_size)) {
+        const uint16_t y_pos = CCNV_Y(BOARD_Y) + (mark_y * 4u * Y_SCALE);
+        const uint16_t x_pos = CCNV_X(BOARD_X) + (mark_x * 4u * X_SCALE);
+        arr[mark_x][mark_y].draw(x_pos,y_pos);
+
+        if (visible)
+        {
+#ifdef USE_GDP_FPGA
+            SetCurrentFgColor(YELLOW);
+#else
+            gp_setxor(true);
+
+#endif
+            GDP_moveto(x_pos+1,y_pos+1);
+            GDP_draw_line((4*(int16_t)X_SCALE)-2,0);
+            GDP_draw_line(0,(4*(int16_t)Y_SCALE)-2);
+            GDP_draw_line((-4*(int16_t)X_SCALE)+2,0);
+            GDP_draw_line(0,(-4*(int16_t)Y_SCALE)+2);
+#ifndef USE_GDP_FPGA
+            gp_setxor(false);
+#endif
+        }
+    }
+}
+
+void board::move_mark(const mark_move_t move)
+{
+
+    set_mark(false); //
+
+    switch (move) {
+        case move_left_e:
+            if (mark_x > 0u) {
+                mark_x -= 1u;
+            }
+            break;
+        case move_right_e:
+            if (mark_x < (x_size - 1u)) {
+                mark_x += 1u;
+            }
+            break;
+        case move_down_e:
+            if (mark_y > 0u) {
+                mark_y -= 1u;
+            }
+            break;
+        case move_up_e:
+            if (mark_y < (y_size - 1u)) {
+                mark_y += 1u;
+            }
+            break;
+    }
+
+    set_mark(true);
+    draw_field_border();
 }

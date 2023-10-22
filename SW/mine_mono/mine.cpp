@@ -9,11 +9,25 @@
 #include "board.h"
 #include "mine.h"
 
+#define UP    0x05u
+#define DOWN  0x18u
+#define LEFT  0x13u
+#define RIGHT 0x04u
 static int16_t mouse_x;
 static int16_t mouse_y;
 
+typedef enum{
+    none_e = 0u,
+    mark_e,
+    uncover_e,
+    left_e,
+    right_e,
+    up_e,
+    down_e,
+    exit_e
+}key_cmd_t;
 
-static int16_t check_mouse(board& myboard);
+static int16_t play_game(board& myboard);
 static void draw_mouse_pointer();
 
 int main(int argc, char *argv[])
@@ -34,9 +48,9 @@ int main(int argc, char *argv[])
     if (!((sysinfo & (IS_08 | IS_00 | IS_20 | GDP_HS | UHR)) == ((IS_08 << PADDING) | GDP_HS | UHR))) {
 #endif
       #if(cpu==1)
-         puts("Nicht unterstuetzte Systemkonfiguration.\r\nSie benoetigen eine GDP-FPGA sowie eine 68008 CPU!\r\n");
+         puts("Nicht unterstuetzte Systemkonfiguration.\r\nSie benoetigen eine GDP-HS sowie eine 68008 CPU!\r\n");
       #else
-         puts("Nicht unterstuetzte Systemkonfiguration.\r\nSie benoetigen eine GDP-FPGA sowie eine 68000 CPU!\r\n");
+         puts("Nicht unterstuetzte Systemkonfiguration.\r\nSie benoetigen eine GDP-HS sowie eine 68000 CPU!\r\n");
       #endif
       return 0;
    }
@@ -75,15 +89,24 @@ int main(int argc, char *argv[])
     //GDP.ctrl2 = 1u<<4u; // Switch to User character set
     gp_writexy(190u,240,0x22u, "* Minesweeper! *");
     gp_setcurxy(1u,3u);
-    iprintf("Press both Mouse keys together to exit\r");
+    iprintf("Press both Mouse keys together or 'x' to exit\r");
+    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,200u,0x11u, "space = Unhide");
+    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,190u,0x11u, "1:    = Mark mine");
+    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,180u,0x11,  "down  = Move Down");
+    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,170u,0x11,  "left  = Move Left");
+    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,160u,0x11,  "right = Move Right");
+    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,150u,0x11,  "up    = Move up");
 
+#ifdef MEASURE_TIME
     const clock_t start_ticks = _clock(NULL);
+#endif
     board myboard(beginner_mode);
     myboard.draw();
+#ifdef MEASURE_TIME
     const clock_t end_ticks = _clock(NULL);
     gp_setcurxy(20u,4u);
     iprintf("Time to draw board: %u ms\r", (unsigned int)(1000u*(end_ticks-start_ticks)/CLOCKS_PER_SEC));
-    //iprintf("Sizeof(field): %u\r\n",sizeof(field));
+#endif
 
     int16_t result=0;
     time_t time=0;
@@ -92,11 +115,11 @@ int main(int argc, char *argv[])
         const time_t now = _gettime();
         if(now!=time) {
             gp_setcurxy(1u,4u);
-            iprintf("Time: %u s\r",(unsigned int)(now-start_time));
+            iprintf("Time: %u s       \r",(unsigned int)(now-start_time));
             time=now;
         }
 
-        result = check_mouse(myboard);
+        result = play_game(myboard);
     }while(result==0);
     const uint8_t y_size = myboard.get_board_height() + 1;
     if(result<0) {
@@ -111,8 +134,13 @@ int main(int argc, char *argv[])
         gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+y_size),0x33u, "Game over -  you won!");
     }
 #ifdef USE_GDP_FPGA
-    GDP_set_clut(MAGENTA, 0b111000111);
-    GDP_set_clut(CYAN, 0b000111111);
+    //GDP_set_clut(MAGENTA, 0b111000111);
+    //GDP_set_clut(CYAN, 0b000111111);
+
+    static const uint16_t colors_restore[]= {0b111000111,   // restore Magenta
+                                     0b000111111,   // restore Cyan
+                                     0b010010010};  // restore middle grey
+    GDP_set_multiple_clut(MAGENTA, colors_restore, ARRAY_SIZE(colors_restore));
 #endif
 }
 
@@ -124,20 +152,54 @@ static inline int16_t limit_value(const int16_t val, const int16_t min, const in
     return ret;
 }
 
-static int16_t check_mouse(board& myboard) {
+static key_cmd_t decode_keyboard(void)
+{
+    key_cmd_t key_stat = none_e;
+    char key = 0;
+    if (gp_csts()) {
+         key = gp_ci();
+         switch(key) {
+            case LEFT:
+                key_stat = left_e;
+                break;
+            case RIGHT:
+                key_stat = right_e;
+                break;
+            case UP:
+                key_stat = up_e;
+                break;
+            case DOWN:
+                key_stat = down_e;
+                break;
+            case '1':
+                key_stat = mark_e;
+                break;
+            case ' ':
+                key_stat = uncover_e;
+                break;
+            case 'x':
+                key_stat = exit_e;
+                break;
+        }
+    }
+    return key_stat;
+}
+
+static int16_t play_game(board& myboard) {
     //static const uint8_t mouse_pointer[]= {0x7f,0x7e,0x71,0xf0,0};
     int16_t dx=0;
     int16_t dy=0;
     int16_t result = 0;
     static uint8_t old_mouse_keys =0u;
-    static bool mouse_init=true;
-    const uint8_t keys = gp_get_mouse(&dx, &dy);
+    static bool mouse_init = true;
+    const uint8_t keys     = gp_get_mouse(&dx, &dy);
 
     if((dx!=0) || (dy!=0) || (keys!=0u)) {
         if(!mouse_init) {
-            // delete old mouse pinter
+            // delete old mouse pointer
             draw_mouse_pointer();
         }
+
         mouse_init=false;
         mouse_x = limit_value(mouse_x+(dx*2),0, X_RES-1);
         mouse_y = limit_value(mouse_y+dy,0, Y_RES-1);
@@ -148,7 +210,7 @@ static int16_t check_mouse(board& myboard) {
         if((((keys & ~old_mouse_keys) & L_BUTTON)!=0u)) {
             result = myboard.click_field(x,y);
         }else if((((keys & ~old_mouse_keys) & R_BUTTON)!=0u)) {
-            myboard.mark_field(x,y);
+            result = myboard.rclick_field(x,y);
         }
         draw_mouse_pointer();
 
@@ -163,7 +225,45 @@ static int16_t check_mouse(board& myboard) {
         draw_mouse_pointer();
     }
     old_mouse_keys = keys;
-    return ((keys & (L_BUTTON | R_BUTTON))==(L_BUTTON | R_BUTTON))?0xffu:result;
+    result =  ((keys & (L_BUTTON | R_BUTTON))==(L_BUTTON | R_BUTTON))?0xffu:result;
+
+    const key_cmd_t keybd  = decode_keyboard();
+    // Play with keyboard
+    if (keybd != none_e) {
+        switch(keybd){
+            case exit_e:
+                result = 0xffu;
+                break;
+            case left_e:
+                myboard.release();
+                myboard.move_mark(move_left_e);
+                break;
+            case right_e:
+                myboard.release();
+                myboard.move_mark(move_right_e);
+                break;
+            case up_e:
+                myboard.release();
+                myboard.move_mark(move_up_e);
+                break;
+            case down_e:
+                myboard.release();
+                myboard.move_mark(move_down_e);
+                break;
+            case mark_e:
+                result = myboard.rclick_marked();
+                break;
+            case uncover_e:
+                result = myboard.click_marked();
+                break;
+            default:
+                break;
+        }
+        if((result==0) && myboard.check_done()) {
+            result=1;
+        }
+    }
+    return result;
 }
 
 static void draw_mouse_pointer()

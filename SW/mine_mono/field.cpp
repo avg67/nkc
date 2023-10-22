@@ -54,68 +54,40 @@ bool field::unhide()
     return false;
 }
 
+#ifdef USE_GDP_FPGA
 void field::draw(const uint16_t x, const uint16_t y)
 {
-#ifdef USE_GDP_FPGA
     uint8_t color = GRAY;
-
     if(this->hl) {
-
         color = GREEN;
     }else if(!this->hidden) {
         if (this->isMine) {
             color = RED;
         }else{
-
             color = WHITE | DARK;
         }
     }
-#else
-    if((!this->hidden) && (!this->isMine)) {
-        GDP_erapen();
-    }
-#endif
-
-
     const uint8_t csize_backup = GDP.csize;
     GDP.csize = ((X_SCALE)<<4u) |(Y_SCALE);
-#ifdef USE_GDP_FPGA
+    //const uint8_t color = (isMine)?RED:GRAY;
     SetCurrentFgColor(color);
-#endif
     GDP_draw4x4(x,y);
-    GDP_drawpen();
-    gdp_ready();
-    gp_setxor(true);
-    if(this->hl) {
-        gdp_ready();
-        GDP.csize = 0x21;
-        GDP_moveto(x+6u,y+2u);
-        GDP.cmd = '\x7f';
-    }else if((this->info>0u) && (this->info<=9u)) {
-
+    if((this->info>0u) && (this->info<=9u)) {
+        SetCurrentFgColor(WHITE);
         GDP.csize = 0x11;
         GDP_moveto(x+8u,y+2u);
-
-#ifdef USE_GDP_FPGA
-        SetCurrentFgColor(WHITE);
-#endif
         GDP.cmd = '0' + this->info;
     }else if(this->info==0xffu) {
         // marked as mine
-        gdp_ready();
-        GDP.csize = 0x21u;
-        GDP_moveto(x+6u,y+2u);
-#ifdef USE_GDP_FPGA
         SetCurrentFgColor(RED);
-#endif
+        GDP.csize = 0x21;
+        GDP_moveto(x+6u,y+2u);
         GDP.cmd = '*';
         //gp_draw_filled_circle(x+6u,y+2u,10u);
     }
 
     gdp_ready();
-    gp_setxor(false);
     GDP.csize = csize_backup;
-#ifdef USE_GDP_FPGA
     if(this->hidden) {
         SetCurrentFgColor(MAGENTA); // very dark grey
         /*GDP_moveto(x+CCNV_X(1u),y);
@@ -134,13 +106,57 @@ void field::draw(const uint16_t x, const uint16_t y)
         GDP_draw_line(0,-((int8_t)(CCNV_Y(1u)-3u)));
     }else{
         SetCurrentBgColor(BLACK);
-#endif
-        gp_setxor(true);
+        GDP_erapen();
         GDP_moveto(x+CCNV_X(1u),y);
         GDP_draw_line(-(int8_t)CCNV_X(1u),0u);
         GDP_draw_line(0,CCNV_Y(1u));
-        gp_setxor(false);
-#ifdef USE_GDP_FPGA
+        GDP_drawpen();
     }
-#endif
+
 }
+#else
+void field::draw(const uint16_t x, const uint16_t y)
+{
+    if((!this->hidden) && (!this->isMine)) {
+        GDP_erapen();
+    }
+
+    const uint8_t csize_backup = GDP.csize;
+    GDP.csize = ((X_SCALE)<<4u) |(Y_SCALE);
+
+    GDP_draw4x4(x,y);
+    GDP_drawpen();
+    gdp_ready();
+    gp_setxor(true);
+    if(this->hl) {
+        gdp_ready();
+        GDP.csize = 0x21;
+        GDP_moveto(x+6u,y+2u);
+        GDP.cmd = '\x7f';
+    }else if((this->info>0u) && (this->info<=9u)) {
+        GDP.csize = 0x11;
+        GDP_moveto(x+8u,y+2u);
+        GDP.cmd = '0' + this->info;
+    }else if(this->info==0xffu) {
+        // marked as mine
+        gdp_ready();
+        GDP.csize = 0x21u;
+        GDP_moveto(x+6u,y+2u);
+        GDP.cmd = '*';
+    }
+
+    gdp_ready();
+    gp_setxor(false);
+    GDP.csize = csize_backup;
+
+    if((!this->hidden) && (!this->isMine)) {
+        GDP_drawpen();
+    }else{
+        GDP_erapen();
+    }
+    GDP_moveto(x+CCNV_X(1u),y);
+    GDP_draw_line(-(int8_t)(CCNV_X(1u)),0u);
+    GDP_draw_line(0,CCNV_Y(1u));
+    GDP_drawpen();
+}
+#endif

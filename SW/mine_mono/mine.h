@@ -77,7 +77,7 @@ static inline __attribute__((always_inline)) void GDP_draw_line(const int8_t dx,
    gdp_ready();
    GDP.deltax = abs_dx;
    GDP.deltay = abs_dy;
-   GDP.cmd = 0x11|sx|sy;
+   GDP.cmd = 0x11u|sx|sy;
 }
 
 static inline __attribute__((always_inline)) void GDP_cmd(const uint8_t cmd)
@@ -112,13 +112,40 @@ static inline __attribute__((always_inline)) void GDP_set_clut(const uint8_t col
    GDP_Clut.color_l   = (uint8_t)(rgb & 0xFFu);
 }
 
+static inline __attribute__((always_inline)) void GDP_set_multiple_clut(const uint8_t start_col_idx, const uint16_t* p_rgb, const uint8_t nr_of_cols)
+{
+   uint8_t color_count = nr_of_cols;
+   GDP_Clut.color_idx = start_col_idx;
+   while(color_count>0u) {
+      const uint16_t color = *p_rgb++;
+      GDP_Clut.color_h   = (uint8_t)((color >> 8u) & 0xFFu);
+      GDP_Clut.color_l   = (uint8_t)(color & 0xFFu);
+      color_count--;
+   }
+}
+
 static inline __attribute__((always_inline)) void GDP_define_char(const uint8_t ch, const uint8_t* p_char) {
    GDP.ctrl2 = 1u<<4u;
-   const uint16_t chr_addr = ((uint16_t)(ch - ' ')) * 5u;
+   const uint16_t chr_addr = ((uint16_t)(ch - ' ')) * CHAR_SIZE;
    GDP.xh = (uint8_t)(chr_addr >> 8u) & 0xFFu;
    GDP.xl = (uint8_t)(chr_addr & 0xFFu);
-   for(uint16_t i=0u;i<5u;i++) {
+   for(uint16_t i=0u;i<CHAR_SIZE;i++) {
       GDP.char_def = *p_char++;
+   }
+   GDP.ctrl2 = 0u;
+}
+
+static inline __attribute__((always_inline)) void GDP_define_chars(const uint8_t start_index, const uint8_t* p_char, const uint8_t nr_chars) {
+   uint8_t char_count = nr_chars;
+   GDP.ctrl2 = 1u<<4u;
+   const uint16_t chr_addr = ((uint16_t)(start_index - ' ')) * CHAR_SIZE;
+   GDP.xh = (uint8_t)(chr_addr >> 8u) & 0xFFu;
+   GDP.xl = (uint8_t)(chr_addr & 0xFFu);
+   while(char_count>0u) {
+      for(uint16_t i=0u;i<CHAR_SIZE;i++) {
+         GDP.char_def = *p_char++;
+      }
+      char_count--;
    }
    GDP.ctrl2 = 0u;
 }
