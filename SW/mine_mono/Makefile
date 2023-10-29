@@ -39,7 +39,7 @@ gccdir = /c/SysGCC/m68k-elf
 ISEARCH = #-I.
 
 #LIBDIRS =  -L $(gccdir)/m68k-elf/lib/m68000
-COMMON_DIR = ../../nkc_common/
+COMMON_DIR = $(gccdir)/nkc_common/
 LIBS =
 
 # Compile with debugging info (-g), with size optimization (-Os)
@@ -65,7 +65,8 @@ CSRCS=  gp_helper.c
 # List of CPP sources
 CPPSRCS= mine.cpp \
 		field.cpp \
-		board.cpp
+		board.cpp \
+		highscore.cpp
 
 ASM_SRCS=
 # Directory where the files are generated to (objects, list files, ...)

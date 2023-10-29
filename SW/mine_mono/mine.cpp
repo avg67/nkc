@@ -8,6 +8,7 @@
 #include <string.h>
 #include "board.h"
 #include "mine.h"
+#include "highscore.h"
 
 #define UP    0x05u
 #define DOWN  0x18u
@@ -32,14 +33,9 @@ static void draw_mouse_pointer();
 
 int main(int argc, char *argv[])
 {
-    setvbuf(stdin, NULL, _IONBF, 0);
+    /*setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);
-
-    bool beginner_mode = true;
-    if((argc>1) && (strcmp(argv[0],"-I")==0)) {
-        beginner_mode=false;
-    }
+    setvbuf(stderr, NULL, _IONBF, 0);*/
 
    const uint32_t sysinfo = gp_system();
 #ifdef USE_GDP_FPGA
@@ -54,6 +50,31 @@ int main(int argc, char *argv[])
       #endif
       return 0;
    }
+
+    gp_clearscreen();
+    bool beginner_mode = true;
+    bool show_hs       = false;
+    if(argc>1) {
+        for(uint16_t i=1u;i<argc;i++) {
+            if (strcmp(argv[i],"-I")==0) {
+                beginner_mode=false;
+            }
+            if(strcmp(argv[i],"-H")==0) {
+                show_hs = true;
+            }
+        }
+        if (show_hs) {
+            highscore hs("mine_hsc.bin");
+            const uint16_t level = (beginner_mode)?0u:1u;
+            if (hs.GetLoaded()) {
+                hs.Display(level);
+            }else{
+                iprintf("No Highscore found... :-(");
+            }
+            return 0;
+        }
+    }
+
 #ifdef USE_GDP_FPGA
     // redefine Magenta as dark grey
     /*GDP_set_clut(MAGENTA, 0b001001001);
@@ -74,7 +95,6 @@ int main(int argc, char *argv[])
     mouse_x=X_RES/2u;
     mouse_y=Y_RES/2u;
 
-    gp_clearscreen();
     gp_cursor_off();
     gp_setflip(10u,10u);
 #ifdef USE_GDP_FPGA
@@ -131,7 +151,23 @@ int main(int argc, char *argv[])
 #ifdef USE_GDP_FPGA
         SetCurrentFgColor(GREEN);
 #endif
-        gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+y_size),0x33u, "Game over -  you won!");
+        gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+y_size),0x33u, "Congratulations -  you won!");
+        gp_writexy(CCNV_X(1u),CCNV_Y(BOARD_Y+y_size-1u),0x11u, "press any key to continue...");
+        highscore hs("mine_hsc.bin");
+        gp_ci();
+        gp_clearscreen();
+        gp_setflip(10u,10u);
+        gp_cursor_on();
+        puts("Please enter your name for highscore list\r\n");
+        char bfr[80u]={0u};
+        fgets(bfr, sizeof(bfr), stdin);
+        puts("\r\n");
+        gp_cursor_off();
+        gp_setflip(0u,0u);
+        const uint16_t level = (beginner_mode)?0u:1u;
+        const uint8_t new_entry = hs.InsertSorted(bfr,time, (uint32_t)time - start_time,level);
+        hs.Save();
+        hs.Display(level,new_entry);
     }
 #ifdef USE_GDP_FPGA
     //GDP_set_clut(MAGENTA, 0b111000111);
