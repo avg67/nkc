@@ -30,6 +30,7 @@ typedef enum{
 
 static int16_t play_game(board& myboard);
 static void draw_mouse_pointer();
+static void play_explosion(void);
 
 int main(int argc, char *argv[])
 {
@@ -69,7 +70,7 @@ int main(int argc, char *argv[])
             if (hs.GetLoaded()) {
                 hs.Display(level);
             }else{
-                iprintf("No Highscore found... :-(");
+                iprintf("No Highscore found... :-(\r\n");
             }
             return 0;
         }
@@ -143,6 +144,7 @@ int main(int argc, char *argv[])
     }while(result==0);
     const uint8_t y_size = myboard.get_board_height() + 1;
     if(result<0) {
+	    play_explosion();
 #ifdef USE_GDP_FPGA
         SetCurrentFgColor(RED);
 #endif
@@ -318,4 +320,10 @@ static void draw_mouse_pointer()
     GDP.ctrl2 = 0u;
 #endif
     gp_setxor(false);
+}
+
+static void play_explosion(void)
+{
+    static const uint8_t explosion[]= {0,0,0,0,0,0,0xff,0x07,0x10,0,0x10,0x10,0x10,0,0x38,0};
+    gp_sound(explosion);
 }

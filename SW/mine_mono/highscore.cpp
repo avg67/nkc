@@ -215,7 +215,7 @@ void highscore::Display(const uint16_t filter, const uint8_t hlEntry) {
    highscore_t * const p_hs = (highscore_t * const)this->p_buffer;
    iprintf(" Nr: Duration  Played at         Name\r\n");   // 41 characters, name max 24 chars
    char timebuf[20];
-   uint16_t line=0u;
+   uint16_t line=1u;
 
     for (uint16_t i=0;i<std::min(p_hs->nr_entries,(uint16_t)MAX_ENTRIES_TO_SHOW);i++) {
         if ((filter == UINT16_MAX) || (p_hs->hs[i].level == filter)) {
@@ -226,7 +226,7 @@ void highscore::Display(const uint16_t filter, const uint8_t hlEntry) {
                 c='*';
             }
             siprintf(timebuf,"%02u.%02u.%02u %02u:%02u:%02u",p_tm->tm_mday,p_tm->tm_mon+1u,p_tm->tm_year-100u,p_tm->tm_hour,p_tm->tm_min,p_tm->tm_sec);
-            iprintf("%c%-2u: %-6u %20s %s\r\n",c,line+1u, (unsigned int)p_hs->hs[i].duration, timebuf, p_hs->hs[i].name);
+            iprintf("%c%-2u: %-6u %20s %s\r\n",c,line, (unsigned int)p_hs->hs[i].duration, timebuf, p_hs->hs[i].name);
 
             line++;
         }

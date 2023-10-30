@@ -208,6 +208,7 @@ void _start(int stackmagi, char **argv, char **envp)
     :   /* inputs */    \
     : "%d7", "%a0"    /* clobbered regs */ \
     );
+    _mem_top = (char *)ram_top;
 
     asm   volatile(
     "# asm"						                    "\n\t"  \
@@ -290,7 +291,7 @@ void _start(int stackmagi, char **argv, char **envp)
 #else
    //   exit(main(cnt, argv, envp));
 #endif
-   asm volatile("_exit_label:");
+   //asm volatile("_exit_label:");
 }
 
 void _exit(int ret)

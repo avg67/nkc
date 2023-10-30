@@ -3,7 +3,11 @@
 
 #include <time.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 #include <ndrcomp/target.h>
+#include <sys/ndrclock.h>
+#include <sys/times.h>
 
 //Exportierte Symbole der NKCLIB
 //volatile char gp_csts(void);
@@ -13,17 +17,27 @@ int ioctl(int fd, int code, void* buf);
 int write(int fd, const void *buffer, size_t n);
 int read(int fd, void *bfr, size_t n);
 int close(int fd);
+void * get_heap_ptr(void);
 
+#ifndef __cplusplus
+  #define min(a,b) (((a)<=(b))?(a):(b))
+#endif
+extern const char *_mem_top;
+extern const char * _static_top;    // Unused memory between _static_top and _mem_top
 #ifdef __cplusplus
   extern "C" time_t _gettime(void);
   extern "C" clock_t _clock(void (*clock_fu)(void));
+  extern "C" clock_t _times(struct tms *buf);
 #else
   time_t _gettime(void);
   clock_t _clock(void (*clock_fu)(void));
+  clock_t _times(struct tms *buf);
 #endif
 
 
 #define ARRAY_SIZE(a) (sizeof(a)/sizeof(a[0u]))
+#define LO8(x) ( (unsigned char) ((x) & 0xFFu) )
+#define HI8(x) ( (unsigned char) (((x) >> 8u) & 0xFFu) )
 
 /* TRAP-NUMMERN DES GP TRAP #1 (V7.0) */
 
@@ -528,11 +542,11 @@ static inline __attribute__((always_inline)) unsigned long to_bendian(unsigned l
     );
     return ret;
 }
-
+#if 0
 // Argument ist am Stack, Returnwert muss in D0 sein
 static inline __attribute__((always_inline)) unsigned short to_bendian16( unsigned short l_in)
 {
-	register unsigned short ret  __asm__("%d0") = 0u;
+	register unsigned short ret  __asm__("%d0") = 0;
 	asm volatile(
     "# asm"                      "\n\t" \
     "movew %1,%%d0"              "\n\t" \
@@ -542,6 +556,12 @@ static inline __attribute__((always_inline)) unsigned short to_bendian16( unsign
     :                 /* clobbered regs */ \
     );
   return ret;
+}
+#endif
+static inline __attribute__((always_inline)) uint16_t to_bendian16( uint16_t l_in)
+{
+    uint16_t ret = l_in;
+    return (ret<<8u)|(ret>>8u);
 }
 
 /* ----------------------------------------------------------------------------- (G)IDE ------------------------------------------------------------------------------------------------------------- */
@@ -991,7 +1011,21 @@ static inline __attribute__((always_inline)) char gp_ci(void)
     : "%d7"    /* clobbered regs */ \
     );
     return retvalue;
+}
 
+static inline __attribute__((always_inline)) void gp_getuhr(volatile ndrtimebuf * p_time)
+{
+    asm volatile(
+    "# asm"                        "\n\t" \
+    "moveal %0,%%a0"               "\n\t" \
+    "moveml %%d4/%%a5-%%a6,%%sp@-" "\n\t" \
+    "moveq #_GETUHR,%%d7"          "\n\t" \
+    "trap #1"                      "\n\t" \
+    "moveml %%sp@+,%%d4/%%a5-%%a6" "\n\t" \
+    : "=g" (p_time)          /* outputs */    \
+    :                        /* inputs */    \
+    : "%a0","%d7"            /* clobbered regs */ \
+    );
 }
 
 static inline __attribute__((always_inline)) void gp_cmd(const uint8_t cmd) {
@@ -1328,6 +1362,20 @@ static inline __attribute__((always_inline)) void gp_progzge(const uint8_t* cons
   );
 }
 
+static inline __attribute__((always_inline)) void gp_sound(const uint8_t* const p_table){
+  asm volatile(
+    "# asm"                      "\n\t" \
+    "moveq %0,%%d7"              "\n\t" \
+    "moveal %1,%%a0"             "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    :                              /* outputs */    \
+    : "g"(_SOUND),"g"(p_table)    /* inputs */    \
+    : "%a0","%d7"                  /* clobbered regs */ \
+  );
+}
+
 #ifdef USE_JADOS
 
 static inline __attribute__((always_inline)) uint32_t jd_getversi(void) {
@@ -1444,7 +1492,7 @@ struct jdfcb{
 }__attribute__ ((packed));				/* otherwise datafields would be aligned ... */
 typedef struct jdfcb jdfcb_t ;
 
-static inline __attribute__((always_inline)) uint8_t jd_fillfcb(jdfcb_t * const p_FCB, char * const p_name)
+static inline __attribute__((always_inline)) uint8_t jd_fillfcb(jdfcb_t * const p_FCB, const char * const p_name)
 {
    register uint8_t ret  asm("%d0") = 0u;
   asm volatile(

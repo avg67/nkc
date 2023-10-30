@@ -395,12 +395,12 @@ extern caddr_t ram_top;
 //#define RAMSIZE             (caddr_t)0x100000
 //#endif
 
+static caddr_t heap_ptr = NULL;
 
 void * sbrk (ptrdiff_t nbytes)
 //caddr_t sbrk(nbytes)
 //     int nbytes;
 {
-  static caddr_t heap_ptr = NULL;
   void *        base;
 
   if (heap_ptr == NULL) {
@@ -419,7 +419,13 @@ void * sbrk (ptrdiff_t nbytes)
   }
 }
 
-
+void * get_heap_ptr(void) {
+    if(heap_ptr!=NULL) {
+        return heap_ptr;
+    }else{
+        return (void *)&_end;
+    }
+}
 
 /*
  times
