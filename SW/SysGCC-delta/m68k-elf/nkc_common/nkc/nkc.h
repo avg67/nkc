@@ -1088,7 +1088,7 @@ static inline __attribute__((always_inline)) void gp_settrans(const bool trans) 
   asm volatile(
     "# asm"                      "\n\t" \
     "moveb %1,%%d0"              "\n\t" \
-    "moveb %0,%%d7"              "\n\t" \
+    "movew %0,%%d7"              "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
@@ -1115,7 +1115,7 @@ static inline __attribute__((always_inline)) void gp_setxor(const bool x) {
 static inline __attribute__((always_inline)) void gp_erapen(void) {
   asm volatile(
     "# asm"                      "\n\t" \
-    "moveb %0,%%d7"              "\n\t" \
+    "movew %0,%%d7"              "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
@@ -1128,7 +1128,7 @@ static inline __attribute__((always_inline)) void gp_erapen(void) {
 static inline __attribute__((always_inline)) void gp_setpen(void) {
   asm volatile(
     "# asm"                      "\n\t" \
-    "moveb %0,%%d7"              "\n\t" \
+    "movew %0,%%d7"              "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
@@ -1191,7 +1191,7 @@ static inline __attribute__((always_inline)) uint32_t gp_system(void) {
    asm volatile(
     "# asm"                      "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
-    "moveb %1,%%d7"              "\n\t" \
+    "movew %1,%%d7"              "\n\t" \
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     "movel %%d0,%0"              "\n\t" \
