@@ -167,11 +167,11 @@ void _start(int stackmagi, char **argv, char **envp)
 	asm   volatile(
   "# asm"						                              "\n\t"  \
 	"lea	%0, %%a0"                                 "\n\t"  \
-	"cmpl	#0,%%a0"                                  "\n\t"  \
+	"cmpaw	#0,%%a0"                                  "\n\t"  \
 	"beqs	m4"                                       "\n\t"  \
 	"jsr     (%%a0)"                                  "\n\t"  \
 "m4: lea	%1, %%a0"                                 "\n\t"  \
-	"cmpl	#0,%%a0"                                  "\n\t"  \
+	"cmpaw	#0,%%a0"                                  "\n\t"  \
 	"beqs	m5"                                       "\n\t"  \
 	"jsr     (%%a0)"                                  "\n\t"  \
 "m5: " \
@@ -183,7 +183,7 @@ void _start(int stackmagi, char **argv, char **envp)
 	asm   volatile(
   "# asm"						                              "\n\t"  \
 	"lea	%0, %%a0"                                 "\n\t"  \
-	"cmpl	#0,%%a0"                                  "\n\t"  \
+	"cmpaw	#0,%%a0"                                  "\n\t"  \
 	"beqs	no_init"                                  "\n\t"  \
 	"jsr     (%%a0)"                                  "\n\t"  \
 "no_init:"                                         "\n\t"  \
@@ -277,7 +277,7 @@ void _start(int stackmagi, char **argv, char **envp)
    asm   volatile(
   "#asm"                                           "\n\t"  \
 	"lea	%0, %%a0"                                 "\n\t"  \
-	"cmpl	#0,%%a0"                                  "\n\t"  \
+	"cmpaw	#0,%%a0"                                  "\n\t"  \
 	"beqs	no_fini"                                  "\n\t"  \
 	"jsr (%%a0)"                                    "\n\t"  \
 "no_fini:"                                         "\n\t"  \

@@ -359,5 +359,7 @@ void board::move_mark(const mark_move_t move)
     }
 
     set_mark(true);
+#ifndef USE_GDP_FPGA
     draw_field_border();
+#endif
 }
