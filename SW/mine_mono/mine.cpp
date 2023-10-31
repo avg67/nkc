@@ -34,9 +34,9 @@ static void play_explosion(void);
 
 int main(int argc, char *argv[])
 {
-    /*setvbuf(stdin, NULL, _IONBF, 0);
+    /*setvbuf(stdin, NULL, _IONBF, 0);*/
     setvbuf(stdout, NULL, _IONBF, 0);
-    setvbuf(stderr, NULL, _IONBF, 0);*/
+    setvbuf(stderr, NULL, _IONBF, 0);
 
    const uint32_t sysinfo = gp_system();
 #ifdef USE_GDP_FPGA
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
     gp_setcurxy(1u,3u);
     iprintf("Press both Mouse keys together or 'x' to exit\r");
     gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,200u,0x11u, "space = Unhide");
-    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,190u,0x11u, "1:    = Mark mine");
+    gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,190u,0x11u, "1     = Mark mine");
     gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,180u,0x11,  "down  = Move Down");
     gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,170u,0x11,  "left  = Move Left");
     gp_writexy(CCNV_X(BOARD_X + BOARD_X_SIZE)+20u,160u,0x11,  "right = Move Right");
