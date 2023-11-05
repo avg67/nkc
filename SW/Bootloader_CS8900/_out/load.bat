@@ -1,0 +1,1 @@
+python C:\working\NKC_GIT_Creep\NKC\SW\68k\python\Python_dl\dl.py -b 115200 -u tftp.68k
