@@ -41,16 +41,10 @@ void send_DHCP_DISCOVER(uchar sock,uchar *pBfr)
     MSG->secs = DHCP_SECS;
     MSG->flags = DHCP_FLAGSBROADCAST;
 
-    memset(MSG->ciaddr,0,RIP_MSG_SIZE-12);
+    memset(MSG->ciaddr,0u,RIP_MSG_SIZE-12u);
 
     // setting default Mac Address Value.
-//	*((unsigned long*)MSG->chaddr)=*((unsigned long*)my_mac);
-//	*((unsigned int*)MSG->chaddr+4)=*((unsigned int*)my_mac+4);
     memcpy(MSG->chaddr, my_mac, 6);
-
-/*	for (i = 6; i < sizeof(MSG->chaddr); i++) MSG->chaddr[i] = 0;
-    for (i = 0; i < sizeof(MSG->sname); i++) MSG->sname[i] = 0;
-    for (i = 0; i < sizeof(MSG->file); i++) MSG->file[i] = 0;*/
 
     // MAGIC_COOKIE
     MSG->OPT[0] = MAGIC0;
@@ -100,7 +94,7 @@ void send_DHCP_REQUEST(uchar sock,uchar *pBfr)
     MSG->ciaddr[2] = my_ip.bytes[2];
     MSG->ciaddr[3] = my_ip.bytes[3];
 
-    memset(MSG->yiaddr.bytes,0,RIP_MSG_SIZE-16);
+    memset(MSG->yiaddr.bytes,0,RIP_MSG_SIZE-16u);
     memcpy(MSG->chaddr, my_mac, sizeof(my_mac));
 
 
@@ -117,12 +111,12 @@ void send_DHCP_REQUEST(uchar sock,uchar *pBfr)
 
     // Option Request Param.
     MSG->OPT[4] = dhcpMessageType;
-    MSG->OPT[5] = 0x01;
+    MSG->OPT[5] = 0x01u;
     MSG->OPT[6] = DHCP_REQUEST;
 
     // DHCP Option Request Param.
     MSG->OPT[7] = dhcpParamRequest;
-    MSG->OPT[8] = 0x05;
+    MSG->OPT[8] = 0x05u;
     MSG->OPT[9] = subnetMask;
     MSG->OPT[10] = routersOnSubnet;
 
@@ -131,7 +125,7 @@ void send_DHCP_REQUEST(uchar sock,uchar *pBfr)
     MSG->OPT[13] = dhcpT2value;
     MSG->OPT[14]= hostName;
     MSG->OPT[15]= 7;
-    memcpy(&MSG->OPT[16],"NKC",3);
+    memcpy(&MSG->OPT[16],"NKC",3u);
     MSG->OPT[19] = endOption;
     send_socket_udp(sock,pBfr,RIP_MSG_SIZE);
 }
@@ -312,7 +306,7 @@ char parseDHCPMSG(uchar sock)
         my_ip.ipl=pMSG->yiaddr.ipl;
 //		puts(IPAddrStr);
     }
-    type = 0;	//(*((unsigned long*)pMSG->OPT)==MAGIC_COOKIE)?pMSG->op:0;
+    type = 0;
     p = (UCHAR *)(pMSG);
     p = p + 240;
     e = p + (rcv_len - 240);

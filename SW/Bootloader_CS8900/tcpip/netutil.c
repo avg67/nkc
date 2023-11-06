@@ -9,32 +9,11 @@
 
 #include <stdio.h>
 
-#include "cs8900_eth.h"		// Utilities
 #include "netutil.h"		// Utilities
 
 
 #define NETUTIL_DEBUG(...)
 //#define NETUTIL_DEBUG iprintf
-
-/**********************************************************************************
-* uchar net_match_ulong(unsigned long m)
-*
-* function, that returns 0 only if the nrext read word from the Ethernet matches
-* matches a fixed one
-**********************************************************************************/
-unsigned char net_match_ulong(unsigned long m){
-    if(Read_Frame_long_8900()!=m) return 1;
-    return 0;	// MATCH!
-}
-/*************************** consm){
-*t
-* function, that returns 0 only if the next read long from the Ethernet matches
-* matches a fixed one
-**********************************************************************************/
-unsigned char net_match_uint(uint16_t m){
-    if(Read_Frame_word_8900()!=m) return 1;
-    return 0;	// MATCH!
-}
 
 uint16_t ip_check_more(uchar const* ps, uint16_t len, uint16_t old_cs)
 {

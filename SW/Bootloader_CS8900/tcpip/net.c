@@ -66,8 +66,6 @@ typedef struct{
 
 #endif
 
-
-
 /* TCP-Option-Flags */
 #define TFIN 0x01
 #define TSYN 0x02
@@ -325,15 +323,15 @@ void free_tx_buf(TX_BUFFER * pbuf){
 **********************************************************************************/
 static void free_match_socket(UC_SOCKET* p_match_socket){
     if(p_match_socket->buf_outsize1){
-        p_match_socket->buf_outsize1=0;
+        p_match_socket->buf_outsize1=0u;
         free_tx_buf(p_match_socket->p_outbuf1);
     }
     if(p_match_socket->buf_outsize2){
-        p_match_socket->buf_outsize2=0;
+        p_match_socket->buf_outsize2=0u;
         free_tx_buf(p_match_socket->p_outbuf2);
     }
     if(p_match_socket->buf_outsize3){
-        p_match_socket->buf_outsize3=0;
+        p_match_socket->buf_outsize3=0u;
         free_tx_buf(p_match_socket->p_outbuf3);
     }
 }
@@ -349,24 +347,24 @@ static void free_match_socket(UC_SOCKET* p_match_socket){
 void send_request_ARP(unsigned long ipl){
     // NET_DEBUG("<ARP QUERRY>"); // Inform us...
 
-    RequestSend_8900(42);    // Send Reply
+    RequestSend_8900(42u);    // Send Reply
 
-    Write_Frame_long_8900(0xFFFFFFFF);  // To Broadcast
-    Write_Frame_word_8900(0xFFFF);    // To Broadcast
+    Write_Frame_long_8900(0xFFFFFFFFu);  // To Broadcast
+    Write_Frame_word_8900(0xFFFFu);    // To Broadcast
 
-    write_frame_data_8900(my_mac,6);   // From US (MAC)
+    write_frame_data_8900(my_mac,sizeof(my_mac));   // From US (MAC)
 
-    Write_Frame_word_8900(0x0806);   // ARP!
+    Write_Frame_word_8900(0x0806u);   // ARP!
 
-    Write_Frame_long_8900(0x10800);   // Ethernet
-    Write_Frame_long_8900(0x6040001);  // Request
+    Write_Frame_long_8900(0x10800u);   // Ethernet
+    Write_Frame_long_8900(0x6040001u);  // Request
 
-    write_frame_data_8900(my_mac,6);   // From US (MAC)
+    write_frame_data_8900(my_mac,sizeof(my_mac));   // From US (MAC)
     Write_Frame_long_8900(my_ip.ipl);  // and IP!
 
     // Variable filled out by Host
-    Write_Frame_long_8900(0xFFFFFFFF);  // To Broadcast
-    Write_Frame_word_8900(0xFFFF);    // To Broadcast
+    Write_Frame_long_8900(0xFFFFFFFFu);  // To Broadcast
+    Write_Frame_word_8900(0xFFFFu);    // To Broadcast
 
     // If Our Mask and Destin. Mask differs in the significant netbits, querry MAC of Gateway
     if((ipl^my_ip.ipl)&subnet_ip.ipl) {
@@ -391,30 +389,30 @@ uint16_t process_ARP(void){
 
     uint16_t type;
 
-    if(net_match_ulong(0x00010800)) return EVENT_ARP_UNKNOWN; // No ARP!						// 4
-    if(net_match_uint(0x0604)) return EVENT_ARP_UNKNOWN; // No ARP!							// 2
+    if(net_match_ulong(0x00010800u)) return EVENT_ARP_UNKNOWN; // No ARP!						// 4
+    if(net_match_uint(0x0604u)) return EVENT_ARP_UNKNOWN; // No ARP!							// 2
     type=Read_Frame_word_8900();  																// 2
     // printf("ARP type %x\n",type);
-    read_frame_data_8900(hframe.bytes,20); 	// Read informative part of ARP message			   20
-    if(type>2) return EVENT_ARP_NOTYPE; 		// Unknown Reply
+    read_frame_data_8900(hframe.bytes,20u); 	// Read informative part of ARP message			   20
+    if(type>2u) return EVENT_ARP_NOTYPE; 		// Unknown Reply
 
-    if(type==1){ // ARP Request!
+    if(type==1u){ // ARP Request!
         if(hframe.arp_info.target_ip.ipl!=my_ip.ipl) return EVENT_ARP_OTHER; // ARP, but not for us...
 
-        // NET_DEBUG("<ARP request>"); // Inform us...
-        RequestSend_8900(42);   // Send Reply
+        NET_DEBUG("<ARP request>"); // Inform us...
+        RequestSend_8900(42u);   // Send Reply
 
-        write_frame_data_8900(remote_mac,6);  // Kick packet back...
-        write_frame_data_8900(my_mac,6);  // From US (MAC)
-        Write_Frame_word_8900(0x0806);  // ARP!
+        write_frame_data_8900(remote_mac,sizeof(remote_mac));  // Kick packet back...
+        write_frame_data_8900(my_mac,sizeof(my_mac));  // From US (MAC)
+        Write_Frame_word_8900(0x0806u);  // ARP!
 
-        Write_Frame_long_8900(0x00010800);
-        Write_Frame_long_8900(0x06040002); // Response
+        Write_Frame_long_8900(0x00010800u);
+        Write_Frame_long_8900(0x06040002u); // Response
 
-        write_frame_data_8900(my_mac,6);  // From US (MAC)
+        write_frame_data_8900(my_mac,sizeof(my_mac));  // From US (MAC)
         Write_Frame_long_8900(my_ip.ipl);  // and IP!
 
-        write_frame_data_8900(hframe.bytes,10);  // Sender MAC & Sender IP
+        write_frame_data_8900(hframe.bytes,10u);  // Sender MAC & Sender IP
         return EVENT_ARP_REQUEST;    // No Event of interest, but an EVENT
 
     }else{ // Arp response! For us?
@@ -458,38 +456,38 @@ uint16_t process_ICMP(uint16_t dlen){
 
     read_frame_data_8900(hframe.bytes,dlen); // Read Sender's Data
     // printf("Type %bx\n",hframe.ping_info.type);
-    if(hframe.ping_info.type==0){
-    // *** NOT REQUIRED FOR SERVER MODE! ***
-    // NET_DEBUG("<ECHO REPLY ???>");
-    return EVENT_ICMP_REPLY;
+    if(hframe.ping_info.type==0u){
+        // *** NOT REQUIRED FOR SERVER MODE! ***
+        // NET_DEBUG("<ECHO REPLY ???>");
+        return EVENT_ICMP_REPLY;
 
-    }else if(hframe.ping_info.type==8){
+    }else if(hframe.ping_info.type==8u){
         //NET_DEBUG("<ICMP ECHO REQUEST>"); // For debugging...
 
         // Reflect block as reply
-        hframe.ping_info.type=0;
-        hframe.ping_info.checksum=0;
+        hframe.ping_info.type=0u;
+        hframe.ping_info.checksum=0u;
         hframe.ping_info.checksum=~ip_check(hframe.bytes,dlen);
 
         // Now, send out reply
         IP_HDR hhdr = {    // Temporary header for sending IP-data
-            .vhl_service=0x4500,
+            .vhl_service=0x4500u,
             .len=sizeof(IP_HDR)+dlen,
-            .ident=0,
-            .frags=16384, // No Fragmentation
-            .ttl=100, // Industrial standard
-            .pcol=1, // ICMP
-            .checksum=0,
+            .ident=0u,
+            .frags=16384u, // No Fragmentation
+            .ttl=100u, // Industrial standard
+            .pcol=1u, // ICMP
+            .checksum=0u,
             .sip.ipl=my_ip.ipl,
             .dip.ipl=remote_ip.ipl
         };
 
         hhdr.checksum=~ip_check((unsigned char *)&hhdr,sizeof(IP_HDR));
 
-        RequestSend_8900(dlen+sizeof(IP_HDR)+14); // Send Reply
-        write_frame_data_8900(remote_mac,6);  // Kick back...
-        write_frame_data_8900(my_mac,6);  // From US (MAC)
-        Write_Frame_word_8900(0x800);  // type IP
+        RequestSend_8900(dlen+sizeof(IP_HDR)+14u); // Send Reply
+        write_frame_data_8900(remote_mac,sizeof(remote_mac));  // Kick back...
+        write_frame_data_8900(my_mac,sizeof(my_mac));  // From US (MAC)
+        Write_Frame_word_8900(0x800u);  // type IP
 
         write_frame_data_8900((unsigned char *)&hhdr,sizeof(IP_HDR));  // Send Header
         write_frame_data_8900(hframe.bytes,dlen);  // and echo
@@ -528,9 +526,8 @@ uint16_t process_UDP(uint16_t dlen){
             if(psock->local_port==udp_dport){
                 psock->sremote_port=udp_sport;  // Copy Sender's Sourceport
                 psock->sremote_ip=remote_ip.ipl; // Copy Sender's IP
-                //xram_fast_copy(&remote_mac[0],psock->sremote_mac,6); // Copy Sender's MAC to socket
-                memcpy(psock->sremote_mac, &remote_mac[0], 6);
-                dlen-=8; // Subtract header length
+                memcpy(psock->sremote_mac, remote_mac, sizeof(remote_mac));
+                dlen-=8u; // Subtract header length
                 if(dlen > MAX_RX) break;   // Ignore too long frames...
                 read_frame_data_8900((uint8_t*)rcv_buf,dlen);  // Read Sender's Data, if any
                 rcv_len=dlen;    // remember size of read data...
@@ -549,29 +546,29 @@ uint16_t process_UDP(uint16_t dlen){
 static inline void send_upd(const unsigned char * const dt, uint16_t len,unsigned char *pmac,unsigned long rem_ipl,uint16_t sport, uint16_t dport){
     // Now fill out IP-Header
     IP_HDR hhdr = {    // Temporary header for sending IP-data
-        .vhl_service=0x4500,
-        .len=sizeof(IP_HDR)+8+len, // 8 Bytes UDP-Header
-        .ident=0,
-        .frags=16384, // No Fragmentation
-        .ttl=100, // Industrial standard
-        .pcol=17, // UDP
-        .checksum=0,
+        .vhl_service=0x4500u,
+        .len=sizeof(IP_HDR)+8u+len, // 8 Bytes UDP-Header
+        .ident=0u,
+        .frags=16384u, // No Fragmentation
+        .ttl=100u, // Industrial standard
+        .pcol=17u, // UDP
+        .checksum=0u,
         .sip.ipl=my_ip.ipl,
         .dip.ipl=rem_ipl
     };
     hhdr.checksum=~(ip_check((const uint8_t*)&hhdr,sizeof(IP_HDR))); // IP-Header only
 
     // Now, send out reply
-    RequestSend_8900(sizeof(IP_HDR)+14+8+len); // Send Reply:  ETHERNET_HDR IP_HDR UDP_HDR +(data)
-    write_frame_data_8900((unsigned char *)pmac,6);  // Physical destination
-    write_frame_data_8900(my_mac,6);  // From US (MAC)
-    Write_Frame_word_8900(0x800);  // type IP
+    RequestSend_8900(sizeof(IP_HDR)+14u+8u+len); // Send Reply:  ETHERNET_HDR IP_HDR UDP_HDR +(data)
+    write_frame_data_8900((unsigned char *)pmac,sizeof(remote_mac));  // Physical destination
+    write_frame_data_8900(my_mac,sizeof(my_mac));  // From US (MAC)
+    Write_Frame_word_8900(0x800u);  // type IP
 
     write_frame_data_8900((const uint8_t*)&hhdr,sizeof(IP_HDR));  // Send IP Header
     Write_Frame_word_8900(sport);
     Write_Frame_word_8900(dport);
-    Write_Frame_word_8900(len+8);  // Including UDP_HDR...
-    Write_Frame_word_8900(0);  // 0: Means: Checksum not computed
+    Write_Frame_word_8900(len+8u);  // Including UDP_HDR...
+    Write_Frame_word_8900(0u);  // 0: Means: Checksum not computed
 
     write_frame_data_8900(dt,len);   // Send data
 }
@@ -586,15 +583,15 @@ static inline void send_upd(const unsigned char * const dt, uint16_t len,unsigne
 * Data for header in HFRAME already setup
 **********************************************************************************/
 void send_TCP(uchar * dt, uint16_t len, const uchar * const pmac, unsigned long rem_ipl){
-    hframe.tcp_hdr.hlen=80;   // Standard Size: 20 Bytes
-    hframe.tcp_hdr.checksum=0;
+    hframe.tcp_hdr.hlen=80u;   // Standard Size: 20 Bytes
+    hframe.tcp_hdr.checksum=0u;
 
     // Used for TCP/IP-Checksums
     const PSEUDO_HDR pseudo_hdr = {
         .sip.ipl = my_ip.ipl,  // Built Pseudo-Header for Checksum
         .dip.ipl = rem_ipl,
-        .pcol    = 6, // TCP
-        .len     = len + 20   // Data+TCP-Header, without Pseudo-header!
+        .pcol    = 6u, // TCP
+        .len     = len + 20u   // Data+TCP-Header, without Pseudo-header!
     };
 
     const uint16_t data_cs=ip_check(dt,len); // Checksum of Data Block
@@ -605,13 +602,13 @@ void send_TCP(uchar * dt, uint16_t len, const uchar * const pmac, unsigned long 
 
     // Now fill out IP-Header
     IP_HDR hhdr = {    // Temporary header for sending IP-data
-        .vhl_service=0x4500,
-        .len=sizeof(IP_HDR)+20+len, // 20 Bytes TCP-Header (add MSS if required)
-        .ident=0,
-        .frags=16384, // No Fragmentation
-        .ttl=100, // Industrial standard
-        .pcol=6, // TCP
-        .checksum=0,
+        .vhl_service=0x4500u,
+        .len=sizeof(IP_HDR)+20u+len, // 20 Bytes TCP-Header (add MSS if required)
+        .ident=0u,
+        .frags=16384u, // No Fragmentation
+        .ttl=100u, // Industrial standard
+        .pcol=6u, // TCP
+        .checksum=0u,
         .sip.ipl=my_ip.ipl,
         .dip.ipl=rem_ipl
     };
@@ -622,13 +619,12 @@ void send_TCP(uchar * dt, uint16_t len, const uchar * const pmac, unsigned long 
     RequestSend_8900(sizeof(IP_HDR)+14+20+len); // Send Reply:  ETHERNET_HDR IP_HDR TCP_HDR +(data)
 
 
-    write_frame_data_8900((const uint8_t *)pmac,6);  // Physical destination
-
-    write_frame_data_8900((const uint8_t *)my_mac,6);  	// From US (MAC)
-    Write_Frame_word_8900(0x800);  		// type IP
+    write_frame_data_8900((const uint8_t *)pmac,sizeof(remote_mac));  // Physical destination
+    write_frame_data_8900((const uint8_t *)my_mac,sizeof(my_mac));  	// From US (MAC)
+    Write_Frame_word_8900(0x800u);  		// type IP
 
     write_frame_data_8900((const uint8_t *)&hhdr,sizeof(IP_HDR));  // Send IP Header
-    write_frame_data_8900((const uint8_t *)hframe.bytes,20);  // Send TCP Header
+    write_frame_data_8900((const uint8_t *)hframe.bytes,20u);  // Send TCP Header
     write_frame_data_8900((const uint8_t *)dt,len);   	// Send data
 
 #ifdef DEBUG_REC
@@ -658,7 +654,7 @@ void send_incomming_reset_TCP(uint16_t dlen,uchar *pmac,unsigned long ipl){
     hframe.tcp_hdr.seq.u=hframe.tcp_hdr.ack.u;
     hframe.tcp_hdr.ack.u=ack;
     hframe.tcp_hdr.flags=TRST+TACK;
-    send_TCP(0,0,pmac,ipl); // Replay
+    send_TCP(0u,0u,pmac,ipl); // Replay
 }
 
 /**********************************************************************************
@@ -686,7 +682,7 @@ void send_match_ok_TCP(unsigned char * const pdt, uint16_t dlen, uchar flags, co
     // Send empty
     send_TCP(pdt,dlen,p_match_socket->sremote_mac, p_match_socket->sremote_ip );
 
- // printf("<TX P:%u A:%x S:%x F:%u, T:%u> ", hframe.tcp_hdr.dport, hframe.tcp_hdr.ack.w.l_word,hframe.tcp_hdr.seq.w.l_word,hframe.tcp_hdr.flags,p_match_socket->state);
+ // iprintf("<TX P:%u A:%x S:%x F:%u, T:%u> ", hframe.tcp_hdr.dport, hframe.tcp_hdr.ack.w.l_word,hframe.tcp_hdr.seq.w.l_word,hframe.tcp_hdr.flags,p_match_socket->state);
 
 }
 
@@ -707,169 +703,169 @@ uchar flags_temp;
 
 uint16_t state_machine_TCP(uint16_t dlen, UC_SOCKET* p_match_socket){
 
- if(hframe.tcp_hdr.flags&TRST){
-    free_match_socket(p_match_socket);   // Free Buffers if allocated...
-    p_match_socket->state=TCP_CLOSED;  // Connection ends immediatelly
-    return EVENT_TCP_RESETRECEIVED;
- }
+    if(hframe.tcp_hdr.flags&TRST){
+        free_match_socket(p_match_socket);   // Free Buffers if allocated...
+        p_match_socket->state=TCP_CLOSED;  // Connection ends immediatelly
+        return EVENT_TCP_RESETRECEIVED;
+    }
 
- NET_DEBUG("<rx D:%u P:%u A:%x S:%x F:%u, T:%u> ",dlen, hframe.tcp_hdr.sport, hframe.tcp_hdr.ack.w.l_word, hframe.tcp_hdr.seq.w.l_word, hframe.tcp_hdr.flags, p_match_socket->state);
+    NET_DEBUG("<rx D:%u P:%u A:%x S:%x F:%u, T:%u> ",dlen, hframe.tcp_hdr.sport, hframe.tcp_hdr.ack.w.l_word, hframe.tcp_hdr.seq.w.l_word, hframe.tcp_hdr.flags, p_match_socket->state);
 
- p_match_socket->timer=BASIC_RETRY_TIMER;
+    p_match_socket->timer=BASIC_RETRY_TIMER;
 
- switch(p_match_socket->state){
+    switch(p_match_socket->state){
 
-    // Socket was listening. Only a SYN could change this
-    case TCP_CLOSED:  // Passive open!
-        if(!(hframe.tcp_hdr.flags&TSYN)) break;
-        NET_DEBUG("<SYN RECEIVED>");
+        // Socket was listening. Only a SYN could change this
+        case TCP_CLOSED:  // Passive open!
+            if(!(hframe.tcp_hdr.flags&TSYN)) break;
+            NET_DEBUG("<SYN RECEIVED>");
 
-#ifdef USE_TCP_CLIENT
-        if(p_match_socket->tcp_client_flag!=FLAG_PASSIVE_OPEN) break; // Passove open not allowed.
-#endif
+    #ifdef USE_TCP_CLIENT
+            if(p_match_socket->tcp_client_flag!=FLAG_PASSIVE_OPEN) break; // Passove open not allowed.
+    #endif
 
-        // Fast copy by two casts... (6 Bytes)
-        //*(unsigned long *)p_match_socket->sremote_mac=*(unsigned long *)remote_mac;
-        //*(uint16_t *)(p_match_socket->sremote_mac+4)=*(uint16_t *)(remote_mac+4);
-        memcpy(p_match_socket->sremote_mac, remote_mac, sizeof(remote_mac));
-        // Save remote's IP, set by process_IP() and other data
-        p_match_socket->sremote_ip = remote_ip.ipl;
-        p_match_socket->sremote_port = hframe.tcp_hdr.sport; // Remote Port match already matching!
-        // Our Ack is sender's Sequence!
-        p_match_socket->sack.u = hframe.tcp_hdr.seq.u+dlen+1; // +1: Bec. SYN rcvd.
-        p_match_socket->sseq.w.h_word = net_service_cnt;   // Time ascending...
-        p_match_socket->sseq.w.l_word = 0;    // Our relative Pointer (for HTTP)
+            // Fast copy by two casts... (6 Bytes)
+            //*(unsigned long *)p_match_socket->sremote_mac=*(unsigned long *)remote_mac;
+            //*(uint16_t *)(p_match_socket->sremote_mac+4)=*(uint16_t *)(remote_mac+4);
+            memcpy(p_match_socket->sremote_mac, remote_mac, sizeof(remote_mac));
+            // Save remote's IP, set by process_IP() and other data
+            p_match_socket->sremote_ip = remote_ip.ipl;
+            p_match_socket->sremote_port = hframe.tcp_hdr.sport; // Remote Port match already matching!
+            // Our Ack is sender's Sequence!
+            p_match_socket->sack.u = hframe.tcp_hdr.seq.u+dlen+1; // +1: Bec. SYN rcvd.
+            p_match_socket->sseq.w.h_word = net_service_cnt;   // Time ascending...
+            p_match_socket->sseq.w.l_word = 0u;    // Our relative Pointer (for HTTP)
 
-        send_match_ok_TCP(0,0,TSYN+TACK, p_match_socket); // Reply with a single SYN+ACK
-        NET_DEBUG("<SYN+ACK SENT>");
+            send_match_ok_TCP(0u,0u,TSYN+TACK, p_match_socket); // Reply with a single SYN+ACK
+            NET_DEBUG("<SYN+ACK SENT>");
 
-        p_match_socket->state=TCP_SYNCON;  // SYN confirmed with SYN+ACK
-        p_match_socket->retry_cnt=0;
-        return EVENT_TCP_SYNRECEIVED; // Low-Byte added by caller!
+            p_match_socket->state=TCP_SYNCON;  // SYN confirmed with SYN+ACK
+            p_match_socket->retry_cnt=0;
+            return EVENT_TCP_SYNRECEIVED; // Low-Byte added by caller!
 
-#ifdef USE_TCP_CLIENT
-    case TCP_SYNSENT:
-        // NET_DEBUG("<ACTIVE OPEN SYN-RECEIVED>");
-        if(!(hframe.tcp_hdr.flags&TSYN)) break;
-        hframe.tcp_hdr.seq.u++;    // Count remote SYN
-        p_match_socket->sack.u=hframe.tcp_hdr.seq.u; // +1: Bec. SYN rcvd.
-#endif
+    #ifdef USE_TCP_CLIENT
+        case TCP_SYNSENT:
+            // NET_DEBUG("<ACTIVE OPEN SYN-RECEIVED>");
+            if(!(hframe.tcp_hdr.flags&TSYN)) break;
+            hframe.tcp_hdr.seq.u++;    // Count remote SYN
+            p_match_socket->sack.u=hframe.tcp_hdr.seq.u; // +1: Bec. SYN rcvd.
+    #endif
 
-    case TCP_SYNCON:
-    case TCP_EST:	// Established, Connection OK
-        if(!(hframe.tcp_hdr.flags&TACK)) break;
-        if(dlen>MAX_RX) dlen=MAX_RX;  // IDIOTA! Clip data in size (don't know if this is safe?)
+        case TCP_SYNCON:
+        case TCP_EST:	// Established, Connection OK
+            if(!(hframe.tcp_hdr.flags&TACK)) break;
+            if(dlen>MAX_RX) dlen=MAX_RX;  // IDIOTA! Clip data in size (don't know if this is safe?)
 
-    // Here a small problem is silently ignored: A not acknowled Segment which is restransmitted larger
-    // could contain old data as a part (maybe for TELNET...)
-    // Silently assume all Segments have valid ACK
+        // Here a small problem is silently ignored: A not acknowled Segment which is restransmitted larger
+        // could contain old data as a part (maybe for TELNET...)
+        // Silently assume all Segments have valid ACK
 
-        if(p_match_socket->sack.u!=hframe.tcp_hdr.seq.u) {
-            NET_DEBUG("<TCP_OOB>");
-            return EVENT_TCP_OUTOFBOUNDS; // Ignore-out-of-bounds segments!
-        }
+            if(p_match_socket->sack.u!=hframe.tcp_hdr.seq.u) {
+                NET_DEBUG("<TCP_OOB>");
+                return EVENT_TCP_OUTOFBOUNDS; // Ignore-out-of-bounds segments!
+            }
 
-        p_match_socket->state=TCP_EST;  // Connection now established
+            p_match_socket->state=TCP_EST;  // Connection now established
 
-        p_match_socket->sack.u+=dlen;
-        read_frame_data_8900((uint8_t *)(rcv_buf+rcv_ofs),dlen);  //+rcv_ofs Read Sender's Data, if any
-        rcv_len=dlen;    // remember size of read data...
-        if(!dlen) rcv_ofs=0;
+            p_match_socket->sack.u+=dlen;
+            read_frame_data_8900((uint8_t *)(rcv_buf+rcv_ofs),dlen);  //+rcv_ofs Read Sender's Data, if any
+            rcv_len=dlen;    // remember size of read data...
+            if(!dlen) rcv_ofs=0;
 
-    // Matching 3 Sockets? -> Clear ALL
-        if(p_match_socket->buf_outsize3 && hframe.tcp_hdr.ack.u==p_match_socket->sseq_3){
-            NET_DEBUG("<M123>");
-            free_tx_buf(p_match_socket->p_outbuf3);
-            free_tx_buf(p_match_socket->p_outbuf2);
-            free_tx_buf(p_match_socket->p_outbuf1);
-            p_match_socket->buf_outsize3=0;
-            p_match_socket->buf_outsize2=0;
-            p_match_socket->buf_outsize1=0;
+        // Matching 3 Sockets? -> Clear ALL
+            if(p_match_socket->buf_outsize3 && hframe.tcp_hdr.ack.u==p_match_socket->sseq_3){
+                NET_DEBUG("<M123>");
+                free_tx_buf(p_match_socket->p_outbuf3);
+                free_tx_buf(p_match_socket->p_outbuf2);
+                free_tx_buf(p_match_socket->p_outbuf1);
+                p_match_socket->buf_outsize3=0;
+                p_match_socket->buf_outsize2=0;
+                p_match_socket->buf_outsize1=0;
 
-            // Matching Sockets 2 and 1: Free 1,2, Shift 3 to 1
-        }else if(p_match_socket->buf_outsize2 && hframe.tcp_hdr.ack.u==p_match_socket->sseq_2){
-            NET_DEBUG("<M12>");
-            free_tx_buf(p_match_socket->p_outbuf2);
-            free_tx_buf(p_match_socket->p_outbuf1);
+                // Matching Sockets 2 and 1: Free 1,2, Shift 3 to 1
+            }else if(p_match_socket->buf_outsize2 && hframe.tcp_hdr.ack.u==p_match_socket->sseq_2){
+                NET_DEBUG("<M12>");
+                free_tx_buf(p_match_socket->p_outbuf2);
+                free_tx_buf(p_match_socket->p_outbuf1);
 
-            p_match_socket->sseq_1=p_match_socket->sseq_3;
-            p_match_socket->p_outbuf1=p_match_socket->p_outbuf3;
-            p_match_socket->buf_outsize1=p_match_socket->buf_outsize3;
+                p_match_socket->sseq_1=p_match_socket->sseq_3;
+                p_match_socket->p_outbuf1=p_match_socket->p_outbuf3;
+                p_match_socket->buf_outsize1=p_match_socket->buf_outsize3;
 
-            p_match_socket->buf_outsize2=0;
-            p_match_socket->buf_outsize3=0;
+                p_match_socket->buf_outsize2=0;
+                p_match_socket->buf_outsize3=0;
 
-            // Matching Sockets 1 Free 1, Shift 2 to 1, 3 to 2
-        }else if(p_match_socket->buf_outsize1 && hframe.tcp_hdr.ack.u==p_match_socket->sseq_1){
-            NET_DEBUG("<M1>");
-            free_tx_buf(p_match_socket->p_outbuf1);
+                // Matching Sockets 1 Free 1, Shift 2 to 1, 3 to 2
+            }else if(p_match_socket->buf_outsize1 && hframe.tcp_hdr.ack.u==p_match_socket->sseq_1){
+                NET_DEBUG("<M1>");
+                free_tx_buf(p_match_socket->p_outbuf1);
 
-            p_match_socket->sseq_1=p_match_socket->sseq_2;
-            p_match_socket->p_outbuf1=p_match_socket->p_outbuf2;
-            p_match_socket->buf_outsize1=p_match_socket->buf_outsize2;
+                p_match_socket->sseq_1=p_match_socket->sseq_2;
+                p_match_socket->p_outbuf1=p_match_socket->p_outbuf2;
+                p_match_socket->buf_outsize1=p_match_socket->buf_outsize2;
 
-            p_match_socket->sseq_2=p_match_socket->sseq_3;
-            p_match_socket->p_outbuf2=p_match_socket->p_outbuf3;
-            p_match_socket->buf_outsize2=p_match_socket->buf_outsize3;
+                p_match_socket->sseq_2=p_match_socket->sseq_3;
+                p_match_socket->p_outbuf2=p_match_socket->p_outbuf3;
+                p_match_socket->buf_outsize2=p_match_socket->buf_outsize3;
 
-            p_match_socket->buf_outsize3=0;
+                p_match_socket->buf_outsize3=0u;
 
-        }
+            }
 
 
-        // Frame does not contain a TFIN so simply acknowledge it, if data od SYN received
-        if(!(hframe.tcp_hdr.flags&TFIN)){
-            if(dlen || (hframe.tcp_hdr.flags&TSYN)) send_match_ok_TCP(0,0,TACK,p_match_socket); // Frame OK: Acknowledge immediatelly if data...
-        }else if(hframe.tcp_hdr.flags&TFIN){ // Come to here if RST and/or received
-            p_match_socket->sack.u++;  // Count remote FIN
-            send_match_ok_TCP(0,0,TACK+TFIN+TPUSH,p_match_socket); // Acknowledge + FIN
-            p_match_socket->sseq.u++;  // Count our FIN after sending!...
-            p_match_socket->state=TCP_FINCON; // FIN Confirmed
-        }
+            // Frame does not contain a TFIN so simply acknowledge it, if data od SYN received
+            if(!(hframe.tcp_hdr.flags&TFIN)){
+                if(dlen || (hframe.tcp_hdr.flags&TSYN)) send_match_ok_TCP(0u,0u,TACK,p_match_socket); // Frame OK: Acknowledge immediatelly if data...
+            }else if(hframe.tcp_hdr.flags&TFIN){ // Come to here if RST and/or received
+                p_match_socket->sack.u++;  // Count remote FIN
+                send_match_ok_TCP(0,0,TACK+TFIN+TPUSH,p_match_socket); // Acknowledge + FIN
+                p_match_socket->sseq.u++;  // Count our FIN after sending!...
+                p_match_socket->state=TCP_FINCON; // FIN Confirmed
+            }
 
-        // Only if nothing available reset retry_counter...
-        if(!p_match_socket->buf_outsize1) p_match_socket->retry_cnt=0;
+            // Only if nothing available reset retry_counter...
+            if(!p_match_socket->buf_outsize1) p_match_socket->retry_cnt=0;
 
-    //    if(!dlen || hframe.tcp_hdr.flags&TPUSH){
-        if(!dlen || flags_temp&TPUSH){
-            return EVENT_TCP_DATARECEIVED;
-        }else{
-            rcv_ofs=dlen;
-            return 0;
-        }
+        //    if(!dlen || hframe.tcp_hdr.flags&TPUSH){
+            if(!dlen || flags_temp&TPUSH){
+                return EVENT_TCP_DATARECEIVED;
+            }else{
+                rcv_ofs=dlen;
+                return 0;
+            }
 
-    case TCP_FINSENT:
-        NET_DEBUG("<FINSENT>");
-        if(!(hframe.tcp_hdr.flags&TACK)) break;
-        // printf("Flags: %u\n",hframe.tcp_hdr.flags);
-        // printf("<<M:%ld H:%lx >>",p_match_socket->sack.u,hframe.tcp_hdr.seq.u);
-        if(p_match_socket->sack.u!=hframe.tcp_hdr.seq.u) return EVENT_TCP_OUTOFBOUNDS; // Ignore-out-of-bounds segments!
-        //NET_DEBUG("<Wait3LASTACK>");
-        if(hframe.tcp_hdr.flags&TFIN){    // Fin accepted by Remote!
-            p_match_socket->sack.u++;    		// Count remote FIN
-            send_match_ok_TCP(0,0,TACK,p_match_socket);   	// Frame OK: Acknowledge immediatelly!
-            free_match_socket(p_match_socket); 			// Free Buffers if allocated...
+        case TCP_FINSENT:
+            NET_DEBUG("<FINSENT>");
+            if(!(hframe.tcp_hdr.flags&TACK)) break;
+            // printf("Flags: %u\n",hframe.tcp_hdr.flags);
+            // printf("<<M:%ld H:%lx >>",p_match_socket->sack.u,hframe.tcp_hdr.seq.u);
+            if(p_match_socket->sack.u!=hframe.tcp_hdr.seq.u) return EVENT_TCP_OUTOFBOUNDS; // Ignore-out-of-bounds segments!
+            //NET_DEBUG("<Wait3LASTACK>");
+            if(hframe.tcp_hdr.flags&TFIN){    // Fin accepted by Remote!
+                p_match_socket->sack.u++;    		// Count remote FIN
+                send_match_ok_TCP(0u,0u,TACK,p_match_socket);   	// Frame OK: Acknowledge immediatelly!
+                free_match_socket(p_match_socket); 			// Free Buffers if allocated...
+                p_match_socket->state=TCP_CLOSED;  	// Connection ends NOW
+                //NET_DEBUG("<FINAL ACK SENT CLOSED>");
+            }
+            p_match_socket->retry_cnt=0u;
+            return EVENT_TCP_WAITLASTACK;
+
+        case TCP_FINCON: // Accept one last ACK
+            if(!(hframe.tcp_hdr.flags&TACK)) break;
+            if(p_match_socket->sack.u!=hframe.tcp_hdr.seq.u) return EVENT_TCP_OUTOFBOUNDS; // Ignore-out-of-bounds segments!
+
             p_match_socket->state=TCP_CLOSED;  	// Connection ends NOW
-            //NET_DEBUG("<FINAL ACK SENT CLOSED>");
-        }
-        p_match_socket->retry_cnt=0;
-        return EVENT_TCP_WAITLASTACK;
+            free_match_socket(p_match_socket); 				// Free Buffers if allocated...
+                                            // NET_DEBUG("<LAST FIN ACKNOWLEDGED>");
+            p_match_socket->retry_cnt=0u;
+            return EVENT_TCP_CLOSED;
+    }
 
-    case TCP_FINCON: // Accept one last ACK
-        if(!(hframe.tcp_hdr.flags&TACK)) break;
-        if(p_match_socket->sack.u!=hframe.tcp_hdr.seq.u) return EVENT_TCP_OUTOFBOUNDS; // Ignore-out-of-bounds segments!
-
-        p_match_socket->state=TCP_CLOSED;  	// Connection ends NOW
-        free_match_socket(p_match_socket); 				// Free Buffers if allocated...
-                                        // NET_DEBUG("<LAST FIN ACKNOWLEDGED>");
-        p_match_socket->retry_cnt=0;
-        return EVENT_TCP_CLOSED;
- }
-
- free_match_socket(p_match_socket); // Free Buffers if allocated...
- p_match_socket->state=TCP_CLOSED;
- send_incomming_reset_TCP(dlen, &remote_mac[0], remote_ip.ipl);  // Denie further request!
- return EVENT_TCP_ILLEGALFRAME; // Denie illegal frames;
+    free_match_socket(p_match_socket); // Free Buffers if allocated...
+    p_match_socket->state=TCP_CLOSED;
+    send_incomming_reset_TCP(dlen, &remote_mac[0], remote_ip.ipl);  // Denie further request!
+    return EVENT_TCP_ILLEGALFRAME; // Denie illegal frames;
 }
 
 /**********************************************************************************
@@ -927,7 +923,7 @@ inline uint16_t retransmit_socket(UC_SOCKET* p_match_socket){
             // NET_DEBUG("<TCP RT IDLE IDLE>");
             // Stack is idle: All ok
             p_match_socket->timer=TCP_IDLE_RETRIES;  // Socket OK, LONG TIMEOUT!!!
-            return 0;
+            return 0u;
 
         case TCP_FINCON:
         case TCP_FINSENT:
@@ -969,7 +965,7 @@ inline uint16_t retransmit_socket(UC_SOCKET* p_match_socket){
 
                 p_match_socket->retry_cnt=0;                   // Never close an ARPED UDP-Socket...
                 p_match_socket->timer=UDP_IDLE_RETRIES;        // Socket OK, LONG TIMEOUT!!! No change in state
-                return 0;
+                return 0u;
             }
     }
 #endif
@@ -989,7 +985,7 @@ uint16_t periodical_socket(UC_SOCKET* p_match_socket){
     uchar h=p_match_socket->timer-1;
     if(h){
         p_match_socket->timer=h;
-        return 0;
+        return 0u;
     }
 
 
@@ -1028,7 +1024,7 @@ uint16_t process_TCP(uint16_t dlen){
 
     dlen-=20;    //
 
-    ohlen=hframe.tcp_hdr.hlen-80;
+    ohlen=hframe.tcp_hdr.hlen-80u;
     while(ohlen){  // Eat TCP-option, if MSS: ignore silently...
         ohlen-=16; // ohlen = size in 32-bit-word<<4
         dlen-=4;
@@ -1062,7 +1058,7 @@ uint16_t process_TCP(uint16_t dlen){
      if(!(hframe.tcp_hdr.flags&TSYN)) return EVENT_TCP_ILLEGALFRAME;
      // No matching socket has been found, so find one with TCP_CLOSED and matching local port to open as a new one...
      psock=uc_socket;
-     for(ui=0;ui<MAX_SOCK;ui++,psock++){
+     for(ui=0u;ui<MAX_SOCK;ui++,psock++){
          if(psock->socket_type==SOCKET_TCP){  // Only TCP-Sockets are of interest if an offered local port is matched
               if(psock->state==TCP_CLOSED && psock->local_port==hframe.tcp_hdr.dport){
                 NET_DEBUG("!MATCH");
@@ -1125,10 +1121,10 @@ uint16_t process_IP(void){
     NET_DEBUG("pcol %x>",pcol);
     if(pcol==1){
         return process_ICMP(dlen);
-    }else if(pcol==6){ // TCP
+    }else if(pcol==6u){ // TCP
         return process_TCP(dlen);
 #ifdef USE_UDP
-    }else if(pcol==17){ // UDP
+    }else if(pcol==17u){ // UDP
         return process_UDP(dlen);
 #endif
     }
@@ -1172,7 +1168,7 @@ uint16_t send_socket_tcp(uchar sock, TX_BUFFER * pbuf, uint16_t datalen){
         if(!datalen) {
     //		NET_DEBUG("<free>");
             free_tx_buf(pbuf); // Free Buffer
-            return 0;  // IDIOTA!
+            return 0u;  // IDIOTA!
         }
 
         // Bind Buffer try to allocate B1 first, then B2m then B3 else error
@@ -1200,9 +1196,9 @@ uint16_t send_socket_tcp(uchar sock, TX_BUFFER * pbuf, uint16_t datalen){
         p_match_socket->sseq.u+=datalen; // 32 Bit operation - This must be acknowledged to free the buffer.
 
     // New TIMEOUT
-        p_match_socket->retry_cnt=0;
+        p_match_socket->retry_cnt=0u;
         p_match_socket->timer=BASIC_RETRY_TIMER;
-        return 0; // All OK
+        return 0u; // All OK
     }
     return GENERAL_ERROR;
 }
@@ -1228,7 +1224,7 @@ uint16_t notready_socket_tcp(uchar sock, uchar flag){
         }else{  // Check Read for Close: BUF1 must be empty
             if(p_match_socket->buf_outsize1) return EVENT_TCP_TXPENDING; // Can't send, old data still pending
         }
-        return 0; // SOCKEt IS READY!
+        return 0u; // SOCKEt IS READY!
     }
     return GENERAL_ERROR;
 }
@@ -1276,12 +1272,12 @@ uint16_t close_socket_tcp(uchar sock){
         p_match_socket->state=TCP_FINSENT;
 
         // New TIMEOUT
-        p_match_socket->retry_cnt=0;
+        p_match_socket->retry_cnt=0u;
         p_match_socket->timer=BASIC_RETRY_TIMER;
 
         // printf("<--CLOSE %u-->",p_match_socket->sremote_port);
 
-        return 0; // All OK
+        return 0u; // All OK
     }
     return GENERAL_ERROR;
 
@@ -1331,7 +1327,7 @@ uint16_t open_socket_udp(uchar sock,unsigned long remote_ipl,unsigned int remote
         p_match_socket->sremote_ip=remote_ipl;
         p_match_socket->sremote_port=remote_port;
 
-        if(remote_ipl!=0xffffffff){
+        if(remote_ipl!=0xffffffffu){
             send_request_ARP(remote_ipl);
             p_match_socket->state=ARPSENT;
 
@@ -1393,7 +1389,7 @@ uint16_t poll_net(void){
         (void)Read_Frame_word_8900(); 		// Skip OUR MAC... (6 Bytes)			2
         (void)Read_Frame_long_8900();										//			4
         //read_frame_data_8900(&temp[0],6);       // Skip OUR MAC... (6 Bytes)  0,1,2
-        read_frame_data_8900(&remote_mac[0],6); // Read Sender's MAC			6
+        read_frame_data_8900(remote_mac,sizeof(remote_mac)); // Read Sender's MAC			6
         //memcpy(&temp[3],remote_mac,6);  //3,4,5
 
         //temp[6]=type=Read_Frame_word_8900();										//	2
@@ -1404,14 +1400,14 @@ uint16_t poll_net(void){
         }*/
         //NET_DEBUG("Remote MAC: %02x:%02x:%02x:%02x:%02x:%02x ", remote_mac[0],remote_mac[1],remote_mac[2],remote_mac[3],remote_mac[4],remote_mac[5]);
         //NET_DEBUG(" Type %x %x\r\n",type,len);
-        if(type<=0x5DC){ // SNAP Frame! Eat LSAP-Ctrl-OUI and retry...
-            if(net_match_uint(0xAAAA)) return 0;							//  (2)
-            if(net_match_ulong(0x3000000)) return 0;						//  (4)
+        if(type<=0x5DCu){ // SNAP Frame! Eat LSAP-Ctrl-OUI and retry...
+            if(net_match_uint(0xAAAAu)) return 0;							//  (2)
+            if(net_match_ulong(0x3000000u)) return 0;						//  (4)
             type=Read_Frame_word_8900(); // Read NEW type...					(2)
                                                                             //  = 20
         }
         // *** First stage input filter/multiplexer for received frames ***
-        if(type==0x0806){ // This is an ARP-Frame!								= 18 (14)
+        if(type==0x0806u){ // This is an ARP-Frame!								= 18 (14)
             return process_ARP();
         }else if(type==0x800){ // IP Header!
             return process_IP();
@@ -1460,9 +1456,9 @@ uchar Init_net(void){
     _clock(timer_func);
 
     if(cs_init()) return 1; // ERROR (MAC set as global!)
-    rcv_ofs=0;
+    rcv_ofs=0u;
     _delay_ms(100); // May needs a few msec until ready
-    return 0;
+    return 0u;
 }
 
 

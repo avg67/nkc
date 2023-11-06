@@ -12,17 +12,16 @@
 
 //#define TFTP_DEBUG iprintf
 #define TFTP_DEBUG(...)
+
 #define RX_BUF_SIZE (JD_BLOCKSIZE*32u)   // RX-Buffer for 32 Blocks
 
 //#define USE_CRC
 
-//static bool data_ready = false;
-//static unsigned short data_len =0;
+
 
 /*static inline uint16_t min(const uint16_t a, const uint16_t b) {
     return (a<=b)?a:b;
 }*/
-#define min(a,b) (((a)<=(b))?(a):(b))
 
 //extern const volatile clock_t _clock_value;
 
@@ -304,8 +303,6 @@ bool tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, co
                         //TFTP_DEBUG("Append %u\r\n",block_size);
                     }
                 }
-
-
             }
         } while(!done);
         free(block_buf); block_buf=NULL;
@@ -347,160 +344,6 @@ bool tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, co
     return !error;
 }
 
-
-
-#if 0
-/*!
- * \brief Download a file from a TFTP server and burn it into the flash ROM.
- *
- * \return 0 on success, -1 otherwise.
- */
-bool TftpRecv(const unsigned long server_ip, const char* const p_file_name, const bool dry_run)
-{
-    unsigned short block = 0u;
-
-
-    if (dry_run) {
-        iprintf(" with a dry-run!");
-    }
-    iprintf("\r\n");
-
-    // Buffer for one sector
-
-    bool done = false;
-    bool error = false;
-    uint32_t total_size = 0u;
-
-    jdfcb_t myfcb={0u};
-    uint8_t result = 0u;
-    if (!dry_run) {
-        result = jd_fillfcb(&myfcb,p_file_name);
-        if(result!=0) {
-            iprintf("Error %u creating FCB!\r\n", result);
-            return false;
-        }
-        result = jd_create(&myfcb);
-        if(result!=0) {
-            iprintf("Error %u creating File!\r\n", result);
-            return false;
-        }
-    }
-
-    //Port in Anwendungstabelle eintragen für eingehende ´TFTP Daten!
-    SOCKET_SETUP(UDP_SOCK, SOCKET_UDP, TFTP_SERVER_PORT, FLAG_PASSIVE_OPEN);
-    if(open_socket_udp(UDP_SOCK, server_ip, TFTP_CLIENT_PORT)!=0) {
-        puts("Error opening UDP Socket");
-        return 0;
-    }
-    char* block_buf = malloc(JD_BLOCKSIZE);
-    TX_BUFFER * const pbuf = allocate_tx_buf();
-
-    const clock_t start_time = _clock(NULL);
-    /*
-     * Prepare the transmit buffer for a file request.
-     */
-     tftp_message(TFTP_RRQ, (const char *)p_file_name, (const char *)"octet", pbuf->buffer);
-
-    /*
-     * Loop until we receive a packet with less than 512 bytes of data.
-     */
-    uint16_t block_size = 0u;
-    do {
-        const clock_t timeout =  _times(NULL) + ((time_t)5000u * CLOCKS_PER_SEC)/1000u;
-        uint16_t res = 0u;
-        bool data_ready = false;
-        do {
-            res=poll_net();
-            if((res&0xff00)==EVENT_UDP_DATARECEIVED) {
-                //iprintf("Event: 0x%04X %u\n",res,rcv_len);
-                data_ready=true;
-                break;
-            }
-        }while(_times(NULL)<timeout);
-        if (!data_ready) {
-            iprintf("Timeout!\r\n");
-            error = true;
-            done=false;
-            break; //return false;
-        } else {
-        /*
-         * Send file request or acknowledge and receive
-         * a data block.
-         */
-            data_ready = false;
-            if(rcv_len < 516) {
-                done = true;
-            }
-            TFTPHDR  *msg = (TFTPHDR *)rcv_buf;
-            if(msg->th_opcode == TFTP_ERROR) {
-                iprintf("TFTP-Error '%u': %s\r\n", msg->th_u.tu_code, msg->th_data);
-                error=true;
-                break;
-            }else if(msg->th_opcode != TFTP_DATA) {
-                //iprintf("No data-block - ignore\r\n");
-                //return -1;
-                gp_co('i');
-                continue;
-            }
-            //iprintf("Received %u Port %u\r\n", msg->th_u.tu_block, uc_socket[sock].sremote_port);
-
-
-            /*
-            * If this block is out of sequence, we ignore it.
-            * However, if we missed the first block, return
-            * with an error.
-            */
-            if(msg->th_u.tu_block != (block + 1u)) {
-                if(block == 0){
-                    error = true;
-                    break; //return false;
-                }
-                continue;
-            }
-            bool store = false;
-            if(rcv_len > 4) {
-                const uint16_t rx_data_len = rcv_len - 4u;
-                total_size += (uint32_t)rx_data_len;
-                TFTP_DEBUG("TFTP-RX %d: %u Bytes ", block, (unsigned int)(rx_data_len));
-                memcpy(&block_buf[block_size],msg->th_data, rx_data_len);
-                block_size+=rx_data_len;
-                store = ((block_size>=JD_BLOCKSIZE) || done);
-            }
-            // ack the block to TFTP Server
-            block++;
-            //msg->th_u.tu_block = block;
-            tftp_ack(block, pbuf->buffer);
-            // In the meanwhile write block to disk
-            if (store) {
-                if (!dry_run) {
-                    result = jd_blockwrite(&myfcb, block_buf, 1u);
-                }
-                block_size -= min(JD_BLOCKSIZE,block_size);
-                TFTP_DEBUG("disk write: 0x%X remaining: %u\r\n", result, block_size);
-                gp_co('.');
-                assert(block_size==0u);
-            }else{
-                TFTP_DEBUG("Append %u\r\n",block_size);
-            }
-
-
-        }
-    } while(!done);
-    free_tx_buf(pbuf);
-    close_socket_udp(UDP_SOCK);
-    if (!error) {
-        const clock_t end_time = _clock(NULL);
-        if (!dry_run) {
-            jd_close(&myfcb);
-        }
-        free(block_buf);
-        const uint32_t duration = (uint32_t)(1000u*(end_time - start_time)/CLOCKS_PER_SEC);
-        iprintf("\r\nDuration for %u Bytes: %u ms with %u kB/s\r\n",(unsigned int)total_size, (unsigned int)duration,(unsigned int)((total_size/1024u)*1000u/duration));
-    }
-
-    return !error;
-}
-#endif
 bool tftp_transm_int(const unsigned long remote_ip, const uint16_t remote_port, const uint16_t local_port, const char* const p_file_name, const bool server)
 {
     unsigned short block = 0u;
@@ -632,234 +475,6 @@ bool tftp_transm_int(const unsigned long remote_ip, const uint16_t remote_port, 
     return !error;
 }
 
-#if 0
-bool TftpTransmit(const unsigned long server_ip, const char* const p_file_name)
-{
-    unsigned short block = 0u;
-    bool error = false;
-    bool done = false;
-
-    jdfcb_t myfcb={0u};
-    jdfile_info_t info __attribute__ ((aligned (4))) = {0};
-    uint8_t result = 0u;
-    result = jd_fillfcb(&myfcb,p_file_name);
-    if(result!=0) {
-        iprintf("Error %u creating FCB!\r\n", result);
-        return false;
-    }
-    result = jd_fileinfo(&myfcb, &info);
-    iprintf("\r\nFileinfo-Result: 0x%X length: %u date:0x%lX, att:0x%X\r\n",result, (unsigned int)info.length, info.date, info.attribute);
-
-
-    char * p_buf = NULL;
-    if (result==0) {
-        p_buf = malloc(info.length);
-        p_buf[0]='\0';
-
-        result = jd_fileload(&myfcb, p_buf);
-        //p_buf[100]=0;
-        //iprintf("Fileread-Result: 0x%X\r\n%s\r\n",result, p_buf);
-        if (result!=0) {
-            iprintf("Error %u reading file\r\n",result);
-            return false;
-        }
-        //Port in Anwendungstabelle eintragen für eingehende ´TFTP Daten!
-        SOCKET_SETUP(UDP_SOCK, SOCKET_UDP, TFTP_SERVER_PORT, FLAG_PASSIVE_OPEN);
-        if(open_socket_udp(UDP_SOCK, server_ip, TFTP_CLIENT_PORT)!=0) {
-            puts("Error opening UDP Socket");
-            return 0;
-        }
-
-        TX_BUFFER * const pbuf = allocate_tx_buf();
-        const clock_t start_time = _times(NULL);
-        const char* p_fn_temp = p_file_name;
-        if(p_fn_temp[1]==':') {
-            p_fn_temp = &p_file_name[2];
-        }
-        tftp_message(TFTP_WRQ, (const char *)p_fn_temp, (const char *)"octet", pbuf->buffer);
-
-        uint32_t total_size = 0u;
-        do {
-            const clock_t timeout =  _times(NULL) + ((time_t)5000u * CLOCKS_PER_SEC)/1000u;
-            uint16_t res = 0u;
-            bool data_ready = false;
-            do {
-                res=poll_net();
-                if((res&0xff00)==EVENT_UDP_DATARECEIVED) {
-                    //iprintf("Event: 0x%04X %u\n",res,rcv_len);
-                    data_ready=true;
-                    break;
-                }
-            }while(_times(NULL)<timeout);
-            if (!data_ready) {
-                iprintf("Timeout!\r\n");
-                error = true;
-                break; //return false;
-            }
-            if (data_ready) {
-                data_ready = false;
-                //const uchar sock = res & 0xffu;
-
-                TFTPHDR  *msg = (TFTPHDR *)rcv_buf;
-                //TFTP_DEBUG("Received %u Port %u,%u\r\n", msg->th_u.tu_block, udp->udp_SrcPort, udp->udp_Hdrlen);
-
-                if(msg->th_opcode == TFTP_ERROR) {
-                    TFTP_DEBUG("TFTP-Error '%u': %s\r\n",msg->th_u.tu_code,msg->th_data);
-                    error=true;
-                    break;
-                }else if(msg->th_opcode == TFTP_ACK) {
-                    block++;
-
-                }else{
-                    TFTP_DEBUG("No ack - ignore\r\n");
-                    gp_co('i');
-                    continue;
-                }
-                const size_t xfer_len = (size_t)min((info.length - total_size),TFTP_BLOCKSIZE);
-                tftp_data(block,&p_buf[total_size],xfer_len, pbuf->buffer);
-
-                total_size += (uint32_t)xfer_len;
-                if (xfer_len<TFTP_BLOCKSIZE) {
-                    done=true;
-                }
-                TFTP_DEBUG("TFTP-TX %d: %u Bytes, total_size: %u %u\r\n", block, (unsigned int)(xfer_len), total_size, info.length);
-
-                gp_co('.');
-            }
-
-        } while(!done);
-        free_tx_buf(pbuf);
-        close_socket_udp(UDP_SOCK);
-        if (!error) {
-            const clock_t end_time = _times(NULL);
-            free(p_buf);
-
-            iprintf(" %u - %u ",(unsigned int)start_time, (unsigned int)end_time);
-            const uint32_t duration = (uint32_t)(1000uL*(end_time - start_time)/CLOCKS_PER_SEC);
-            iprintf("\r\nDuration for %u Bytes: %u ms with %u kB/s\r\n",(unsigned int)total_size, (unsigned int)duration,(unsigned int)((total_size/1024u)*1000u/duration));
-        }
-
-    }else{
-        error=true;
-    }
-
-    return !error;
-}
-
-static inline bool tftp_server_wrq(const char* const p_filename, uint32_t remote_ip, uint16_t remote_port, bool dry_run)
-{
-    bool error = false;
-
-    SOCKET_SETUP(UDP_SOCK, SOCKET_UDP, TFTP_CLIENT_PORT, FLAG_PASSIVE_OPEN);
-    uint16_t res = open_socket_udp(UDP_SOCK, remote_ip, remote_port);
-    if(res!=0) {
-        iprintf("Error 0x%X opening UDP Socket\n",res);
-        return 0;
-    }
-
-    char* block_buf = malloc(JD_BLOCKSIZE);
-    uint16_t block_size = 0u;
-    uint16_t block  = 0u;
-    bool done       = false;
-    bool data_ready = false;
-    uint32_t total_size = 0u;
-
-    jdfcb_t myfcb={0u};
-    uint8_t result = 0u;
-
-    if (!dry_run) {
-        result = jd_fillfcb(&myfcb,p_filename);
-        if(result!=0) {
-            iprintf("Error %u creating FCB!\r\n", result);
-            return false;
-        }
-        result = jd_create(&myfcb);
-        if(result!=0) {
-            iprintf("Error %u creating File!\r\n", result);
-            return false;
-        }
-    }
-    TX_BUFFER * const pbuf = allocate_tx_buf();
-    const clock_t start_time = _clock(NULL);
-
-    tftp_ack(block, pbuf->buffer);
-
-    do {
-        const clock_t timeout =  _clock(NULL) + ((time_t)5000u * CLOCKS_PER_SEC)/1000u;
-        do {
-            res=poll_net();
-            if((res&0xff00)==EVENT_UDP_DATARECEIVED) {
-                //iprintf("Event: 0x%04X %u\n",res,rcv_len);
-                data_ready=true;
-                break;
-            }
-        }while(_clock(NULL)<timeout);
-        if (!data_ready) {
-            iprintf("Timeout!\r\n");
-            error = true;
-            break; //return false;
-        } else {
-            data_ready = false;
-            if(rcv_len < 516) {
-                done = true;
-            }
-            TFTPHDR  *msg = (TFTPHDR *)rcv_buf;
-            if(msg->th_opcode == TFTP_ERROR) {
-                iprintf("TFTP-Error '%u': %s\r\n", msg->th_u.tu_code, msg->th_data);
-                error=true;
-                break;
-            }else if(msg->th_opcode != TFTP_DATA) {
-                //iprintf("No data-block - ignore\r\n");
-                //return -1;
-                gp_co('i');
-                continue;
-            }
-            if(msg->th_u.tu_block != (block + 1u)) {
-                if(block == 0){
-                    error = true;
-                    break; //return false;
-                }
-                continue;
-            }
-            // ack the block to TFTP Server
-            block++;
-            tftp_ack(block, pbuf->buffer);
-            bool store = false;
-            if(rcv_len > 4) {
-                const uint16_t rx_data_len = rcv_len - 4u;
-                total_size += (uint32_t)rx_data_len;
-                memcpy(&block_buf[block_size],msg->th_data, rx_data_len);
-                block_size+=rx_data_len;
-                store = ((block_size>=JD_BLOCKSIZE) || done);
-            }
-            if (store) {
-                if (!dry_run) {
-                    result = jd_blockwrite(&myfcb, block_buf, 1u);
-                }
-                block_size -= min(JD_BLOCKSIZE,block_size);
-                TFTP_DEBUG("disk write: 0x%X remaining: %u\r\n", result, block_size);
-                gp_co('.');
-                assert(block_size==0u);
-            }else{
-                TFTP_DEBUG("Append %u\r\n",block_size);
-            }
-        }
-    }while(!done);
-    free_tx_buf(pbuf);
-    close_socket_udp(UDP_SOCK);
-    if (!error) {
-        const clock_t end_time = _clock(NULL);
-        if (!dry_run) {
-            jd_close(&myfcb);
-        }
-        free(block_buf);
-        const uint32_t duration = (uint32_t)(1000u*(end_time - start_time)/CLOCKS_PER_SEC);
-        iprintf("\r\nDuration for %u Bytes: %u ms with %u kB/s\r\n",(unsigned int)total_size, (unsigned int)duration,(unsigned int)((total_size/1024u)*1000u/duration));
-    }
-    return !error;
-}
-#endif
-
 bool check_wr_rd_command(const char* const p_buf, const size_t name_len, char* const p_filename) {
     if (strcmp(&p_buf[name_len+1u],"octet")!=0) {
         puts("unknown command");
@@ -868,7 +483,6 @@ bool check_wr_rd_command(const char* const p_buf, const size_t name_len, char* c
     strcpy(p_filename, p_buf);
     return true;
 }
-
 
 bool TftpServer(const bool dry_run)
 {
@@ -904,14 +518,14 @@ bool TftpServer(const bool dry_run)
             break;
         }
         TFTPHDR  *msg = (TFTPHDR *)rcv_buf;
-        char filename[16]={0};
+        char filename[128]={0};
         TFTP_DEBUG("Request: %u, payload %s\n",msg->th_opcode, msg->th_u.tu_stuff);
         {
-            const size_t name_len = strnlen(msg->th_u.tu_stuff, 32);
+            const size_t name_len = strnlen(msg->th_u.tu_stuff, sizeof(filename)-1u);
             //iprintf("Debug %u %s\n",name_len, &msg->th_u.tu_stuff[name_len+1u]);
 
-            if(name_len>=sizeof(filename)-1u) {
-                puts("file name too long");
+            if(name_len>=(sizeof(filename)-1u)) {
+                iprintf("file name '%s' too long (%u, max allowed: %u)\r\n",msg->th_u.tu_stuff, (unsigned int)name_len, (unsigned int)sizeof(filename)-1u);
                 continue;
             }
 
