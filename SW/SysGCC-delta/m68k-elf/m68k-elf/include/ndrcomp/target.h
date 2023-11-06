@@ -29,13 +29,15 @@
 #include <sys/sc6551.h>
 #define GDP_PADDING     PADDING
 #include <sys/gdp9366.h>
-#define RTC_PADDING     PADDING
-#include <sys/soundchip.h>
+//#define RTC_PADDING         PADDING
 #define SOUNDCHIP_PADDING   PADDING
-#include <sys/key.h>
+#include <sys/soundchip.h>
 #define KEY_PADDING   PADDING
-#include <sys/ioe.h>
+#include <sys/key.h>
 #define IOE_PADDING   PADDING
+#include <sys/ioe.h>
+#define CS_PADDING   PADDING
+#include <sys/cs8900.h>
 
 #define INST_PER_SEC    300000L
 #define VECTOR_NUMBER   64
@@ -69,6 +71,8 @@
 #define SOUND           (*(volatile SOUNDCHIP *)(0xffffff50L <<PADDING))
 #define KEY             (*(volatile KEY *)(0xffffff68L <<PADDING))
 #define IOE             (*(volatile IOE *)(0xffffff30L <<PADDING))
+//#define IOE             (*(volatile IOE *)(0xffffff48L <<PADDING))
+#define CS8900          (*(volatile CS8900 *)(0xffffffD0L <<PADDING))
 
 
 

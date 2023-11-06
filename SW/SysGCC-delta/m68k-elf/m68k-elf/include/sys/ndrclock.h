@@ -7,6 +7,8 @@
  * Date		Version	Action						Who
  * 12.02.1991	1.00	created						avg
  */
+#ifndef _NDRCLOCK
+#define _NDRCLOCK
 
 typedef struct {
     unsigned char hour;
@@ -20,3 +22,4 @@ typedef struct {
 	long tmp;
 }ndrtimebuf;
 #undef _
+#endif

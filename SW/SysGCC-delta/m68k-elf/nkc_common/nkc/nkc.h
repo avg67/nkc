@@ -21,6 +21,7 @@ void * get_heap_ptr(void);
 
 #ifndef __cplusplus
   #define min(a,b) (((a)<=(b))?(a):(b))
+  #define max(a,b) (((a)>=(b))?(a):(b))
 #endif
 extern const char *_mem_top;
 extern const char * _static_top;    // Unused memory between _static_top and _mem_top
@@ -1376,6 +1377,39 @@ static inline __attribute__((always_inline)) void gp_sound(const uint8_t* const 
   );
 }
 
+static inline __attribute__((always_inline)) int16_t gp_sin(int16_t angle) {
+   register int16_t result  __asm__("%d0") =0;
+   asm volatile(
+    "# asm"                      "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "moveq %1,%%d7"              "\n\t" \
+    "movew %2,%%d0"              "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    "movew %%d0,%0"              "\n\t" \
+    : "=g"(result)          /* outputs */    \
+    : "g"(_SIN),"g"(angle)  /* inputs */    \
+    : "d7"             /* clobbered regs */ \
+   );
+   return result;
+}
+
+static inline __attribute__((always_inline)) int16_t gp_cos(int16_t angle) {
+   register int16_t result  __asm__("%d0") =0;
+   asm volatile(
+    "# asm"                      "\n\t" \
+    "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
+    "moveq %1,%%d7"              "\n\t" \
+    "movew %2,%%d0"              "\n\t" \
+    "trap #1"                    "\n\t" \
+    "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
+    "movew %%d0,%0"              "\n\t" \
+    : "=g"(result)          /* outputs */    \
+    : "g"(_COS),"g"(angle)  /* inputs */    \
+    : "d7"             /* clobbered regs */ \
+   );
+   return result;
+}
 #ifdef USE_JADOS
 
 static inline __attribute__((always_inline)) uint32_t jd_getversi(void) {
