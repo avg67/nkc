@@ -15,7 +15,7 @@
 #define NETUTIL_DEBUG(...)
 //#define NETUTIL_DEBUG iprintf
 
-uint16_t ip_check_more(uchar const* ps, uint16_t len, uint16_t old_cs)
+uint16_t __attribute__((optimize("-O3"))) ip_check_more(uchar const* ps, uint16_t len, uint16_t old_cs)
 {
     register uint32_t result32 = (uint32_t)old_cs;
     while(len>1u) {

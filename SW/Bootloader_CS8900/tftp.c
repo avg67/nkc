@@ -31,21 +31,21 @@ static bool fn_valid(const char* const p_filename)
     const char* p_name = p_filename;
     const char* const p_colon = strchr(p_filename,':');
     // check if filename starts with an drive letter (e.g. A:xy.ext)
-    if(p_colon && (p_filename[1]==':')) {
-        p_name = &p_filename[2];
+    if(p_colon && (p_filename[1u]==':')) {
+        p_name = &p_filename[2u];
     }
     // filename neet to follow 8.3 rule
     const size_t len = strlen(p_name);
     if (len<=12u) {
         const char* const p_dot = strchr(p_name,'.');
         if (p_dot) {
-            if (strlen(&p_dot[1])<=3) {
+            if (strlen(&p_dot[1u])<=3u) {
                 const uint16_t n = (uint16_t)(p_dot - p_name);
-                if(n<=8) {
+                if(n<=8u) {
                     valid=true;
                 }
             }
-        }else if(len<=8){
+        }else if(len<=8u){
             // filename without extension
             valid=true;
         }
@@ -76,7 +76,7 @@ static void tftp_message (unsigned short request, const char * name, const char 
 }
 
 
-static inline void tftp_ack (unsigned short block_nr, char* tx_buf)
+static inline void __attribute__((optimize("-O3"))) tftp_ack (unsigned short block_nr, char* tx_buf)
 {
     TFTPHDR *msg = (TFTPHDR *)tx_buf;
 
@@ -101,7 +101,7 @@ static inline void tftp_error (const uint16_t tu_code, const char* const err_msg
 }
 
 
-static inline void tftp_data (unsigned short block_nr, const char* const p_buf, const size_t len, char* tx_buf)
+static inline void __attribute__((optimize("-O3"))) tftp_data (unsigned short block_nr, const char* const p_buf, const size_t len, char* tx_buf)
 {
     TFTPHDR *msg = (TFTPHDR *)tx_buf;
 
@@ -113,7 +113,7 @@ static inline void tftp_data (unsigned short block_nr, const char* const p_buf, 
     send_socket_udp(UDP_SOCK, (const uchar * const)tx_buf, 4+len);
 }
 
-bool tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, const uint16_t local_port, const char* const p_file_name, const bool server, const bool dry_run)
+bool __attribute__((optimize("-O3"))) tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, const uint16_t local_port, const char* const p_file_name, const bool server, const bool dry_run)
 {
     unsigned short block = 0u;
 
@@ -156,7 +156,7 @@ bool tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, co
     SOCKET_SETUP(UDP_SOCK, SOCKET_UDP, local_port, FLAG_PASSIVE_OPEN);
     if(open_socket_udp(UDP_SOCK, remote_ip, remote_port)!=0) {
         puts("Error opening UDP Socket");
-        return 0;
+        return 0u;
     }
 
     TX_BUFFER * const pbuf = allocate_tx_buf();
@@ -181,7 +181,7 @@ bool tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, co
         */
         uint16_t block_size = 0u;
         do {
-            const clock_t timeout =  _times(NULL) + ((clock_t)(5u * CLOCKS_PER_SEC));
+            const clock_t timeout =  _times(NULL) + ((clock_t)(1u * CLOCKS_PER_SEC));
             bool data_ready = false;
 
             do {
@@ -206,12 +206,15 @@ bool tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, co
                 iprintf("Timeout!\r\n");
                 if(server) {
                     tftp_error(16u,"Timeout",pbuf->buffer);
-                    continue;
+                    error = true;
+                    done=false;
+                    //continue;
                 }else{
                     error = true;
                     done=false;
-                    break; //return false;
+                    //break; //return false;
                 }
+                break;
             } else {
                 /*
                 * Send file request or acknowledge and receive
@@ -344,7 +347,7 @@ bool tftp_recv_int(const unsigned long remote_ip, const uint16_t remote_port, co
     return !error;
 }
 
-bool tftp_transm_int(const unsigned long remote_ip, const uint16_t remote_port, const uint16_t local_port, const char* const p_file_name, const bool server)
+bool __attribute__((optimize("-O3"))) tftp_transm_int(const unsigned long remote_ip, const uint16_t remote_port, const uint16_t local_port, const char* const p_file_name, const bool server)
 {
     unsigned short block = 0u;
     bool error = false;
@@ -475,13 +478,22 @@ bool tftp_transm_int(const unsigned long remote_ip, const uint16_t remote_port, 
     return !error;
 }
 
-bool check_wr_rd_command(const char* const p_buf, const size_t name_len, char* const p_filename) {
-    if (strcmp(&p_buf[name_len+1u],"octet")!=0) {
-        puts("unknown command");
-        return false;
+bool check_wr_rd_command(const char* const p_buf, char* const p_filename, const size_t buffer_size) {
+    const size_t name_len = strnlen(p_buf, buffer_size);
+    bool success = false;
+    if(name_len < buffer_size) {
+        if (strcmp(&p_buf[name_len+1u],"octet")!=0) {
+            puts("unknown command\r\n");
+            success = false;
+        }else{
+            strcpy(p_filename, p_buf);
+            success = true;
+        }
+    }else{
+        iprintf("file name too long (%u, max allowed: %u)\r\n", (unsigned int)name_len, (unsigned int)buffer_size);
+        success = false;
     }
-    strcpy(p_filename, p_buf);
-    return true;
+    return success;
 }
 
 bool TftpServer(const bool dry_run)
@@ -521,28 +533,21 @@ bool TftpServer(const bool dry_run)
         char filename[128]={0};
         TFTP_DEBUG("Request: %u, payload %s\n",msg->th_opcode, msg->th_u.tu_stuff);
         {
-            const size_t name_len = strnlen(msg->th_u.tu_stuff, sizeof(filename)-1u);
-            //iprintf("Debug %u %s\n",name_len, &msg->th_u.tu_stuff[name_len+1u]);
-
-            if(name_len>=(sizeof(filename)-1u)) {
-                iprintf("file name '%s' too long (%u, max allowed: %u)\r\n",msg->th_u.tu_stuff, (unsigned int)name_len, (unsigned int)sizeof(filename)-1u);
-                continue;
-            }
-
             switch(msg->th_opcode) {
                 case TFTP_RRQ:
                     // client read-request (server -> client transfer)
                     //success = tftp_server_rrq(filename, remote_ip, remote_port);
-                    if (check_wr_rd_command(msg->th_u.tu_stuff, name_len, filename)) {
+                    if (check_wr_rd_command(msg->th_u.tu_stuff, filename, sizeof(filename))) {
                         iprintf("Transmit '%s'",filename);
                         success = tftp_transm_int(remote_ip, remote_port, TFTP_CLIENT_PORT, filename, true);
+                    }else{
+                        success=false;
                     }
-                    success=false;
                     break;
                 case TFTP_WRQ:
                     // client write-request (client -> server transfer)
                     //success = tftp_server_wrq(filename, remote_ip, remote_port, dry_run);
-                    if (check_wr_rd_command(msg->th_u.tu_stuff, name_len, filename)) {
+                    if (check_wr_rd_command(msg->th_u.tu_stuff, filename, sizeof(filename))) {
                         iprintf("Receive '%s'",filename);
                         success = tftp_recv_int(remote_ip, remote_port, TFTP_CLIENT_PORT, filename, true, dry_run);
                     }

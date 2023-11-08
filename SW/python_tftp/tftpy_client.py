@@ -89,7 +89,7 @@ def main():
         def progresshook(self, pkt):
             if isinstance(pkt, tftpy.TftpPacketTypes.TftpPacketDAT):
                 self.progress += len(pkt.data)
-                self.out("Transferred %d bytes" % self.progress)
+                #self.out("Transferred %d bytes" % self.progress)
             elif isinstance(pkt, tftpy.TftpPacketTypes.TftpPacketOACK):
                 self.out("Received OACK, options are: %s" % pkt.options)
 

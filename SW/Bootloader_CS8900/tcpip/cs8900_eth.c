@@ -83,7 +83,7 @@ static inline void cs_reset(void)
 }*/
 
 #if (cpu==2)
-    // optimized version - only for 68000 (16bit)
+    // optimized version - only for 68000 (16bit) -> ~25% faster that standard version (1.2 vs 1.6 Mbit/s)
     void write_frame_data_8900(const uint8_t* ps, const uint16_t len)
     {
         register uint16_t nr_words asm("%d1") = (len>>1u)-1u;   // prepare for dbra
@@ -150,7 +150,7 @@ static inline void cs_reset(void)
         }
     }
 
-    void  read_frame_data_8900(uint8_t* ps, const uint16_t len)
+    void __attribute__((optimize("-O3"))) read_frame_data_8900(uint8_t* ps, const uint16_t len)
     {
         uint16_t nr_words = len>>1u;
         uint8_t* p_ptr = (uint8_t*)ps;

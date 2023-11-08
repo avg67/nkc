@@ -543,7 +543,7 @@ uint16_t process_UDP(uint16_t dlen){
 /**********************************************************************************
 * void send_upd();
 **********************************************************************************/
-static inline void send_upd(const unsigned char * const dt, uint16_t len,unsigned char *pmac,unsigned long rem_ipl,uint16_t sport, uint16_t dport){
+static inline void __attribute__((optimize("-O3"))) send_upd(const unsigned char * const dt, uint16_t len,unsigned char *pmac,unsigned long rem_ipl,uint16_t sport, uint16_t dport){
     // Now fill out IP-Header
     IP_HDR hhdr = {    // Temporary header for sending IP-data
         .vhl_service=0x4500u,
@@ -1083,7 +1083,7 @@ uint16_t process_TCP(uint16_t dlen){
 *
 * 2.nd-Level-Multiplexer
 **********************************************************************************/
-uint16_t process_IP(void){
+uint16_t __attribute__((optimize("-O3"))) process_IP(void){
     uint16_t hdr;
     uint16_t dlen;
     uchar pcol;
@@ -1138,7 +1138,7 @@ uint16_t process_IP(void){
 *
 * Send data without any buffering
 **********************************************************************************/
-uint16_t send_socket_udp(uchar sock, const unsigned char * const pbuf, uint16_t datalen){
+uint16_t __attribute__((optimize("-O3"))) send_socket_udp(uchar sock, const unsigned char * const pbuf, uint16_t datalen){
     if (sock < MAX_SOCK) {
         UC_SOCKET *psock;
         psock=&uc_socket[sock];
@@ -1375,7 +1375,7 @@ uint16_t close_socket_udp(uchar sock){
 * Top-Level-Multiplexer, should be happy with SNAP frames too...
 * Will return !=0 if Event was encountered
 **********************************************************************************/
-uint16_t poll_net(void){
+uint16_t __attribute__((optimize("-O3"))) poll_net(void){
  uint16_t RxEvent; //,len;
  uint16_t type;
 
@@ -1401,8 +1401,8 @@ uint16_t poll_net(void){
         //NET_DEBUG("Remote MAC: %02x:%02x:%02x:%02x:%02x:%02x ", remote_mac[0],remote_mac[1],remote_mac[2],remote_mac[3],remote_mac[4],remote_mac[5]);
         //NET_DEBUG(" Type %x %x\r\n",type,len);
         if(type<=0x5DCu){ // SNAP Frame! Eat LSAP-Ctrl-OUI and retry...
-            if(net_match_uint(0xAAAAu)) return 0;							//  (2)
-            if(net_match_ulong(0x3000000u)) return 0;						//  (4)
+            if(net_match_uint(0xAAAAu)) return 0u;							//  (2)
+            if(net_match_ulong(0x3000000u)) return 0u;						//  (4)
             type=Read_Frame_word_8900(); // Read NEW type...					(2)
                                                                             //  = 20
         }

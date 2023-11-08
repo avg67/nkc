@@ -297,14 +297,14 @@
     }
 #else
 
-    static inline uint16_t Read_PP_8900(const uint16_t addr)
+    static inline uint16_t __attribute__((optimize("-O3"))) Read_PP_8900(const uint16_t addr)
     {
         CS8900.add_l = LO8(addr);
         CS8900.add_h = HI8(addr);
         return ((uint16_t)CS8900.data0_l) | ((uint16_t)CS8900.data0_h << 8u);
     }
 
-    static inline void Write_PP_8900(const uint16_t addr, const uint16_t data)
+    static inline void __attribute__((optimize("-O3"))) Write_PP_8900(const uint16_t addr, const uint16_t data)
     {
         CS8900.add_l = LO8(addr);
         CS8900.add_h = HI8(addr);
@@ -313,33 +313,33 @@
     }
 #endif
     // writes a word in little-endian byte order to the frame register
-    static inline void Write_Frame_word_8900(register const uint16_t data)
+    static inline void __attribute__((optimize("-O3"))) Write_Frame_word_8900(register const uint16_t data)
     {
         CS8900.rxtx_data0_l = HI8(data);
         CS8900.rxtx_data0_h = LO8(data);
     }
 
     // writes a long in little-endian byte order to the frame register
-    static inline void Write_Frame_long_8900(register const uint32_t data)
+    static inline void __attribute__((optimize("-O3"))) Write_Frame_long_8900(register const uint32_t data)
     {
         Write_Frame_word_8900(data >> 16u);
         Write_Frame_word_8900(data & 0xffffu);
     }
 
     // reads a word from the Frame Register High-Low-Order! Req. for Status and Length
-    static inline uint16_t Read_FrameHL_word_8900(void)
+    static inline uint16_t __attribute__((optimize("-O3"))) Read_FrameHL_word_8900(void)
     {
         return ((uint16_t)CS8900.rxtx_data0_h << 8u) | CS8900.rxtx_data0_l;
     }
 
     // reads a word from the Frame Register Standard-Order (Network Order)
-    static inline uint16_t Read_Frame_word_8900(void)
+    static inline uint16_t __attribute__((optimize("-O3"))) Read_Frame_word_8900(void)
     {
         return ((uint16_t)CS8900.rxtx_data0_l << 8u) | CS8900.rxtx_data0_h;
     }
 
     // reads a long word from the Frame Register Standard-Order (Network Order)
-    static inline uint32_t Read_Frame_long_8900(void)
+    static inline uint32_t __attribute__((optimize("-O3"))) Read_Frame_long_8900(void)
     {
         return ((uint32_t)Read_Frame_word_8900() << 16u) | Read_Frame_word_8900();
 
