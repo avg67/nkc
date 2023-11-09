@@ -90,12 +90,12 @@ static void free_match_socket(UC_SOCKET* p_match_socket);
 **********************************************************************************/
 const uchar my_mac[6] __attribute__ ((aligned (2))) = {0x00, 0x51, 0xD3, 0xC4, 0xB5, 0xA6 }; // MAC for this machine: M0:M1:M2:M3:M4:M5
 
-uchar remote_mac[6] __attribute__ ((aligned (2)));  // used as temp.
+static uchar remote_mac[6] __attribute__ ((aligned (2)));  // used as temp.
 
 
-#if defined(USE_TCP_CLIENT) || defined(USE_UDP_CLIENT)
- uchar gateway_mac[6]; // optional Gateway for active oen of an "ouside" peer
-#endif
+//#if defined(USE_TCP_CLIENT) || defined(USE_UDP_CLIENT)
+ //static uchar gateway_mac[6]; // optional Gateway for active oen of an "ouside" peer
+//#endif
 
 
 /**********************************************************************************
@@ -182,13 +182,13 @@ typedef union{
 } HFRAME;
 
 // A Frame for temporary usage 2.nd and 3.rd level
-HFRAME hframe;
+static HFRAME hframe;
 
 /**********************************************************************************
 * The timer, counts down with about 2 Hz
 **********************************************************************************/
-volatile uchar  net_timer; // Temporary value, counts down until by an IRQ
-uchar  net_service_cnt; // Additional Timer, counts up. twice /sec.
+static volatile uchar  net_timer; // Temporary value, counts down until by an IRQ
+static uchar  net_service_cnt; // Additional Timer, counts up. twice /sec.
 
 /**********************************************************************************
 * The 'official' buffers in XRAM
@@ -199,8 +199,8 @@ char rcv_buf[MAX_RX]  __attribute__ ((aligned (2)));   // Buffer for receiving d
 uint16_t  rcv_len,rcv_ofs;    // Size of received data (int)
 
 // TX-Buffers (x)
-TX_BUFFER tx_buffers[TX_BUFFERS];
-char tx_bufleft=TX_BUFFERS; // Counts left buffers
+static TX_BUFFER tx_buffers[TX_BUFFERS];
+static char tx_bufleft=TX_BUFFERS; // Counts left buffers
 
 
 
@@ -512,7 +512,7 @@ uint16_t process_ICMP(uint16_t dlen){
 * Note: It is intended hframe my by used for synthesisinhg a response header...
 *
 **********************************************************************************/
-uint16_t process_UDP(uint16_t dlen){
+static inline uint16_t __attribute__((optimize("-O3"))) process_UDP(uint16_t dlen){
     const uint16_t udp_sport=Read_Frame_word_8900();
     const uint16_t udp_dport=Read_Frame_word_8900();
     if(net_match_uint(dlen)) return EVENT_UDP_ERROR; // a simple check for plausibility...
@@ -543,7 +543,8 @@ uint16_t process_UDP(uint16_t dlen){
 /**********************************************************************************
 * void send_upd();
 **********************************************************************************/
-static inline void __attribute__((optimize("-O3"))) send_upd(const unsigned char * const dt, uint16_t len,unsigned char *pmac,unsigned long rem_ipl,uint16_t sport, uint16_t dport){
+__attribute__((optimize("-O3"))) static inline void send_upd(const unsigned char * const dt, uint16_t len,unsigned char *pmac,unsigned long rem_ipl,uint16_t sport, uint16_t dport)
+{
     // Now fill out IP-Header
     IP_HDR hhdr = {    // Temporary header for sending IP-data
         .vhl_service=0x4500u,
@@ -982,7 +983,7 @@ inline uint16_t retransmit_socket(UC_SOCKET* p_match_socket){
 uint16_t periodical_socket(UC_SOCKET* p_match_socket){
     // First decrement sub-timer. If no 0: No Action required
 
-    uchar h=p_match_socket->timer-1;
+    uchar h=p_match_socket->timer-1u;
     if(h){
         p_match_socket->timer=h;
         return 0u;
@@ -1018,7 +1019,7 @@ uint16_t process_TCP(uint16_t dlen){
 
     //iprintf("Process TCP %u\n",dlen);
 
-    read_frame_data_8900(hframe.bytes,20); // Read informative part of TCP header to HFRAME
+    read_frame_data_8900(hframe.bytes,20u); // Read informative part of TCP header to HFRAME
     flags_temp=hframe.tcp_hdr.flags;
 
 
@@ -1026,8 +1027,8 @@ uint16_t process_TCP(uint16_t dlen){
 
     ohlen=hframe.tcp_hdr.hlen-80u;
     while(ohlen){  // Eat TCP-option, if MSS: ignore silently...
-        ohlen-=16; // ohlen = size in 32-bit-word<<4
-        dlen-=4;
+        ohlen-=16u; // ohlen = size in 32-bit-word<<4
+        dlen-=4u;
         (void)Read_Frame_long_8900();
     }
 
@@ -1109,17 +1110,17 @@ uint16_t __attribute__((optimize("-O3"))) process_IP(void){
 
     Read_Frame_long_8900();   // Destination IP (should be US)
 
-    dlen-=20;    // Adjust header
-    hdr&=0xF00;
-    hdr>>=8;
-    hdr-=5;
+    dlen-=20u;    // Adjust header
+    hdr&=0xF00u;
+    hdr>>=8u;
+    hdr-=5u;
     NET_DEBUG("<skip %x ",hdr);
     while(hdr--){
         Read_Frame_long_8900();  // Ignore IP options
         dlen-=4;
     }
     NET_DEBUG("pcol %x>",pcol);
-    if(pcol==1){
+    if(pcol==1u){
         return process_ICMP(dlen);
     }else if(pcol==6u){ // TCP
         return process_TCP(dlen);
@@ -1341,7 +1342,7 @@ uint16_t open_socket_udp(uchar sock,unsigned long remote_ipl,unsigned int remote
             p_match_socket->timer=1;
         }
 
-        return 0; // All OK
+        return 0u; // All OK
     }
     return GENERAL_ERROR;
 }
@@ -1361,7 +1362,7 @@ uint16_t close_socket_udp(uchar sock){
         if(p_match_socket->socket_type!=SOCKET_UDP || !p_match_socket->state) return EVENT_UDP_DENIED; // Closing always possible...
         p_match_socket->state=0;   // That's all to close...
 
-        return 0; // All OK
+        return 0u; // All OK
     }
     return GENERAL_ERROR;
 }
@@ -1436,7 +1437,7 @@ uint16_t __attribute__((optimize("-O3"))) poll_net(void){
 **********************************************************************************/
 volatile bool timer_flag=false;
 
-void timer_func() {
+static void timer_func() {
   static uint8_t _prescaler = TIMER;
   if (!--_prescaler) {
     _prescaler = TIMER;

@@ -118,18 +118,19 @@ typedef enum _OPTION
 }OPTION;
 
 typedef struct _RIP_MSG{
-	UCHAR op;
-	UCHAR htype;
-	UCHAR hlen;
-	UCHAR hops;
-	ULONG xid;
-	uint16_t secs;
-	uint16_t flags;
-	UCHAR ciaddr[4];
+	UCHAR op;           // 0
+	UCHAR htype;        // 1
+	UCHAR hlen;         // 2
+	UCHAR hops;         // 3
+	ULONG xid;          // 4-7
+	uint16_t secs;      // 8-9
+	uint16_t flags;     // A-B
+	//UCHAR ciaddr[4];    // C-F
+	IP_ADR ciaddr;      // C-F
 	//UCHAR yiaddr[4];
-    IP_ADR yiaddr;
-	UCHAR siaddr[4];
-	UCHAR giaddr[4];
+    IP_ADR yiaddr;      // 10-13
+	UCHAR siaddr[4];    // 14-17
+	UCHAR giaddr[4];    // 18-1B
 	UCHAR chaddr[16];
 	UCHAR sname[64];
 	UCHAR file[128];
@@ -142,13 +143,13 @@ typedef struct _RIP_MSG{
 
 
 
-extern void send_DHCP_DISCOVER(uchar sock,uchar  *pBfr);     		/* Send DHCP_DISCOVER message to a dhcp server. */
-extern void send_DHCP_REQUEST(uchar sock,uchar  *pBfr);                /* Send DHCP_REQUEST message to a dhcp server. */
+//extern void send_DHCP_DISCOVER(uchar sock,uchar  *pBfr);     		/* Send DHCP_DISCOVER message to a dhcp server. */
+//extern void send_DHCP_REQUEST(uchar sock,uchar  *pBfr);                /* Send DHCP_REQUEST message to a dhcp server. */
 //extern void send_DHCP_RELEASE(SOCKET s);
 
 extern char DHCP_SetIP();				/* request Ip address to a dhcp server and then apply received ip address from dhcp server to W3100A */
 
-extern char parseDHCPMSG(uchar sock);		/* Analyze message received from dhcp server and then apply it. */
+//extern char parseDHCPMSG(uchar sock);		/* Analyze message received from dhcp server and then apply it. */
 
 
 

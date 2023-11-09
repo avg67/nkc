@@ -181,7 +181,7 @@ bool __attribute__((optimize("-O3"))) tftp_recv_int(const unsigned long remote_i
         */
         uint16_t block_size = 0u;
         do {
-            const clock_t timeout =  _times(NULL) + ((clock_t)(1u * CLOCKS_PER_SEC));
+            const clock_t timeout =  _times(NULL) + ((clock_t)(5u * CLOCKS_PER_SEC));
             bool data_ready = false;
 
             do {
@@ -483,7 +483,7 @@ bool check_wr_rd_command(const char* const p_buf, char* const p_filename, const 
     bool success = false;
     if(name_len < buffer_size) {
         if (strcmp(&p_buf[name_len+1u],"octet")!=0) {
-            puts("unknown command\r\n");
+            puts("unknown command");
             success = false;
         }else{
             strcpy(p_filename, p_buf);

@@ -27,7 +27,7 @@ DESCRIPTION :  DHCP protocol messaging flow
 #include "netutil.h"
 
 // Create Discover DHCP packet and broadcast it.
-void send_DHCP_DISCOVER(uchar sock,uchar *pBfr)
+static inline void send_DHCP_DISCOVER(uchar sock,uchar *pBfr)
 {
 
     RIP_MSG * MSG=(RIP_MSG *)pBfr;
@@ -41,7 +41,7 @@ void send_DHCP_DISCOVER(uchar sock,uchar *pBfr)
     MSG->secs = DHCP_SECS;
     MSG->flags = DHCP_FLAGSBROADCAST;
 
-    memset(MSG->ciaddr,0u,RIP_MSG_SIZE-12u);
+    memset(&MSG->ciaddr.bytes,0u,RIP_MSG_SIZE-12u);   // Clear all starting from ciaddr
 
     // setting default Mac Address Value.
     memcpy(MSG->chaddr, my_mac, 6);
@@ -74,9 +74,7 @@ void send_DHCP_DISCOVER(uchar sock,uchar *pBfr)
     send_socket_udp(sock,pBfr,RIP_MSG_SIZE);
 }
 
-
-
-void send_DHCP_REQUEST(uchar sock,uchar *pBfr)
+static inline void send_DHCP_REQUEST(uchar sock,uchar *pBfr)
 {
     RIP_MSG * MSG = (RIP_MSG *)pBfr;
 
@@ -88,11 +86,11 @@ void send_DHCP_REQUEST(uchar sock,uchar *pBfr)
     MSG->secs = DHCP_SECS;
     MSG->flags = DHCP_FLAGSBROADCAST;
 
-    //*((unsigned long *)MSG->ciaddr)=my_ip.ipl;
-    MSG->ciaddr[0] = my_ip.bytes[0];
+    MSG->ciaddr.ipl = my_ip.ipl;
+    /*MSG->ciaddr[0] = my_ip.bytes[0];
     MSG->ciaddr[1] = my_ip.bytes[1];
     MSG->ciaddr[2] = my_ip.bytes[2];
-    MSG->ciaddr[3] = my_ip.bytes[3];
+    MSG->ciaddr[3] = my_ip.bytes[3];*/
 
     memset(MSG->yiaddr.bytes,0,RIP_MSG_SIZE-16u);
     memcpy(MSG->chaddr, my_mac, sizeof(my_mac));
@@ -205,6 +203,63 @@ void DefaultNetConfig()
 #endif
 }
 
+#define pMSG ((RIP_MSG *) rcv_buf)
+static char parseDHCPMSG(uchar sock)
+{
+    char type;
+    UCHAR opt_len;
+    UCHAR * p;
+    UCHAR * e;
+
+    if (uc_socket[sock].sremote_port == DHCP_SERVER_PORT)
+    {
+        //puts("DHCP MSG received..");
+        my_ip.ipl=pMSG->yiaddr.ipl;
+//		puts(IPAddrStr);
+    }
+    type = 0;
+    p = (UCHAR *)(pMSG);
+    p = p + 240;
+    e = p + (rcv_len - 240);
+// OPTIONS auswerten
+    while ( p < e )
+    {
+        switch ( *p++ )
+        {
+            case endOption :
+                return	type;
+                break;
+        case padOption :
+                break;
+        case dhcpMessageType :
+                p++;
+                type = *p++;
+                break;
+        case subnetMask :
+                p++;
+                for (uint16_t i = 0; i < 4; i++)	subnet_ip.bytes[i] = *p++;
+                break;
+        case routersOnSubnet :
+                p++;
+                for (uint16_t i = 0; i < 4; i++)	gateway_ip.bytes[i] = *p++;
+                break;
+/*	  	case dns :
+//				p++;
+                p++;
+                for (i = 0; i < 4; i++)	DNS[i] = *p++;*/
+/*				iprintf("dns : ");
+                inet_ntoa(DNS,IPAddrStr);
+                WriteScreen(IPAddrStr);
+                WriteScreenf("\r\n");*/
+                break;
+            default :
+                opt_len = *p++;
+                p += opt_len;
+                break;
+        }
+    }
+    return	type;
+}
 
 char DHCP_SetIP()
 {
@@ -292,61 +347,3 @@ char DHCP_SetIP()
     return 1;
 }
 
-#define pMSG ((RIP_MSG *) rcv_buf)
-char parseDHCPMSG(uchar sock)
-{
-    char type;
-    UCHAR opt_len;
-    UCHAR * p;
-    UCHAR * e;
-
-    if (uc_socket[sock].sremote_port == DHCP_SERVER_PORT)
-    {
-        //puts("DHCP MSG received..");
-        my_ip.ipl=pMSG->yiaddr.ipl;
-//		puts(IPAddrStr);
-    }
-    type = 0;
-    p = (UCHAR *)(pMSG);
-    p = p + 240;
-    e = p + (rcv_len - 240);
-// OPTIONS auswerten
-    while ( p < e )
-    {
-        switch ( *p++ )
-        {
-            case endOption :
-                return	type;
-                break;
-        case padOption :
-                break;
-        case dhcpMessageType :
-                p++;
-                type = *p++;
-                break;
-        case subnetMask :
-//				p++;
-                p++;
-                for (uint16_t i = 0; i < 4; i++)	subnet_ip.bytes[i] = *p++;
-                break;
-    case routersOnSubnet :
-                p++;
-                for (uint16_t i = 0; i < 4; i++)	gateway_ip.bytes[i] = *p++;
-                break;
-/*	  	case dns :
-//				p++;
-                p++;
-                for (i = 0; i < 4; i++)	DNS[i] = *p++;*/
-/*				iprintf("dns : ");
-                inet_ntoa(DNS,IPAddrStr);
-                WriteScreen(IPAddrStr);
-                WriteScreenf("\r\n");*/
-                break;
-            default :
-                opt_len = *p++;
-                p += opt_len;
-                break;
-        }
-    }
-    return	type;
-}
