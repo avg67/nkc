@@ -35,7 +35,7 @@ OBJDUMP=$(DEVC_PREFIX)objdump
 
 TARGET := tftp
 gccdir = /c/SysGCC/m68k-elf
-COMMON_DIR = ../../nkc_common/
+COMMON_DIR = $(gccdir)/nkc_common/
 ISEARCH = -I. -I./tcpip -I./html -I$(COMMON_DIR)/nkc/
 
 #LIBDIRS =  -L $(gccdir)/m68k-elf/lib/m68000
