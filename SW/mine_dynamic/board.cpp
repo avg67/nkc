@@ -45,6 +45,7 @@ board::board(const bool beginner)
             arr[x_pos][y_pos].setMine(true);
         }
     }while(nr_mines<tot_nr_mines);
+    game_started=false;
     //iprintf("\r\n");
 }
 
@@ -223,10 +224,11 @@ int16_t board::click_field(const uint16_t x, const uint16_t y)
 {
     int16_t result=0;
     if ((y<y_size) && (x<x_size)) {
+        game_started=true;
         field& f = arr[x][y];
         this->last_clicked = {.x=x,.y=y,.marked=false};
 
-        if(f.getInfo()!=0xFF && f.is_hidden()) {
+        if(f.getInfo()!=0xFFu && f.is_hidden()) {
             if(f.unhide()) {
                 result = -1;
             }
@@ -355,6 +357,11 @@ uint8_t board::get_board_height(void) const
     return this->y_size;
 }
 
+uint8_t board::get_board_width(void) const
+{
+    return this->x_size;
+}
+
 void board::set_mark(const bool visible) //, const uint16_t x, const uint16_t y)
 {
     if ((mark_y < y_size) && (mark_x < x_size)) {
@@ -410,4 +417,9 @@ uint16_t board::get_x_pixel(void) const
 uint16_t board::get_y_pixel(void) const
 {
     return CCNV_Y(BOARD_Y) + (y_size * 4u * Y_SCALE);
+}
+
+bool board::is_started(void) const
+{
+    return game_started;
 }

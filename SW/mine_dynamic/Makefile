@@ -39,7 +39,7 @@ gccdir = /c/SysGCC/m68k-elf
 ISEARCH = #-I.
 
 #LIBDIRS =  -L $(gccdir)/m68k-elf/lib/m68000
-COMMON_DIR = ../../nkc_common/
+COMMON_DIR = $(gccdir)/nkc_common/
 LIBS =
 
 # Compile with debugging info (-g), with size optimization (-Os)
@@ -103,7 +103,7 @@ create_bin:   $(TARGET).s19
 	$(OBJCOPY) --output-target=binary $(OUTDIR)$(TARGET).elf $(OUTDIR)$(TARGET).68k
 
 # print codesize
-print_codesize:
+print_codesize: $(PROGS)
 	$(SIZE) $(OUTDIR)*.elf
 
 define COMPILE_C_TEMPLATE

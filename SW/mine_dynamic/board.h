@@ -65,6 +65,7 @@ class board
         coord_t last_clicked;
         uint8_t mark_x;
         uint8_t mark_y;
+        bool game_started;
 
         uint8_t count_marked_mines(void) const;
         uint8_t count_mines(const uint16_t x, const uint16_t y, const bool count_marked) const;
@@ -85,9 +86,11 @@ class board
         void show_fields(const uint16_t x, const uint16_t y, const bool hold);
         void draw(void) const;
         uint8_t get_board_height() const;
+        uint8_t get_board_width(void) const;
         void move_mark(const mark_move_t move);
         uint16_t get_x_pixel(void) const;
         uint16_t get_y_pixel(void) const;
+        bool is_started(void) const;
 
 
 
