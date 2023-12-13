@@ -1,7 +1,7 @@
 /*-
  * Copyright (C) 1991	Andreas Voggeneder
  */
- 
+
 /*
  * Definitions:
  *
@@ -27,14 +27,14 @@
 #endif
 
 #ifndef MINI
-#define OPEN_STDIO 
+#define OPEN_STDIO
 #define USE_ENV_DEVICE
 #define STDIO_CLEANUP
 #endif
 
 #ifdef OPEN_STDIO
  extern int _open(const char *name, int flags, ...);
- #ifdef USE_ENV_DEVICE 
+ #ifdef USE_ENV_DEVICE
 //  #error "NO Envdevice!"
   #define OPEN_DEVICE(dev, flag) (getenv(dev) ? \
       (_open(getenv(dev), (flag)) < 0 ? _open(_device_ary.name, (flag)) : 0) : \
@@ -68,7 +68,7 @@ main(int argc, char **argp, char **envp);
  */
 #ifdef COPYDATA
 int _copydata = -1;
-#endif  
+#endif
 /*
  * Definition of standard C globals
  */
@@ -109,50 +109,50 @@ void _start(int stackmagi, char **argv, char **envp)
 //    char **cpp;
     long cnt;
 //    static char *nix = (char *)0;
-    extern char *_stdin_envname;	
-    extern char *_stdout_envname;	
-    extern char *_stderr_envname;	
+    extern char *_stdin_envname;
+    extern char *_stdout_envname;
+    extern char *_stderr_envname;
 
     asm volatile ("movel #0,%a6");
 
-/* 
- * copy datasegment 
+/*
+ * copy datasegment
  */
 //    if(&_etext != &_bdata){
 //    if(&_etext != &copy_start){
 //      //	for(src = &_etext, dest = &_bdata; dest < &_edata;)
 //      for(src = &_etext, dest = &copy_start; dest < &_edata;)
-//            *dest++ = *src++; 
+//            *dest++ = *src++;
 //#ifdef COPYDATA
 //    } else {
 //        if (_copydata) {
 //          //          for(src = &_bdata, dest = &_end; src < &_edata;)
 //          for(src = &copy_start, dest = &_end; src < &_edata;)
-//                *dest++ = *src++; 
+//                *dest++ = *src++;
 //            _copydata = 0;
 //        } else {
 //          //          for(src = &_end, dest = &_bdata; dest < &_edata;)
 //          for(src = &_end, dest = &copy_start; dest < &_edata;)
-//                *dest++ = *src++; 
+//                *dest++ = *src++;
 //            _copydata = 0;
 //	}
 //#endif
 //    }
-    
-/* 
- * clear bss 
+
+/*
+ * clear bss
  */
     for(dest = &__bss_start; dest < &_end;) *dest++ = 0;
-/* 
+/*
  * After this pointer static and global variables are useble.
  */
-    _static_top = (char *)&_end; 
+    _static_top = (char *)&_end;
 #ifdef COPYDATA
     //    if (!_copydata) _static_top += (char *)&_edata - (char *)&_bdata;
     if (!_copydata) _static_top += (char *)&_edata - (char *)&copy_start;
 #endif
-/* 
- * Check if the stack is valid and count the arguments. 
+/*
+ * Check if the stack is valid and count the arguments.
  */
 
 #if defined ndrcomp
@@ -196,7 +196,7 @@ void _start(int stackmagi, char **argv, char **envp)
 
 
 //    OPa=0x55;
-    
+
    asm   volatile(
     "# asm"						                     "\n\t"  \
     "moveq #62,%%d7" /* Ramtop ermitteln */          "\n\t"  \
@@ -233,8 +233,8 @@ void _start(int stackmagi, char **argv, char **envp)
     : "g"(args),"g"(jados_cmd),"g"(sizeof(jados_cmd))  /* inputs */    \
     : "%d0","%d1", "%d6","%d7", "%a0","%a1","%a2"    /* clobbered regs */ \
     );
-    
-    
+
+
     argv=args;
 //    envp=envr;
     envp=0; //NULL;
@@ -251,7 +251,7 @@ void _start(int stackmagi, char **argv, char **envp)
 // */
 //    _init_dev();
 #endif
-/* 
+/*
  * Open the 3 standardchannels, if defined.
  */
     //_REENT->_stdin=
@@ -273,7 +273,7 @@ void _start(int stackmagi, char **argv, char **envp)
    FPGAT1.ctrl=0;
    DISABLE_CPU_INTERRUPTS;
    SC.command |=0x1f;
-   
+
 #if 0
    asm   volatile(
   "#asm"                                           "\n\t"  \
@@ -306,7 +306,7 @@ void _exit(int ret)
     FPGAT1.ctrl=0;
     DISABLE_CPU_INTERRUPTS;
     SC.command |=0x1f;
-    
+
     /*
     * Returnvalue in register d0.
     */
@@ -322,7 +322,7 @@ void _exit(int ret)
     : "g" (ret)       /* inputs */    \
     : /*"%d0","%d7"     clobbered regs */ \
     );
-    
+
     asm volatile(
     "# asm"						             "\n\t"  \
     "movel %0,%%a7"	                         "\n\t"  \

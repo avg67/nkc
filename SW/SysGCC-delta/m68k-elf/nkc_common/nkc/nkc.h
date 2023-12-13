@@ -23,8 +23,11 @@ void * get_heap_ptr(void);
   #define min(a,b) (((a)<=(b))?(a):(b))
   #define max(a,b) (((a)>=(b))?(a):(b))
 #endif
+
+//extern const unsigned long ram_top;   // same as _mem_top
 extern const char *_mem_top;
 extern const char * _static_top;    // Unused memory between _static_top and _mem_top
+
 #ifdef __cplusplus
   extern "C" time_t _gettime(void);
   extern "C" clock_t _clock(void (*clock_fu)(void));
@@ -559,11 +562,14 @@ static inline __attribute__((always_inline)) unsigned short to_bendian16( unsign
   return ret;
 }
 #endif
+
+
 static inline __attribute__((always_inline)) uint16_t to_bendian16( uint16_t l_in)
 {
     uint16_t ret = l_in;
     return (ret<<8u)|(ret>>8u);
 }
+
 
 /* ----------------------------------------------------------------------------- (G)IDE ------------------------------------------------------------------------------------------------------------- */
 
@@ -1410,6 +1416,7 @@ static inline __attribute__((always_inline)) int16_t gp_cos(int16_t angle) {
    );
    return result;
 }
+
 #ifdef USE_JADOS
 
 static inline __attribute__((always_inline)) uint32_t jd_getversi(void) {
@@ -1649,7 +1656,7 @@ struct jdfile_info {
 typedef struct jdfile_info jdfile_info_t;
 
 struct jddisk_info {
-	uint32_t o_tracks;
+  uint32_t o_tracks;
   uint32_t f_tracks;
   uint32_t o_entries;
   uint32_t f_entries;
