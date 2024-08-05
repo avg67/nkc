@@ -1,0 +1,5 @@
+CLK  i
+RESET  i
+CLKOP  o
+CLKOK  o
+LOCK  o

@@ -42,7 +42,8 @@ parameter tRP      = 500,   // RESET_B Pulse Width, table 13
           tWHWH1_W = 11000, // Program valid to RYBY_B low, table 12
           tWHWH1_B = 9000,  // Program valid to RYBY_B low, table 12
           tWHWH2   = 10000, //900_000_000,  // Sector Erase Time, table 12
-          tChip_ers= 900_000_000; //115_000_000_000; // Chip Erasae Time
+          tChip_ers= 900_000_000, //115_000_000_000; // Chip Erasae Time
+          offset   = 0;
 `protect
 parameter A_bit  = 23,
           A_msb  = 21,
@@ -152,7 +153,8 @@ initial begin
     suspend_flag     = 1'b0;
     resume_flag      = 1'b0;
     for( i = 0; i < flash_size; i = i+1 ) begin
-        array[ i ] = 8'hff;   // Set Erase state
+        //array[ i ] = 8'hff;   // Set Erase state
+        array[ i ] = offset + i*2;   // Set Erase state
     end
 end
 

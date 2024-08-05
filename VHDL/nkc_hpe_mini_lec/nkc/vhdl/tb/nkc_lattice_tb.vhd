@@ -134,6 +134,9 @@ FLASH_nWr <= SRAM_nWR or FLASH_nCE;
 FLASH_Addr <= SRAM_Addr(21 downto 0) when FLASH_nCE='0' else
               (others => '1');
 Flash0 : entity work.flash_64m
+   generic map(
+      offset => 0
+   )
    port map(
       CE_B    => FLASH_nCE,
       WE_B    => FLASH_nWr,
@@ -145,6 +148,9 @@ Flash0 : entity work.flash_64m
    );
    
 Flash1 : entity work.flash_64m
+   generic map(
+      offset => 1
+   )
    port map(
       CE_B    => FLASH_nCE,        
       WE_B    => FLASH_nWr,    

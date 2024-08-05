@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE gowin-synthesis-project>
+<Project>
+    <Version>beta</Version>
+    <Device id="GW2AR-18C" package="QFN88" speed="8" partNumber="GW2AR-LV18QN88C8/I7"/>
+    <FileList>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/FPGA/fifo_sc_hs/temp/FIFO_SC/fifo_sc_hs_define.v" type="verilog"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/FPGA/fifo_sc_hs/temp/FIFO_SC/fifo_sc_hs_parameter.v" type="verilog"/>
+        <File path="C:/Gowin/Gowin_V1.9.9.02_x64/IDE/ipcore/FIFO_SC_HS/data/fifo_sc_hs.v" type="verilog"/>
+        <File path="C:/Gowin/Gowin_V1.9.9.02_x64/IDE/ipcore/FIFO_SC_HS/data/fifo_sc_hs_top.v" type="verilog"/>
+    </FileList>
+    <OptionList>
+        <Option type="disable_insert_pad" value="1"/>
+        <Option type="output_file" value="video_fifo.vg"/>
+        <Option type="output_template" value="video_fifo_tmp.vhd"/>
+        <Option type="output_vhdl_file" value="video_fifo.vhg"/>
+        <Option type="ram_balance" value="1"/>
+        <Option type="ram_rw_check" value="1"/>
+        <Option type="verilog_language" value="sysv-2017"/>
+    </OptionList>
+</Project>

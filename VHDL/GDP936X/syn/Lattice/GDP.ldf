@@ -13,9 +13,6 @@
         <Source name="../../vhdl/rtl/gdp_global-p.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
-        <Source name="../../vhdl/rtl/gdp_top.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
         <Source name="../../vhdl/rtl/gdp_decoder.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
@@ -74,6 +71,9 @@
             <Options/>
         </Source>
         <Source name="../../vhdl/rtl/gdp_font_ram.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../../vhdl/rtl/gdp_top.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
         <Source name="../../../vhdl/rtl/SPI_Vdip.vhd" type="VHDL" type_short="VHDL">

@@ -179,6 +179,10 @@ START:
 ;     move.b (GPIO_SFR_BASE+4).w,d0
    
 ;    lea $400,a1
+    lea FLASH_START,a0
+    move.l (a0)+,d0
+    move.l (a0),d1
+
 ;    move.l #$00980098,($55*4,a0)
 ;    move.l ($20*2,a0),(a1)+
 ;    move.l ($22*2,a0),(a1)+
@@ -193,6 +197,7 @@ START:
 
 ;    move.w #80,d0
 ;    bsr fill_buffer
+
 ;    lea FLASH_START,a0
 ;;    bsr erase_flash
 ;;    bsr erase_sectors
@@ -1381,6 +1386,7 @@ msgLen:
 
 
     END    START            * last line of source
+
 
 
 

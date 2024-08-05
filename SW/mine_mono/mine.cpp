@@ -16,6 +16,7 @@
 #define RIGHT 0x04u
 static int16_t mouse_x;
 static int16_t mouse_y;
+static bool mouse_present;
 
 typedef enum{
     none_e = 0u,
@@ -42,15 +43,18 @@ int main(int argc, char *argv[])
 #ifdef USE_GDP_FPGA
    if (!((sysinfo & (IS_08 | IS_00 | IS_20 | GDP_FPGA | UHR)) == ((IS_08 << PADDING) | GDP_FPGA | UHR))) {
 #else
-    if (!((sysinfo & (IS_08 | IS_00 | IS_20 | GDP_HS | UHR)) == ((IS_08 << PADDING) | GDP_HS | UHR))) {
+    if (((sysinfo & (IS_08 | IS_00 | IS_20)) != ((IS_08 << PADDING))) ||
+        ((sysinfo & (GDP_FPGA | GDP_HS))==0) ||
+        ((sysinfo & UHR)==0)) {
 #endif
       #if(cpu==1)
-         puts("Nicht unterstuetzte Systemkonfiguration.\r\nSie benoetigen eine GDP-HS sowie eine 68008 CPU!\r\n");
+         iprintf("Nicht unterstuetzte Systemkonfiguration: 0x%08X\r\nSie benoetigen eine GDP-HS sowie eine 68008 CPU und eine Uhr!\r\n",(unsigned int)sysinfo & (IS_08 | IS_00 | IS_20 | GDP_HS | UHR));
       #else
          puts("Nicht unterstuetzte Systemkonfiguration.\r\nSie benoetigen eine GDP-HS sowie eine 68000 CPU!\r\n");
       #endif
       return 0;
    }
+   mouse_present = ((sysinfo & GDP_FPGA)!=0);
 
     gp_clearscreen();
     bool beginner_mode = true;
@@ -142,6 +146,7 @@ int main(int argc, char *argv[])
 
         result = play_game(myboard);
     }while(result==0);
+
     const uint8_t y_size = myboard.get_board_height() + 1;
     if(result<0) {
 	    play_explosion();
@@ -228,43 +233,47 @@ static int16_t play_game(board& myboard) {
     int16_t dx=0;
     int16_t dy=0;
     int16_t result = 0;
-    static uint8_t old_mouse_keys =0u;
-    static bool mouse_init = true;
-    const uint8_t keys     = gp_get_mouse(&dx, &dy);
 
-    if((dx!=0) || (dy!=0) || (keys!=0u)) {
-        if(!mouse_init) {
-            // delete old mouse pointer
+    if (mouse_present) {
+        static uint8_t old_mouse_keys =0u;
+        static bool mouse_init = true;
+
+        const uint8_t keys     = gp_get_mouse(&dx, &dy);
+
+        if((dx!=0) || (dy!=0) || (keys!=0u)) {
+            if(!mouse_init) {
+                // delete old mouse pointer
+                draw_mouse_pointer();
+            }
+
+            mouse_init=false;
+            mouse_x = limit_value(mouse_x+(dx*2),0, X_RES-1);
+            mouse_y = limit_value(mouse_y+dy,0, Y_RES-1);
+
+            uint16_t x = (mouse_x - CCNV_X(BOARD_X)) / (4u*X_SCALE);
+            uint16_t y = (mouse_y - CCNV_Y(BOARD_Y)) / (4u*Y_SCALE);
+
+            if((((keys & ~old_mouse_keys) & L_BUTTON)!=0u)) {
+                result = myboard.click_field(x,y);
+            }else if((((keys & ~old_mouse_keys) & R_BUTTON)!=0u)) {
+                result = myboard.rclick_field(x,y);
+            }
             draw_mouse_pointer();
-        }
 
-        mouse_init=false;
-        mouse_x = limit_value(mouse_x+(dx*2),0, X_RES-1);
-        mouse_y = limit_value(mouse_y+dy,0, Y_RES-1);
+            if((result==0) && myboard.check_done()) {
+                result=1;
+            }
 
-        uint16_t x = (mouse_x - CCNV_X(BOARD_X)) / (4u*X_SCALE);
-        uint16_t y = (mouse_y - CCNV_Y(BOARD_Y)) / (4u*Y_SCALE);
-
-        if((((keys & ~old_mouse_keys) & L_BUTTON)!=0u)) {
-            result = myboard.click_field(x,y);
-        }else if((((keys & ~old_mouse_keys) & R_BUTTON)!=0u)) {
-            result = myboard.rclick_field(x,y);
-        }
-        draw_mouse_pointer();
-
-        if((result==0) && myboard.check_done()) {
-            result=1;
+            if((((~keys & old_mouse_keys) & L_BUTTON)!=0u)) {
+                // left Mousebutton released
+                draw_mouse_pointer();
+                myboard.release();
+                draw_mouse_pointer();
+            }
+            old_mouse_keys = keys;
+            result =  ((keys & (L_BUTTON | R_BUTTON))==(L_BUTTON | R_BUTTON))?0xffu:result;
         }
     }
-    if((((~keys & old_mouse_keys) & L_BUTTON)!=0u)) {
-        // left Mousebutton released
-        draw_mouse_pointer();
-        myboard.release();
-        draw_mouse_pointer();
-    }
-    old_mouse_keys = keys;
-    result =  ((keys & (L_BUTTON | R_BUTTON))==(L_BUTTON | R_BUTTON))?0xffu:result;
-
     const key_cmd_t keybd  = decode_keyboard();
     // Play with keyboard
     if (keybd != none_e) {

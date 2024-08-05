@@ -1,4 +1,4 @@
-<Project ModBy="Analyzer" Name="C:/working/_nkc_git_avg/nkc_hpe_mini_lec/nkc/syn/nkc_soc_reveal.rvs" Date="2023-05-30">
+<Project ModBy="Analyzer" Name="C:/working/_nkc_git_avg/nkc/VHDL/nkc_hpe_mini_lec/nkc/syn/nkc_soc_reveal.rvs" Date="2024-01-23">
  <Core Name="soc_top_LA0">
   <Setting>
    <Capture SamplesPerTrig="1024" NumTrigsCap="1"/>
