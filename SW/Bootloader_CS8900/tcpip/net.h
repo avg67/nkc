@@ -160,7 +160,7 @@ extern UC_SOCKET  uc_socket[MAX_SOCK];  // My (User's) Sockets!
 
 
 /**********************************************************************************
-* The public buffers in XRAM
+* The public buffers in RAM
 **********************************************************************************/
 
 // RX-Buffer (1)
@@ -277,9 +277,6 @@ uint16_t poll_net(void);
 uchar Init_net(void);
 
 
-
-
-
 #ifdef DEBUG_REC
 
 // --- Debugging stuff (only available if DEBUG_REC defined )
@@ -293,6 +290,5 @@ uchar show_frame(uint16_t no);
 
 /**********************************************************************************/
 
-//void bmove(char * psrc, char * pdest, unsigned int count);
 #endif
 // EOF

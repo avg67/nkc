@@ -34,7 +34,7 @@ static inline const char* parse_string(const int argc, char **argp, const uint16
     return p_string;
 }
 
-uint32_t parse_ip_string(const char* const ip_str)
+static uint32_t parse_ip_string(const char* const ip_str)
 {
     uint8_t s_idx=0;
     uint8_t part=0;
