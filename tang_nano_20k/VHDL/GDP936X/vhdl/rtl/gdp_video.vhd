@@ -37,6 +37,7 @@ entity gdp_video is
        scroll_i      : in  std_ulogic_vector(6 downto 0);
        color_mode_i  : in  std_ulogic :='0';
        enable_i      : in  std_ulogic;
+       fifo_ur_o     : out  std_ulogic;   -- fifo_underrun
        -----------------------------
        clut_we_i     : in  std_ulogic;
        clut_addr_i   : in  std_ulogic_vector(3 downto 0);
@@ -98,6 +99,7 @@ architecture rtl of gdp_video is
   signal Line                : unsigned(Stages_c-1 downto 0);
   signal HSYNC, VSYNC, VidEn : std_ulogic;
   signal VidEn1              : std_ulogic;
+  signal blank,valid_line    : std_ulogic;
   signal Pixel               : std_ulogic_vector(7 downto 0);
   signal delay               : natural range 0 to 100;
   signal run                 : std_ulogic;
@@ -105,7 +107,7 @@ architecture rtl of gdp_video is
 --  signal next_Pixel_count    : unsigned(2 downto 0);
   signal rd_data,next_rd_data: std_ulogic_vector(31 downto 0);
   signal set_rd_data         : std_ulogic; 
-  
+  signal color_mode_reg      : std_ulogic; 
 
   signal rd_state,next_rd_state         : rd_state_t;
   signal next_rd_addr                   : std_ulogic_vector(rd_addr_o'range);
@@ -148,12 +150,14 @@ begin
          WrEn          => rd_data_valid_i,
          RdEn          => fifo_rden,
 
-         AlmostEmptyTh => X"8",
+         AlmostEmptyTh => "10000",
          Almost_Empty  => fifo_ae,
          Q             => fifo_dout,
          Empty         => fifo_empty,
          Full          => fifo_full
       );
+
+   fifo_ur_o <= fifo_empty and fifo_rden;
 
   -- http://info.electronicwerkstatt.de/bereiche/monitortechnik/vga/Standard-Timing/
   -- 40 MHz (VGA2)
@@ -183,30 +187,34 @@ begin
   --                                    S   1   4     23
   -- Vertical:   ---- 512 ----|---44----| VFP | VS | VBP |---44----|
   
-  
-  VidEn <= '1' when q < 512 and Line < 512 else
+  valid_line <= '1' when  Line < 512 else
+                '0';
+  VidEn <= '1' when q < 512 and valid_line='1' else
            '0';
-  VidEn1 <= '1' when (q = to_unsigned(HMAX_c-1, Stages_c) or q < 511) and Line < 512 else
+  VidEn1 <= '1' when (q = to_unsigned(HMAX_c-1, Stages_c) or q < 511) and valid_line='1' else
             '0'; 
   -- blank generation 
   -- blank_o <= '1' when (Line > 515 and Line < VMAX_c - 2) or (q > 515 and q < HMAX_c - 2) else '0';
   --blank_o <= '1' when (Line > 513 and Line < 627) or (q > 513 and q < 1055) else '0';
-  blank_o <= '1' when (Line > 556 and Line < 561) else '0';
+  blank <= '1' when (Line > 556 and Line < 561) else 
+           '0';
   --blank_o <= '1' when (q > 513 and q < 1050) else '0';
+  blank_o <= blank;
   
   
   
   vid : process(clk_i, reset_n_i,cx1_i,cx2_i,cy1_i,cy2_i,hwcuren_i)                 -- Generierung von VSync, HSync etc.
   begin
     if reset_n_i = '0' then
-      HSYNC       <= '0'; 
-      Line        <= to_unsigned(512 + 44 + VFRONT_PORCH_c-1, Stages_c);
-      VSYNC       <= '0';
-      q           <= (others => '0');
-      frame_start <= '0';
-      vreset_done <= '0';
-      run         <= '0';
-      delay       <= 100;
+      HSYNC          <= '0'; 
+      Line           <= to_unsigned(512 + 44 + VFRONT_PORCH_c-1, Stages_c);
+      VSYNC          <= '0';
+      q              <= (others => '0');
+      frame_start    <= '0';
+      vreset_done    <= '0';
+      run            <= '0';
+      delay          <= 100;
+      color_mode_reg <= '0';
 --      line_start  <= '0'; 
     elsif rising_edge(clk_i) then
       if clk_en_i = '1' then
@@ -215,9 +223,11 @@ begin
          if run='0' then
             if delay/=0 then
                delay <= delay - 1;
+               if delay=10 then
+                  vreset      <= '1';
+               end if;
             else
                run         <= '1';
-               vreset      <= '1';
             end if;
          else
      --      line_start  <= '0'; 
@@ -262,8 +272,9 @@ begin
              if Line = to_unsigned(512 + 44 + VFRONT_PORCH_c-1, Stages_c) then
                VSYNC <= '1'; -- activate VSync              -- VSync setzen
              elsif Line = to_unsigned(512 + 44 + VFRONT_PORCH_c + VSYNC_c -1, Stages_c) then
-               VSYNC       <= '0';                       -- nach VSyncPhase VSync löschen und frame_start setzen              
-               frame_start <= '1';
+               VSYNC          <= '0';                       -- nach VSyncPhase VSync löschen und frame_start setzen              
+               frame_start    <= '1';
+               color_mode_reg <= color_mode_i;
              elsif Line = to_unsigned(VMAX_c-1, Stages_c) then
                Line <= (others => '0');                  -- Am Bildende Line wieder auf 0
              end if;
@@ -281,12 +292,12 @@ begin
    debug2 <=rd_address(6 downto 0);
    debug3 <=rd_address(rd_address'high downto 7);
 
-   process(debug2, viden, viden1)
-   begin
-      if (viden1 and not viden)='1' then
-         assert debug2=16 report "Address error" severity warning;
-      end if;
-   end process;
+   --process(debug2, viden, viden1)
+   --begin
+   --   if (viden1 and not viden)='1' then
+   --      assert debug2=48 report "Address error" severity warning;
+   --   end if;
+   --end process;
    
    process(rd_data_valid_i)
       variable re: time;
@@ -302,8 +313,8 @@ begin
    end process;
 -- pragma translate_on
 
-  MEM_RD_FSM_COMB: process(mem_rd_state, enable_i, frame_start, Line, color_mode_i,
-                           HSYNC,VSYNC,q,fifo_ae,rd_busy_i,rd_address)
+  MEM_RD_FSM_COMB: process(mem_rd_state, enable_i, frame_start, Line, color_mode_reg,
+                           HSYNC,VSYNC,q,fifo_ae,rd_busy_i,rd_address,VidEn)
   begin 
     next_mem_rd_state <= mem_rd_state;
     next_rd_address   <= rd_address;
@@ -318,7 +329,7 @@ begin
             next_mem_rd_state <= mem_dly_e;
             if not color_support_c then
                next_rd_address     <= to_unsigned(255*512/(32),next_rd_address'length); -- last line
-            elsif color_mode_i = '0' then
+            elsif color_mode_reg = '0' then
                -- 4 bit / Pixel (256x512)
                next_rd_address     <= to_unsigned(255*512/4,next_rd_address'length); -- last line
             else
@@ -335,8 +346,8 @@ begin
          if rd_busy_i='0' then
             next_mem_rd_state    <= mem_s1_e;
             if unsigned(rd_address(6 downto 0)) = LINE_MAX_c then
-               next_rd_address(6 downto 0)               <= "0000000";
-               if color_mode_i = '1' or Line(0) = '1' then
+               next_rd_address(6 downto 0) <= "0000000";
+               if color_mode_reg = '1' or Line(0) = '1' then
                   next_rd_address(rd_address'high downto 7) <= rd_address(rd_address'high downto 7) - 1;
 -- pragma translate_off
                   debug4 <= (others => '0');
@@ -388,92 +399,69 @@ begin
     end if;
   end process;
 
-  RD_FSM_COMB: process(rd_state,fifo_dout,rd_address, rd_data,
+  RD_FSM_COMB: process(rd_state,fifo_dout,rd_address, rd_data, Line, fifo_empty,
                        rd_ack_i,rd_busy_i, VidEn, VidEn1, q, frame_start, 
-                       HSYNC,VSYNC,enable_i, color_mode_i,fifo_empty)
+                       HSYNC,VSYNC,enable_i, color_mode_reg,fifo_empty,valid_line)
   begin
     next_rd_state       <= rd_state;
 --    next_Pixel_count    <= Pixel_count;
     next_rd_data        <= (others => '-');
     set_rd_data         <= '0';
-    --next_rd_req         <= '0';
     fifo_rden           <= '0';
    
     case rd_state is       
       when idle_e =>
         -- currently no data available. do a prefetch
+        -- empty fifo
+        if fifo_empty='0' then
+          fifo_rden  <= '1';
+        end if;
         if frame_start = '1' then
           --next_rd_req   <= '1';
           next_rd_state <= s1_e;
         end if;
-        
-      --when wait_ack_e =>
-      --  if rd_busy_i='0' then
-      --    next_rd_state    <= s1_e;
-      --    set_rd_data      <= '1';
-      --    next_rd_data     <= fifo_dout;
-      --  end if;
-      
+
       when s1_e => 
-        --next_rd_req  <= '1';
---        if color_mode_i='0' then
---          next_rd_state    <= s2_e;
---        else
---          next_rd_state    <= s1a_e;
---        end if;
-        if fifo_empty='0' then
+        if VSYNC='1' then
+            next_rd_state    <= idle_e;
+        elsif fifo_empty='0' and valid_line='1' and HSYNC='1' then
             next_rd_state    <= s2_e;
             set_rd_data      <= '1';
+            next_rd_data     <= std_ulogic_vector(fifo_dout);
+            -- Debug
+            --if Line(0) ='1' then
+            --  next_rd_data(31 downto 24) <= (others => '1');
+            --end if;
             fifo_rden        <= '1';
         end if;
-        
---      when s1a_e => 
---        if VidEn1 ='1' then
---          --next_rd_req      <= '1';
---          next_rd_state    <= s2_e;
---        end if;
---        if VSYNC = '1' then
---          next_rd_state   <= idle_e;
---          --next_rd_req     <= '0';
---        end if;
-        
+
       when s2_e =>  
-        -- process odd pixel (15 downto 8)
         if VidEn ='1' then
         --if ((VidEn and not color_mode_i) or (VidEn1 and color_mode_i))='1' then
           if (not HSYNC and not VSYNC) = '1' then
             if not color_support_c then
-              if unsigned(q(4 downto 0)) = 31 then
-                set_rd_data      <= '1';
-                next_rd_data     <= std_ulogic_vector(fifo_dout);
-                fifo_rden        <= '1';
-                --next_rd_req      <= '1';
-              else
-                set_rd_data     <= '1';
-                next_rd_data    <= std_ulogic_vector(shift_left(unsigned(rd_data),1)); -- 8 pixel per byte 
-              end if;
---            elsif color_mode_i = '0' then
---              -- 4bit / Pixel
---              if unsigned(q(2 downto 0))=7 then
---                set_rd_data      <= '1';
---                next_rd_data     <= fifo_dout;
---                --next_rd_req      <= '1';
---                fifo_rden        <= '1';
---              else
---                set_rd_data               <= '1';
---                next_rd_data(31 downto 4) <= rd_data(27 downto 0); -- 4 pixel per Byte
---              end if;
+                if unsigned(q(4 downto 0)) = 31 then
+                    set_rd_data      <= '1';
+                    next_rd_data     <= std_ulogic_vector(fifo_dout);
+                    fifo_rden        <= '1';
+                else
+                    set_rd_data     <= '1';
+                    next_rd_data    <= std_ulogic_vector(shift_left(unsigned(rd_data),1)); -- 8 pixel per byte 
+                end if;
             else
                -- 8bit / Pixel
-              if unsigned(q(1 downto 0))=3 then
-                set_rd_data      <= '1';
-                next_rd_data     <= std_ulogic_vector(fifo_dout);
-                --next_rd_req      <= '1';
-                fifo_rden        <= '1';
-              else
-                set_rd_data               <= '1';
-                next_rd_data(31 downto 8) <= rd_data(23 downto 0); -- 4 pixel per Byte
-              end if;
+                if unsigned(q(1 downto 0))=3 then
+                    if VidEn1='1' then
+                      set_rd_data      <= '1';
+                      next_rd_data     <= std_ulogic_vector(fifo_dout);
+                      fifo_rden        <= '1';
+                    else
+                      next_rd_state   <= s1_e;
+                    end if;
+                else
+                    set_rd_data               <= '1';
+                    next_rd_data(31 downto 8) <= rd_data(23 downto 0); -- 4 pixel per Byte
+                end if;
             end if;
           end if;
         --elsif color_mode_i='1' then
@@ -481,7 +469,6 @@ begin
         end if;     
         if VSYNC = '1' then
           next_rd_state   <= idle_e;
-          --next_rd_req     <= '0';
           fifo_rden       <= '0';
         end if;
                 
@@ -493,15 +480,15 @@ begin
     end if;    
   end process;
   
-  process(clk_i,reset_n_i,color_mode_i)
+  process(clk_i,reset_n_i,color_mode_reg)
   begin
     if reset_n_i ='0' then
       rd_state       <= idle_e;
       if not color_support_c then
         rd_address     <= to_unsigned(255*512/(32),rd_address'length); -- last line
-      elsif color_mode_i = '1' then
-        -- 8 bit / Pixel (512x512)
-        rd_address     <= to_unsigned(511*512/4,rd_address'length); -- last line
+--      elsif color_mode_reg = '1' then
+--        -- 8 bit / Pixel (512x512)
+--        rd_address     <= to_unsigned(511*512/4,rd_address'length); -- last line
       else
         -- 4 bit / Pixel (256x512)
         rd_address     <= to_unsigned(255*512/4,rd_address'length); -- last line
@@ -522,74 +509,14 @@ begin
   --      Pixel_count    <= next_Pixel_count;
         if enable_i = '1' then
             rd_address <= next_rd_address;
---          if next_rd_req='1' then
---            wait_not_busy<='1';
---            if color_support_c then
---               if color_mode_i = '0' then
---                  -- 4 bit / Pixel
---                  if rd_address(5 downto 0) = "111111" then
---                     rd_address(5 downto 0) <= "000000";
---                     if Line(0) = '1' then
---                        rd_address(rd_address'high downto 6) <= rd_address(rd_address'high downto 6) - 1;
---                     end if;
---                  else
---                     rd_address(5 downto 0) <= rd_address(5 downto 0) + 1;
---                  end if;
---               else
---                  -- 8 bit / Pixel
---                  if rd_address(6 downto 0) = "1111111" then
---                     rd_address(6 downto 0) <= "0000000";
---                     rd_address(rd_address'high downto 7) <= rd_address(rd_address'high downto 7) - 1;
---                  else
---                     rd_address(6 downto 0) <= rd_address(6 downto 0) + 1;
---                  end if;
---               end if;
---            end if;
---          elsif wait_not_busy='1' and rd_busy_i='0' then
---            wait_not_busy <='0';
---            if not color_support_c then
---              if rd_address(3 downto 0) = "1111" then
---                rd_address(3 downto 0) <= "0000";
---                if Line(0) = '1' then
---                  rd_address(rd_address'high-2 downto 4) <= rd_address(rd_address'high-2 downto 4) - 1;
---                end if;
---              else
---                rd_address(3 downto 0) <= rd_address(3 downto 0) + 1;
---              end if;
---            end if;
---          elsif wait_not_busy='0' and next_rd_req='0' and rd_busy_i='0' and VSYNC='1' then
---            if not color_support_c then
---              rd_address     <= to_unsigned(255*512/(8*4),rd_address'length); -- last line
---            elsif color_mode_i = '0' then
---              -- 4 bit / Pixel
---              rd_address     <= to_unsigned(255*512/(2*4),rd_address'length); -- last line
---            else
---               -- 8 bit / Pixel
---               rd_address     <= to_unsigned(511*512/4,rd_address'length); -- last line
---            end if;
---    --        rd_address <= (others => '0');
---          end if;
---        else
---          wait_not_busy <= '0';
---          if not color_support_c then
---            rd_address <= to_unsigned(255*512/(8*2),rd_address'length); -- last line
---            rd_data(7) <= '0';
---          elsif color_mode_i = '0' then
---            -- 4 bit / Pixel
---            rd_address <= to_unsigned(255*512/(2*2),rd_address'length); -- last line
---            rd_data    <= (others => '0');
---          else
---            rd_address <= to_unsigned(511*512/2,rd_address'length); -- last line
---            rd_data    <= (others => '0');
---          end if;
         end if;
       end if;
     end if;
   end process;
   
   color_pixel: if color_support_c generate
-  Pixel    <= "0000" & rd_data(31 downto 28) when isCursor = '0' and color_mode_i = '0' else
-              rd_data(31 downto 24) when isCursor = '0' and color_mode_i = '1' else
+  Pixel    <= "0000" & rd_data(31 downto 28) when isCursor = '0' and color_mode_reg = '0' else
+              rd_data(31 downto 24) when isCursor = '0' and color_mode_reg = '1' else
               curcol_i;
   end generate;
   
@@ -598,10 +525,23 @@ begin
               "00000001";
   end generate;
            
+  process(rd_address, scroll_i, color_mode_reg)
+    variable tmp_v : unsigned(rd_address'range);
+  begin
+    if color_support_c then
+      tmp_v := rd_address + (unsigned(scroll_i) & "00000000");
+      if color_mode_reg='0' then
+         tmp_v(rd_address'high downto 15):=(others => '0');
+      end if;
+    else
+      tmp_v :=  "0000" & rd_address(12 downto 0) + (unsigned(scroll_i) & "00000");
+    end if;
+    next_rd_addr <= std_ulogic_vector(tmp_v);
+  end process;
+  
   rd_req_o     <= next_rd_req;
-  rd_addr_o    <= next_rd_addr;
-  next_rd_addr <= std_ulogic_vector(rd_address + (unsigned(scroll_i) & "0000000")) when color_support_c else
-                 "0000" & std_ulogic_vector(rd_address(12 downto 0) + (unsigned(scroll_i) & "00000"));
+  rd_addr_o  <= next_rd_addr;
+  
    --process(clk_i)
    --begin
    --   if rising_edge(clk_i) then
@@ -649,7 +589,7 @@ begin
       if rising_edge(clk_i) then
         if clk_en_i = '1' then
           if VidEn='1' then
-            if color_mode_i = '0' then
+            if color_mode_reg = '0' then
                rgb_pixel <= lookup(Pixel(3 downto 0));
             else
                rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 3) & Pixel(3) & Pixel(2 downto 0);
@@ -671,7 +611,7 @@ begin
          if rising_edge(clk_i) then
             if clk_en_i = '1' then
                if (VidEn and enable_i)='1' then
-                  if color_mode_i = '0' then
+                  if color_mode_reg = '0' then
                      rgb_pixel <= std_ulogic_vector(clut_q);
                   else
                      --           R                   G                   B

@@ -37,7 +37,7 @@ architecture beh of gdp_tb is
   signal Clk     : std_logic := '1';
   signal CPU_Clk : std_logic := '1';
   -- component ports
-  signal reset_i     : std_ulogic;
+  signal reset_n_i   : std_ulogic;
   signal nkc_DB_buf  : std_logic_vector(7 downto 0); 
   signal nkc_DB      : std_logic_vector(7 downto 0);
   signal nkc_ADDR    : std_ulogic_vector(7 downto 0);
@@ -57,6 +57,7 @@ architecture beh of gdp_tb is
   signal SDRAM_nCS  : STD_LOGIC;
   signal SDRAM_BA   : std_logic_vector(1 downto 0);
   signal SDRAM_CLK  : STD_LOGIC;
+  --signal SDRAM_CLK_neg : std_logic;
   signal SDRAM_CKE  : STD_LOGIC;
 
   signal SDRAM_DQ1   : std_logic_vector(31 downto 0);
@@ -95,7 +96,7 @@ begin  -- beh
   DUT: entity work.gdp_gowin_top
     generic map(sim_g => false)
     port map (
-      reset_i   => reset_i,
+      reset_n_i   => reset_n_i,
 --      addr_sel_i  => '1',
       refclk_i    => clk,
 --      RxD_i       => TxD,
@@ -116,7 +117,7 @@ begin  -- beh
 --      SD_nCS_o    => SD_nCS,
 --      SD_MOSI_o   => SD_MOSI,
 --      SD_MISO_i   => SD_MOSI,
-      O_sdram_clk   => SDRAM_CLK,
+      O_sdram_clk   => SDRAM_CLK, --SDRAM_CLK_neg,
       O_sdram_cke   => SDRAM_CKE,
       O_sdram_cs_n  => SDRAM_nCS,
       O_sdram_cas_n => SDRAM_nCAS,
@@ -142,10 +143,10 @@ begin  -- beh
   Clk     <= not Clk after 18.51851859 ns; -- 27 MHz
   CPU_Clk <= not CPU_Clk after 40 ns; -- ~12.5 MHz
 
-  nkc_DB_buf <= nkc_DB after 5 ns when driver_nEN = '0' and driver_DIR = '0' else
+  nkc_DB_buf <= nkc_DB after 5 ns when driver_nEN = '0' and driver_DIR = '1' else
                 (others => 'Z') after 5 ns;
 
-  nkc_DB     <= nkc_DB_buf(nkc_DB'range) after 5 ns when driver_nEN = '0' and driver_DIR = '1' else
+  nkc_DB     <= nkc_DB_buf(nkc_DB'range) after 5 ns when driver_nEN = '0' and driver_DIR = '0' else
                 (others => 'Z') after 5 ns;
 
 --  SRAM_DB <= std_logic_vector(SRAM_data_o) after 1 ns when (SRAM_ena_o and SRAM_we_o)='1' else
@@ -187,7 +188,7 @@ begin  -- beh
 --      A   => SRAM_Addr(16 downto 0),
 --      D   => SRAM_DB(7 downto 0)
 --    );
-
+--  SDRAM_CLK <= not SDRAM_CLK_neg;
   DRAM_1: entity work.sdram_sim_model
     port map (
       Dq     => SDRAM_DQ,
@@ -527,11 +528,12 @@ begin  -- beh
     m68k_nRW <= '1';
     m68k_nDS <= '1';
 
-    reset_i  <= '1', '0' after 150 ns;
+    reset_n_i  <= '0', '1' after 150 ns;
     wait for 100 us;
     --wait for 10 ms;
     wait until CPU_Clk'event and CPU_Clk='1';
     
+    write_bus(X"61",X"08");  -- HSCROLL
     write_bus(X"70",X"07");  -- Clear Screen
     wait_ready;
     write_bus(X"71",X"03");  --  CTRL1 = 3
@@ -539,10 +541,45 @@ begin  -- beh
     --wait_ready;
     line(511,0,511,255);
     wait_ready;
-    write_bus(X"60",X"01");  -- XOR Mode
-    line(0,0,255,0);
+    line(0,0,511,0);
+    wait_ready;
+    line(511,0,511,255);
     wait_ready;
     line(0,0,0,255);
+    wait_ready;
+    --write_bus(X"60",X"01");  -- XOR Mode
+    --line(0,0,255,0);
+    --wait_ready;
+    --line(0,0,0,255);
+
+    wait_ready;
+    write_bus(X"60",X"00");  -- XOR Mode=0
+    
+    write_bus(X"70",X"05");  -- Home
+    wait_ready;
+    write_bus(X"70",X"41");  -- 'A'
+    wait_ready;
+    write_bus(X"70",X"42");  -- 'B'
+    wait_ready;
+    write_bus(X"70",X"43");  -- 'C'
+    wait_ready;
+    write_bus(X"70",X"44");  -- 'D'
+    wait_ready;
+    write_bus(X"70",X"45");  -- 'E'
+    wait_ready;
+    write_bus(X"70",X"46");  -- 'F'
+    wait_ready;    
+    write_bus(X"70",X"47");  -- 'G'
+    wait_ready; 
+
+    write_bus(X"60",X"40");  -- Page 1
+    write_bus(X"70",X"07");  -- Clear Screen
+    wait_ready;
+    write_bus(X"60",X"80");  -- Page 2
+    write_bus(X"70",X"07");  -- Clear Screen
+    wait_ready;
+    write_bus(X"60",X"C0");  -- Page 3
+    write_bus(X"70",X"07");  -- Clear Screen
     wait_ready;
     
     

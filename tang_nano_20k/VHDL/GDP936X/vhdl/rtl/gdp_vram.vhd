@@ -30,7 +30,7 @@ entity gdp_vram is
     kernel_req_i      : in  std_ulogic;
     kernel_wr_i       : in  std_ulogic;
     kernel_clrscr_i   : in  std_ulogic;
-    kernel_addr_i     : in  std_ulogic_vector(17 downto 0);
+    kernel_addr_i     : in  std_ulogic_vector(19 downto 0);
     kernel_data_i     : in  std_ulogic_vector(7 downto 0);
     kernel_data_o     : out std_ulogic_vector(7 downto 0);
     kernel_busy_o     : out std_ulogic;
@@ -38,7 +38,7 @@ entity gdp_vram is
 
     -- video port (only read)
     rd_req_i          : in  std_ulogic;
-    rd_addr_i         : in  std_ulogic_vector(15 downto 0);
+    rd_addr_i         : in  std_ulogic_vector(17 downto 0);
     rd_data_o         : out std_ulogic_vector(31 downto 0);
     rd_data_valid_o   : out std_ulogic;
     rd_busy_o         : out std_ulogic;
@@ -174,7 +174,7 @@ begin
     procedure do_kernel_acc_p is
     begin
       set_ram_address      <= '1';
-      next_ram_address     <= "00000" & kernel_addr_i(17 downto 2);
+      next_ram_address     <= "000" & kernel_addr_i(19 downto 2);
       next_ram_wren        <= kernel_wr_i;
       next_sdrc_read_burst <= '0';
       --if kernel_addr_i(19)='1' then
@@ -218,7 +218,7 @@ begin
     procedure do_vid_rd_p is
     begin
       set_ram_address  <= '1';
-      next_ram_address <= "00000" & rd_addr_i;
+      next_ram_address <= "000" & rd_addr_i;
       --if rd_addr_i(18)='1' then
       --  next_ram_en <= "10";
       --else

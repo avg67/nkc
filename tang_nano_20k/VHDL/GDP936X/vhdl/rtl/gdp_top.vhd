@@ -76,7 +76,7 @@ architecture rtl of gdp_top is
   signal kernel_req      : std_ulogic;
   signal kernel_wr       : std_ulogic;
   signal kernel_clrscr   : std_ulogic;
-  signal kernel_addr     : std_ulogic_vector(17 downto 0);
+  signal kernel_addr     : std_ulogic_vector(19 downto 0);
   signal kernel_addr1    : std_ulogic_vector(17 downto 0);
   signal kernel_rd_data  : std_ulogic_vector(7 downto 0);
   signal kernel_wr_data  : std_ulogic_vector(7 downto 0);
@@ -84,7 +84,7 @@ architecture rtl of gdp_top is
   --signal kernel_ack      : std_ulogic;
 
   signal vid_rd_req      : std_ulogic;
-  signal vid_rd_addr     : std_ulogic_vector(15 downto 0);
+  signal vid_rd_addr     : std_ulogic_vector(17 downto 0);
   signal vid_rd_addr1    : std_ulogic_vector(15 downto 0);
   signal vid_rd_data     : std_ulogic_vector(31 downto 0);
   signal vid_rd_data_valid : std_ulogic;
@@ -168,12 +168,11 @@ begin
   pixel_green_o <= pixel_green;
   pixel_blue_o  <= pixel_blue;
 
---  vid_rd_addr <= page_reg(2 downto 1) & "00" & vid_rd_addr1(14 downto 0) when color_support_c and color_mode = '0' else
---                 page_reg(2 downto 1)        & vid_rd_addr1 when color_support_c and color_mode = '1' else
---                 page_reg(2 downto 1)&"0000" & vid_rd_addr1(12 downto 0);
-  vid_rd_addr <= page_reg(2 downto 1) & vid_rd_addr1(13 downto 0) when color_support_c and color_mode = '0' else
-                 vid_rd_addr1 when color_support_c and color_mode = '1' else
-                 "00" & page_reg(2 downto 1) & vid_rd_addr1(11 downto 0);
+--  vid_rd_addr <= page_reg(2 downto 1) & vid_rd_addr1(13 downto 0) when color_support_c and color_mode = '0' else
+--                 vid_rd_addr1 when color_support_c and color_mode = '1' else
+--                 "00" & page_reg(2 downto 1) & vid_rd_addr1(11 downto 0);
+  vid_rd_addr <= page_reg(2 downto 1) & vid_rd_addr1 when color_support_c else
+                 "0000" & page_reg(2 downto 1) & vid_rd_addr1(11 downto 0);
 
 
   kernel: entity work.gdp_kernel
@@ -233,8 +232,8 @@ begin
    --kernel_addr <= page_reg(4 downto 3) & kernel_addr1(15 downto 0) when color_support_c and color_mode ='0' else
    --              kernel_addr1(17 downto 0) when color_support_c and color_mode ='1' else
    --              "00"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
-   kernel_addr <= kernel_addr1(17 downto 0) when color_support_c else
-                 "00"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
+   kernel_addr <= page_reg(4 downto 3) & kernel_addr1(17 downto 0) when color_support_c else
+                  "00"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
   
   vram : entity work.gdp_vram
     port map(

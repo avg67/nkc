@@ -11,7 +11,7 @@ module video2hdmi (
 
           // video control inputs
           input        vreset,   // top/left pixel reached
-          input [1:0]  vvmode,    // Atari ST video mode
+          input [1:0]  vvmode,   // Video Mode
           input        vwide,    // request display on wide (16:9) screen
 
 	      input [2:0]  r,
@@ -30,8 +30,8 @@ module video2hdmi (
 	      output [2:0] tmds_d_p  
 );
    
-wire clk_pixel_x5;   // 160 MHz HDMI clock
-wire clk_pixel;      // at 800x576@50Hz the pixel clock is 32 MHz
+wire clk_pixel_x5;   // 200 MHz HDMI clock
+wire clk_pixel;      // at 800x600@60Hz the pixel clock is 40 MHz
 
 assign clk_40 = clk_pixel;
     
@@ -59,7 +59,7 @@ Gowin_CLKDIV clk_div_5 (
 /* -------------------- HDMI video and audio -------------------- */
 
 // generate 48khz audio clock
-reg clk_audio;
+reg clk_audio = 0;
 reg [8:0] aclk_cnt;
 always @(posedge clk_pixel) begin
     // divisor = pixel clock / 48000 / 2 - 1

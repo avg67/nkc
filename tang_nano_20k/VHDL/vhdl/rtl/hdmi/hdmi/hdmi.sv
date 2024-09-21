@@ -115,7 +115,7 @@ logic [1:0] invert;
 //wire [102:0] timing = timing0;
 
 // demux timing parameters   
-wire [10:0] start_x           = 11'd0; //timing[102:92];
+wire [10:0] start_x           = 11'd8; //timing[102:92];
 
 //wire [10:0] frame_width       = 11'd880; //timing[91:81];
 //wire [10:0] screen_width      = 11'd800; //timing[80:70];
@@ -259,7 +259,19 @@ generate
             .VENDOR_NAME(VENDOR_NAME),
             .PRODUCT_DESCRIPTION(PRODUCT_DESCRIPTION),
             .SOURCE_DEVICE_INFORMATION(SOURCE_DEVICE_INFORMATION)
-        ) packet_picker (.clk_pixel(clk_pixel), .clk_audio(clk_audio), .reset(reset), .cea(cea), .stmode(stmode), .video_field_end(video_field_end), .packet_enable(packet_enable), .packet_pixel_counter(packet_pixel_counter), .audio_sample_word(audio_sample_word), .header(header), .sub(sub));
+        ) packet_picker (
+         .clk_pixel(clk_pixel), 
+         .clk_audio(clk_audio), 
+         .reset(reset), 
+         .cea(cea), 
+         .stmode(stmode), 
+         .video_field_end(video_field_end), 
+         .packet_enable(packet_enable), 
+         .packet_pixel_counter(packet_pixel_counter), 
+         .audio_sample_word(audio_sample_word), 
+         .header(header), 
+         .sub(sub)
+       );
         logic [8:0] packet_data;
         packet_assembler packet_assembler (.clk_pixel(clk_pixel), .reset(reset), .data_island_period(data_island_period), .header(header), .sub(sub), .packet_data(packet_data), .counter(packet_pixel_counter));
 

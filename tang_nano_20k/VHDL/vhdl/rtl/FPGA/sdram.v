@@ -52,7 +52,8 @@ module sdram (
    input read_burst
 );
 
-assign sd_clk = ~clk;
+//assign sd_clk = ~clk;
+assign sd_clk = clk;
 assign sd_cke = 1'b1;  
    
 localparam RASCAS_DELAY   = 3'd1;   // tRCD=15ns -> 1 cycle@32MHz

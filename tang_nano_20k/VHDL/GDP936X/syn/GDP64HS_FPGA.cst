@@ -13,10 +13,11 @@ IO_PORT "*" IO_TYPE=LVCMOS33 PULL_MODE=NONE;
 
 IO_LOC "refclk_i" 4;
 IO_PORT "refclk_i" PULL_MODE=UP;
-//IO_LOC "reset_i" 87;
-//IO_PORT "reset_i" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
+IO_LOC "reset_i" 87;
+IO_PORT "reset_i" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
 IO_LOC "reset_n_i" 29;
 IO_PORT "reset_n_i" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
 
 IO_LOC "nkc_DB[0]" 76;
 IO_PORT "nkc_DB[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
@@ -63,3 +64,10 @@ IO_LOC "driver_nEN_o" 31;
 IO_PORT "driver_nEN_o" IO_TYPE=LVCMOS33;
 IO_LOC "driver_DIR_o" 30;
 IO_PORT "driver_DIR_o" IO_TYPE=LVCMOS33;
+
+IO_LOC "Pixel_o" 72;
+IO_PORT "Pixel_o" IO_TYPE=LVCMOS33
+IO_LOC "Hsync_o" 53;
+IO_PORT "Hsync_o" IO_TYPE=LVCMOS33
+IO_LOC "Vsync_o" 71;
+IO_PORT "Vsync_o" IO_TYPE=LVCMOS33

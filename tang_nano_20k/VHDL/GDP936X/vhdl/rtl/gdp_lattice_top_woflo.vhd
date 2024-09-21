@@ -15,12 +15,13 @@ library IEEE;
 
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use ieee.std_logic_misc.all;
 use work.DffGlobal.all;
 use work.gdp_global.all;
 
 entity gdp_gowin_top is
   generic(sim_g      : boolean := false);
-  port(--reset_i       : in  std_ulogic;
+  port(reset_i       : in  std_ulogic:='0';
        reset_n_i     : in  std_ulogic;
        refclk_i      : in  std_ulogic;
 --       addr_sel_i    : in  std_ulogic;
@@ -80,8 +81,9 @@ entity gdp_gowin_top is
 --       Red_o      : out std_ulogic_vector(2 downto 0);
 --       Green_o    : out std_ulogic_vector(2 downto 0);
 --       Blue_o     : out std_ulogic_vector(2 downto 0);
---       Hsync_o    : out std_ulogic;
---       Vsync_o    : out std_ulogic;
+       Pixel_o      : out std_ulogic;
+       Hsync_o      : out std_ulogic;
+       Vsync_o      : out std_ulogic;
        tmds_clk_n   : out std_logic;
        tmds_clk_p   : out std_logic;
        tmds_d_n     : out std_logic_vector(2 downto 0);
@@ -244,6 +246,10 @@ architecture rtl of gdp_gowin_top is
   signal blue              : std_ulogic_vector(2 downto 0);
   signal vreset            : std_ulogic;
   signal sdram_addr        : std_logic_vector(12 downto 0);
+  signal vvmode            : std_logic_vector(1 downto 0);
+  signal vwide             : std_logic;
+  signal audio0            : std_logic_vector(15 downto 0);
+  signal audio1            : std_logic_vector(15 downto 0);
 begin
 
   dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
@@ -268,7 +274,7 @@ begin
       if rising_edge(pixel_clk) then
         reset_n  <= tmp_v(1);
         tmp_v(1) := tmp_v(0);
-        tmp_v(0) := reset_n_i and pll_lock;
+        tmp_v(0) := (reset_n_i and not reset_i) and pll_lock;
       end if;
     end process reset_sync;
   end generate;
@@ -283,14 +289,14 @@ begin
       clk_40         => pixel_clk,
       pll_lock       => pll_lock,
       vreset         => vreset,
-      vvmode         => "00",
-      vwide          => '0',
+      vvmode         => vvmode,
+      vwide          => vwide,
       r              => red,
       g              => green,
       b              => blue,
       --audio          => audio,
-      audio0         => X"0000",
-      audio1         => X"0000",
+      audio0         => audio0,
+      audio1         => audio1,
       --audio(1)       => audio1,
       tmds_clk_n     => tmds_clk_n,
       tmds_clk_p     => tmds_clk_p,
@@ -298,7 +304,10 @@ begin
       tmds_d_p       => tmds_d_p
     );
 
-
+   vvmode <= "00";
+   vwide  <= '0';
+   audio0 <= (others => '0');
+   audio1 <= (others => '0');
 
   
 --  GDP_EN_SYNC : InputSync
@@ -340,8 +349,7 @@ begin
   fpga_en      <= gdp_cs or key_cs or dip_cs or mouse_cs or ser_cs or 
                   snd_cs or spi_cs or t1_cs or vdip_cs or gpio_cs;
   driver_nEN_o <= not reset_n; --not(output_en and (not nkc_nWR_i or not nkc_nRD_i)); 
-  --driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
-  --                '1';
+
   driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
                   '1';
   
@@ -386,8 +394,8 @@ begin
       pixel_red_o   => red,
       pixel_green_o => green,
       pixel_blue_o  => blue,
-      Hsync_o     => open, --Hsync_o,
-      Vsync_o     => open, --Vsync_o,
+      Hsync_o     => Hsync_o,
+      Vsync_o     => Vsync_o,
       vreset_o    => vreset,
 
 --      kernel_req_o  => kernel_req,
@@ -415,6 +423,8 @@ begin
       sdram_dqm       => O_sdram_dqm,
       monitoring_o    => open --debug_o
     );
+    
+  Pixel_o <= or_reduce(red&green&blue);
   O_sdram_addr <= sdram_addr(O_sdram_addr'range);
 
   gdp_cs <= (IORQ and glob_gdp_en) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
@@ -677,11 +687,11 @@ begin
 --        DataOut_o   => t1_data
 --      );
 --  end generate;
---  no_T1: if not use_timer_c generate
---    t1_data      <= (others =>'0');
---    t1_cs        <= '0';
---    t1_irq       <= '0';
---  end generate;
+  no_T1: if not use_timer_c generate
+    t1_data      <= (others =>'0');
+    t1_cs        <= '0';
+    t1_irq       <= '0';
+  end generate;
   
 --  impl_VDIP: if use_vdip_c generate 
 ----    vdip_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=VDIP_BASE_ADDR_c(7 downto 2) else -- 0x20 - 0x23
