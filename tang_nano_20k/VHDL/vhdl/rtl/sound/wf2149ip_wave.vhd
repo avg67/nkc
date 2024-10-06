@@ -36,6 +36,7 @@ entity WF2149IP_WAVE is
 --        OUT_A       : out std_ulogic;
 --        OUT_B       : out std_ulogic;
 --        OUT_C       : out std_ulogic;
+        SND_OUT     : out std_ulogic_vector(9 downto 0);
         OUT_SUM     : out std_ulogic
     );
 end entity WF2149IP_WAVE;
@@ -503,6 +504,7 @@ begin
         sum_v := resize(unsigned(VOLUME_A),10) + unsigned(VOLUME_B) + unsigned(VOLUME_C);
         sum_v := sum_v + shift_right(sum_v,2);
         SUM_VOL <= std_ulogic_vector(sum_v(9 downto 2));
+        SND_OUT <= std_ulogic_vector(sum_v);
       end if;
     end process;
     

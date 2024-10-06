@@ -51,7 +51,7 @@ vcom -93                  ../vhdl/rtl/Dffdecl-p.vhd \
                           ../../vhdl/rtl/sound/wf2149ip_wave.vhd \
                           ../../vhdl/rtl/sound/dac.vhd \
                           ../../vhdl/rtl/sound/wf2149ip_top_soc.vhd \
-                          ../vhdl/rtl/gdp_lattice_top_woflo.vhd
+                          ../vhdl/rtl/gdp_gowin_top.vhd
 vcom -93  ../vhdl/tb/gdp_bitmap-p.vhd
 #vcom -93  ../vhdl/tb/sram.vhd
 vcom -93  ../vhdl/tb/sram_256x16/package_timing.vhd
@@ -68,10 +68,10 @@ add wave -group {sdram} -noupdate -radix hex /dram_1/*
 add wave -group {Top} -noupdate -radix hex /dut/*
 #add wave -group {sdram_arbiter_top} -noupdate -radix hex /dut/sdram_top_inst/*
 add wave -group {Businterface} -noupdate -radix hex /dut/bi_inst/*
-#add wave -noupdate -divider Keyboard
-#add wave -group {PS2} -noupdate -radix hex /dut/impl_key2/kbd/*
-#add wave -group {PS2_if} -noupdate -radix hex /dut/impl_key2/kbd/PS2if/*
-#add wave -group {PS2_Decoder} -noupdate -radix hex /dut/impl_key2/kbd/PS2dec/*
+add wave -noupdate -divider Keyboard
+add wave -group {PS2} -noupdate -radix hex /dut/impl_key2/kbd/*
+add wave -group {PS2_if} -noupdate -radix hex /dut/impl_key2/kbd/PS2if/*
+add wave -group {PS2_Decoder} -noupdate -radix hex /dut/impl_key2/kbd/PS2dec/*
 #add wave -noupdate -divider Mouse
 #add wave -group {Mouse} -noupdate -radix hex /dut/impl_mouse/mouse/*
 #add wave -group {Mouse} -noupdate -radix hex /dut/impl_mouse/mouse/nkc_mouse/*
@@ -93,11 +93,11 @@ add wave -group {Char} -noupdate -radix hex /dut/gdp/kernel/char/*
 add wave -group {VRAM} -noupdate -radix hex /dut/gdp/vram/*
 add wave -group {sdram_ctrl} -noupdate -radix hex /dut/gdp/vram/sdram_inst/*
 add wave -group {GDP_Top} -noupdate -radix hex /dut/gdp/*
-#add wave -noupdate -divider Sound
-#add wave -group {Sound} -noupdate -radix hex /dut/impl_sound/sound_inst/*
-#add wave -group {Sound_Wave} -noupdate -radix hex /dut/impl_sound/sound_inst/i_psg_wave/*
-#add wave -noupdate -divider
-#add wave -group {Timer1} -noupdate -radix hex /dut/impl_t1/t1/*
+add wave -noupdate -divider Sound
+add wave -group {Sound} -noupdate -radix hex /dut/impl_sound/sound_inst/*
+add wave -group {Sound_Wave} -noupdate -radix hex /dut/impl_sound/sound_inst/i_psg_wave/*
+add wave -noupdate -divider
+add wave -group {Timer1} -noupdate -radix hex /dut/impl_t1/t1/*
 
 TreeUpdate [SetDefaultTree]
 configure wave -signalnamewidth 1

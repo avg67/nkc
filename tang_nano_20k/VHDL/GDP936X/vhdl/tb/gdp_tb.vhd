@@ -99,11 +99,11 @@ begin  -- beh
       reset_n_i   => reset_n_i,
 --      addr_sel_i  => '1',
       refclk_i    => clk,
---      RxD_i       => TxD,
---      TxD_o       => TxD,
+      RxD_i       => TxD,
+      TxD_o       => TxD,
 --      CTS_i       => '1',
---      Ps2Clk_io   => Ps2Clk,
---      Ps2Dat_io   => Ps2Dat,
+      Ps2Clk_io   => Ps2Clk,
+      Ps2Dat_io   => Ps2Dat,
 --      Ps2MouseClk_io => Ps2MouseClk,
 --      Ps2MouseDat_io => Ps2MouseDat,
       nkc_DB      => nkc_DB_buf,      
@@ -113,10 +113,10 @@ begin  -- beh
       nkc_nIORQ_i => nkc_nIORQ, 
       driver_nEN_o=> driver_nEN,
       driver_DIR_o=> driver_DIR,
---      SD_SCK_o    => open,
---      SD_nCS_o    => SD_nCS,
---      SD_MOSI_o   => SD_MOSI,
---      SD_MISO_i   => SD_MOSI,
+      SD_SCK_o    => open,
+      SD_nCS_o    => SD_nCS,
+      SD_MOSI_o   => SD_MOSI,
+      SD_MISO_i   => SD_MOSI,
       O_sdram_clk   => SDRAM_CLK, --SDRAM_CLK_neg,
       O_sdram_cke   => SDRAM_CKE,
       O_sdram_cs_n  => SDRAM_nCS,
@@ -533,7 +533,26 @@ begin  -- beh
     --wait for 10 ms;
     wait until CPU_Clk'event and CPU_Clk='1';
     
+    write_bus(X"50",0);
+    write_bus(X"51",X"55");     -- Frequenz A = 0x055
+    read_bus(X"51",read_data);
+    write_bus(X"50",2);      
+    write_bus(X"51",X"AA");     -- Frequenz B = 0x0AA    
+    write_bus(X"50",7);
+    write_bus(X"51",X"FC");     -- Freigabe A,B
+    write_bus(X"50",8);
+    write_bus(X"51",15);        -- Aplitude A = 15
+    write_bus(X"50",9);
+    write_bus(X"51",31);        -- Aplitude B = Hüllkurve
+    write_bus(X"50",X"0D");
+    write_bus(X"51",8);
+    write_bus(X"50",X"0B");
+    write_bus(X"51",X"0F");
+    
+    
+    
     write_bus(X"61",X"08");  -- HSCROLL
+    write_bus(X"71",X"04");  -- Write wo display
     write_bus(X"70",X"07");  -- Clear Screen
     wait_ready;
     write_bus(X"71",X"03");  --  CTRL1 = 3
@@ -952,10 +971,16 @@ begin  -- beh
     Ps2Clk <= 'Z';
     Ps2Dat <= 'Z';
     wait for 100 us;
-    sendkbd(X"1c"); -- a
+--    sendkbd(X"1c"); -- a
+--    sendkbd(X"F0");
+--    sendkbd(X"1c");
+    sendkbd(X"e0"); -- 
+    sendkbd(X"69"); -- END (0xE0 0x69)
+    sendkbd(X"e0"); -- 
+    sendkbd(X"f0"); -- 
+    sendkbd(X"69"); -- Release END (0xE0 0x69)
     wait for 1 ms;
-    sendkbd(X"F0");
-    sendkbd(X"1c");
+
     sendkbd(X"12"); -- shift
     sendkbd(X"1c"); -- A
     wait for 1 ms;
@@ -963,10 +988,10 @@ begin  -- beh
     sendkbd(X"1c");
     sendkbd(X"F0");
     sendkbd(X"12"); -- shift relese
-    sendkbd(X"06"); -- F1
+    sendkbd(X"06"); -- F2
     wait for 1 ms;
     sendkbd(X"F0");  
-    sendkbd(X"06"); -- F1  
+    sendkbd(X"06"); -- F2  
     sendkbd(X"E0");
     sendkbd(X"7d"); -- PGUP
     wait for 1 ms;

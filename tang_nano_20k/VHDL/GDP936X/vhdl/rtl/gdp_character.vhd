@@ -211,7 +211,9 @@ begin
         xscnt            <= (others => '0');
         yscnt            <= (others => '0');
         wr_busy          <= inactivated_c;
+if not INT_CHR_ROM_g then
         rom_ena          <= inactivated_c;
+end if;
         wr_pixel         <= '0';
       elsif rising_edge(clk_i) then
         if clk_en_i = '1' then

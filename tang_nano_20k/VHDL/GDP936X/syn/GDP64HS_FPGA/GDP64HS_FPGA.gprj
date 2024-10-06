@@ -30,11 +30,23 @@
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_decoder.vhd" type="file.vhdl" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_font_ram.vhd" type="file.vhdl" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_global-p.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_gowin_top.vhd" type="file.vhdl" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_kernel.vhd" type="file.vhdl" enable="1"/>
-        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_lattice_top_woflo.vhd" type="file.vhdl" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_top.vhd" type="file.vhdl" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_video.vhd" type="file.vhdl" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/vhdl/rtl/gdp_vram.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/FPGA/ps2_fifo.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/PS2Keyboard.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/PS2Mouse.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/PS2_Decoder.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/PS2_Interface.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/SPI_Interface.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/Ser1.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/Timer.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/sound/dac.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/sound/wf2149ip_pkg.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/sound/wf2149ip_top_soc.vhd" type="file.vhdl" enable="1"/>
+        <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/vhdl/rtl/sound/wf2149ip_wave.vhd" type="file.vhdl" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/syn/GDP64HS_FPGA.cst" type="file.cst" enable="1"/>
         <File path="C:/working/_Tang_nano/gdp_fpga/VHDL/GDP936X/syn/GDP64HS_FPGA.sdc" type="file.sdc" enable="1"/>
     </FileList>

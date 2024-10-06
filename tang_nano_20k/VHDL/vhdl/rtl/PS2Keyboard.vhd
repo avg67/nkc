@@ -98,12 +98,6 @@ architecture rtl of PS2Keyboard is
     );
   end component;
  
-  component ps2_fifo
-    port (Data: in  std_logic_vector(6 downto 0); Clock: in  std_logic; 
-        WrEn: in  std_logic; RdEn: in  std_logic; Reset: in  std_logic; 
-        Q: out  std_logic_vector(6 downto 0); Empty: out  std_logic; 
-        Full: out  std_logic);
-  end component;
   
   constant transInit_c  : natural :=2400;    -- 60 uS Time to hold CLK low (to initiate a Transmission)
   constant transStart_c : natural :=2480;    -- 2 uS additonal Time where Data and Clockline are both LOW
@@ -372,9 +366,9 @@ begin
       NkcCode_stb_o    => NkcCode_stb
     );
     
-  PS2FiFo : ps2_fifo
+  PS2FiFo : entity work.ps2_fifo
     port map (
-      Clock    => clk_i,
+      clk      => clk_i,
       Reset    => Reset, 
       Data     => std_logic_vector(NkcCode), 
       WrEn     => NkcCode_stb, 
@@ -387,7 +381,7 @@ begin
 
 
   
-  process(FifoRdState,FifoFull,FifoEmpty,DipCS_i,Rd_i)
+  process(FifoRdState,KbdDataReg_valid, FifoFull,FifoEmpty,DipCS_i,Rd_i)
   begin
     next_FifoRdState      <= FifoRdState;
     next_KbdDataReg_valid <= KbdDataReg_valid;

@@ -97,9 +97,9 @@ architecture rtl of gdp_top is
   signal dma_data        : std_ulogic_vector(7 downto 0);
   signal kernel_DataOut  : std_ulogic_vector(7 downto 0);
   signal vsync,hsync     : std_ulogic;
-  signal color_reg       : std_ulogic_vector(15 downto 0):= X"0000";
+  signal color_reg       : std_ulogic_vector(15 downto 0); --:= X"0000";
   signal color_mode      : std_ulogic;
-  signal clut_addr       : std_ulogic_vector(3 downto 0):= X"0";
+  signal clut_addr       : std_ulogic_vector(3 downto 0); --:= X"0";
   signal temp_reg        : std_ulogic:= '0';
   signal clut_we         : std_ulogic;
   signal clut_data       : std_ulogic_vector(8 downto 0);

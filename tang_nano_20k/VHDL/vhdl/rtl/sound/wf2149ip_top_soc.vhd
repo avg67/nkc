@@ -44,6 +44,7 @@ entity WF2149IP_TOP_SOC is
 --        OUT_A       : out std_ulogic; -- Analog (PWM) outputs.
 --        OUT_B       : out std_ulogic;
 --        OUT_C       : out std_ulogic
+        SND_OUT     : out std_ulogic_vector(9 downto 0);
         PWM_OUT     : out std_ulogic
     );
 end WF2149IP_TOP_SOC;
@@ -155,6 +156,7 @@ begin
 --            OUT_A       => OUT_A,
 --            OUT_B       => OUT_B,
 --            OUT_C       => OUT_C
+            SND_OUT      => SND_OUT,
             OUT_SUM      => PWM_OUT
         );
 

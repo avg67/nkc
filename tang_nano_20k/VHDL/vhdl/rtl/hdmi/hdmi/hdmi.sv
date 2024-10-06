@@ -310,6 +310,11 @@ generate
     end
 endgenerate
 
-serializer #(.NUM_CHANNELS(NUM_CHANNELS)) serializer(.clk_pixel(clk_pixel), .clk_pixel_x5(clk_pixel_x5), .reset(reset), .tmds_internal(tmds_internal), .tmds(tmds), .tmds_clock(tmds_clock));
-
+serializer #(.NUM_CHANNELS(NUM_CHANNELS)) serializer(
+   .clk_pixel(clk_pixel), 
+   .clk_pixel_x5(clk_pixel_x5), 
+   .reset(reset), 
+   .tmds_internal(tmds_internal), 
+   .tmds(tmds), 
+   .tmds_clock(tmds_clock));
 endmodule

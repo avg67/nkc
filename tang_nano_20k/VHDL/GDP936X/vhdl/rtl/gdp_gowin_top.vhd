@@ -35,55 +35,51 @@ entity gdp_gowin_top is
        nkc_nIORQ_i   : in std_ulogic;
        driver_nEN_o  : out std_ulogic;
        driver_DIR_o  : out std_ulogic;
---       nIRQ_o        : out std_logic;
-	   --nNMI_o		 : out std_logic;
---	   IRQ0_o	 	 : out std_logic; 
---	   IRQ1_o	 	 : out std_logic; 
+       nIRQ_o        : out std_logic;
 --	   
 --       --------------------------
 --       -- UART Receiver
 --       --------------------------
---       RxD_i    : in  std_ulogic;
---       TxD_o    : out std_ulogic;
+       RxD_i    : in  std_ulogic;
+       TxD_o    : out std_ulogic;
+       txd_debug_o : out std_ulogic;
+       rxd_debug_o : out std_ulogic;
 --       RTS_o    : out std_ulogic;
 --       CTS_i    : in  std_ulogic;
---       --------------------------
---       -- PS/2 Keyboard signals
---       --------------------------
---       -- PS/2 clock line. Bidirectional (resolved!) for Inhibit bus state on
---       -- PS/2 bus. In all other cases an input would be sufficient.
---       Ps2Clk_io    : inout std_logic;
+       --------------------------
+       -- PS/2 Keyboard signals
+       --------------------------
+       -- PS/2 clock line. Bidirectional (resolved!) for Inhibit bus state on
+       -- PS/2 bus. In all other cases an input would be sufficient.
+       Ps2Clk_io    : inout std_logic;
 --       -- PS/2 data line. Bidirectional for reading and writing data.
---       Ps2Dat_io    : inout std_logic;
---       --------------------------
---       -- PS/2 Mouse signals
---       --------------------------
---       -- PS/2 clock line. Bidirectional (resolved!) for Inhibit bus state on
---       -- PS/2 bus. In all other cases an input would be sufficient.
---       Ps2MouseClk_io    : inout std_logic;
---       -- PS/2 data line. Bidirectional for reading and writing data.
---       Ps2MouseDat_io    : inout std_logic;
---       --------------------------
---       -- Audio DAC-PWM out
---       -- This DAC requires an external RC low-pass filter:
---       --
---       --   pwm_out 0---XXXXX---+---0 analog audio
---       --                3k3    |
---       --                      === 4n7
---       --                       |
---       --                      GND
---       --------------------------
---       PWM_OUT_R_o   : out std_ulogic;
+       Ps2Dat_io    : inout std_logic;
+       --------------------------
+       -- PS/2 Mouse signals
+       --------------------------
+       -- PS/2 clock line. Bidirectional (resolved!) for Inhibit bus state on
+       -- PS/2 bus. In all other cases an input would be sufficient.
+       Ps2MouseClk_io    : inout std_logic;
+       -- PS/2 data line. Bidirectional for reading and writing data.
+       Ps2MouseDat_io    : inout std_logic;
+       --------------------------
+       -- Audio DAC-PWM out
+       -- This DAC requires an external RC low-pass filter:
+       --
+       --   pwm_out 0---XXXXX---+---0 analog audio
+       --                3k3    |
+       --                      === 4n7
+       --                       |
+       --                      GND
+       --------------------------
+       PWM_OUT_o   : out std_ulogic;
 --       PWM_OUT_L_o   : out std_ulogic;
        --------------------------
        -- Video out
        --------------------------
---       Red_o      : out std_ulogic_vector(2 downto 0);
---       Green_o    : out std_ulogic_vector(2 downto 0);
---       Blue_o     : out std_ulogic_vector(2 downto 0);
-       Pixel_o      : out std_ulogic;
-       Hsync_o      : out std_ulogic;
-       Vsync_o      : out std_ulogic;
+       --Pixel_o      : out std_ulogic;
+       --Hsync_o      : out std_ulogic;
+       --Vsync_o      : out std_ulogic;
        tmds_clk_n   : out std_logic;
        tmds_clk_p   : out std_logic;
        tmds_d_n     : out std_logic_vector(2 downto 0);
@@ -91,10 +87,10 @@ entity gdp_gowin_top is
 --       --------------------------
 --       -- SPI-Signals
 --       --------------------------
---       SD_SCK_o  : out std_ulogic;
---       SD_nCS_o  : out std_ulogic_vector(0 downto 0);
---       SD_MOSI_o : out std_ulogic;
---       SD_MISO_i : in  std_ulogic;
+       SD_SCK_o  : out std_ulogic;
+       SD_nCS_o  : out std_ulogic_vector(0 downto 0);
+       SD_MOSI_o : out std_ulogic;
+       SD_MISO_i : in  std_ulogic;
 --       --
 --       --ETH_SCK_o  : out std_ulogic;
 --       --ETH_nCS_o  : out std_ulogic;
@@ -138,12 +134,12 @@ architecture rtl of gdp_gowin_top is
 
  
   constant use_ser_key_c   : boolean := false;
-  constant use_ps2_key_c   : boolean := false;
-  constant use_ps2_mouse_c : boolean := false;
-  constant use_ser1_c      : boolean := false;
-  constant use_sound_c     : boolean := false;
-  constant use_spi_c       : boolean := false;
-  constant use_timer_c     : boolean := false;
+  constant use_ps2_key_c   : boolean := true;
+  constant use_ps2_mouse_c : boolean := true;
+  constant use_ser1_c      : boolean := true;
+  constant use_sound_c     : boolean := true;
+  constant use_spi_c       : boolean := true;
+  constant use_timer_c     : boolean := true;
   constant use_vdip_c      : boolean := false;
   constant use_gpio_c      : boolean := false;
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
@@ -239,6 +235,8 @@ architecture rtl of gdp_gowin_top is
   SIGNAL SD_MISO_s         : std_ulogic;
   
   signal PWM_OUT_s         : std_ulogic;
+  signal SND_s             : std_ulogic_vector(9 downto 0);
+  signal TxD_s             : std_ulogic;
   
   signal pll_lock          : std_ulogic;
   signal red               : std_ulogic_vector(2 downto 0);
@@ -306,8 +304,8 @@ begin
 
    vvmode <= "00";
    vwide  <= '0';
-   audio0 <= (others => '0');
-   audio1 <= (others => '0');
+   audio0 <= std_logic_vector(SND_s) & "000000";
+   audio1 <= std_logic_vector(SND_s) & "000000";
 
   
 --  GDP_EN_SYNC : InputSync
@@ -394,8 +392,8 @@ begin
       pixel_red_o   => red,
       pixel_green_o => green,
       pixel_blue_o  => blue,
-      Hsync_o     => Hsync_o,
-      Vsync_o     => Vsync_o,
+      --Hsync_o     => Hsync_o,
+      --Vsync_o     => Vsync_o,
       vreset_o    => vreset,
 
 --      kernel_req_o  => kernel_req,
@@ -424,7 +422,7 @@ begin
       monitoring_o    => open --debug_o
     );
     
-  Pixel_o <= or_reduce(red&green&blue);
+  --Pixel_o <= or_reduce(red&green&blue);
   O_sdram_addr <= sdram_addr(O_sdram_addr'range);
 
   gdp_cs <= (IORQ and glob_gdp_en) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
@@ -487,206 +485,208 @@ begin
     DoutParRX <= (others =>'0');
     BusyRX    <= '1';
     key_data  <= not BusyRX & DoutParRX(6 downto 0);
---   Ps2Dat_io <= 'Z';
---   Ps2Dat_io <= 'Z';
+   Ps2Clk_io <= 'Z';
+   Ps2Dat_io <= 'Z';
   end generate;
   
---  impl_key2: if use_ps2_key_c generate
---    kbd: entity work.PS2Keyboard
---      port map (
---        reset_n_i => reset_n,
---        clk_i     => pixel_clk,
---        Ps2Clk_io => Ps2Clk_io,
---        Ps2Dat_io => Ps2Dat_io,
---        KeyCS_i   => key_cs,
---        DipCS_i   => dip_cs,
---        Rd_i      => gdp_Rd,
---        DataOut_o => key_data,
---        monitoring_o=> open --debug_o
---     );
---   end generate;
+  impl_key2: if use_ps2_key_c generate
+    kbd: entity work.PS2Keyboard
+      port map (
+        reset_n_i => reset_n,
+        clk_i     => pixel_clk,
+        Ps2Clk_io => Ps2Clk_io,
+        Ps2Dat_io => Ps2Dat_io,
+        KeyCS_i   => key_cs,
+        DipCS_i   => dip_cs,
+        Rd_i      => gdp_Rd,
+        DataOut_o => key_data,
+        monitoring_o=> open --debug_o
+     );
+   end generate;
 
---  impl_mouse: if use_ps2_mouse_c generate 
-----    mouse_cs <= (not nIORQ and not nIORQ_d and addr_sel_i) when Addr(7 downto 3)=MOUSE_BASE_ADDR_c(7 downto 3) else
-----    mouse_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 3)=MOUSE_BASE_ADDR_c(7 downto 3) else
---    mouse_cs <= IORQ when Addr(7 downto 3)=MOUSE_BASE_ADDR_c(7 downto 3) else
---                '0';
---    mouse : entity work.PS2Mouse
---      port map (
---        reset_n_i    => reset_n,
---        clk_i        => pixel_clk,
---        Ps2Clk_io    => Ps2MouseClk_io,
---        Ps2Dat_io    => Ps2MouseDat_io,
---        Adr_i        => Addr(2 downto 0),
---        en_i         => mouse_cs,
---        DataIn_i     => data_in,
---        Rd_i         => gdp_Rd,
---        Wr_i         => gdp_Wr,
---        DataOut_o    => mouse_data,
---        monitoring_o => open  --debug_o
---      );
---  end generate;
+  impl_mouse: if use_ps2_mouse_c generate 
+    mouse_cs <= IORQ when Addr(7 downto 3)=MOUSE_BASE_ADDR_c(7 downto 3) else
+                '0';
+    mouse : entity work.PS2Mouse
+      port map (
+        reset_n_i    => reset_n,
+        clk_i        => pixel_clk,
+        Ps2Clk_io    => Ps2MouseClk_io,
+        Ps2Dat_io    => Ps2MouseDat_io,
+        Adr_i        => Addr(2 downto 0),
+        en_i         => mouse_cs,
+        DataIn_i     => data_in,
+        Rd_i         => gdp_Rd,
+        Wr_i         => gdp_Wr,
+        DataOut_o    => mouse_data,
+        monitoring_o => open  --debug_o
+      );
+  end generate;
   
   no_mouse: if not use_ps2_mouse_c generate
     mouse_data     <= (others =>'0');
     mouse_cs       <= '0';
---    Ps2MouseClk_io <= 'Z';
---    Ps2MouseDat_io <= 'Z';
+    Ps2MouseClk_io <= 'Z';
+    Ps2MouseDat_io <= 'Z';
   end generate;
   
---  impl_ser1: if use_ser1_c generate 
-----    ser_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
---    ser_cs <= IORQ when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
---              '0';
---    
---    ser : entity work.Ser1
---      port map (
---        reset_n_i   => reset_n,
---        clk_i       => pixel_clk,
---        RxD_i       => RxD_i,
---        TxD_o       => TxD_o,
---        RTS_o       => RTS_o,
---        CTS_i       => CTS_i,
---        DTR_o       => open,
---        Adr_i       => Addr(1 downto 0),
---        en_i        => ser_cs,
---        DataIn_i    => data_in,
---        Rd_i        => gdp_Rd,
---        Wr_i        => gdp_Wr,
---        DataOut_o   => ser_data,
---        Intr_o      => ser_int
---      );
---  end generate;
+  impl_ser1: if use_ser1_c generate 
+--    ser_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
+    ser_cs <= IORQ when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
+              '0';
+    
+    ser : entity work.Ser1
+      port map (
+        reset_n_i   => reset_n,
+        clk_i       => pixel_clk,
+        RxD_i       => RxD_i,
+        TxD_o       => TxD_s,
+        RTS_o       => open, --RTS_o,
+        CTS_i       => '1', --CTS_i,
+        DTR_o       => open,
+        Adr_i       => Addr(1 downto 0),
+        en_i        => ser_cs,
+        DataIn_i    => data_in,
+        Rd_i        => gdp_Rd,
+        Wr_i        => gdp_Wr,
+        DataOut_o   => ser_data,
+        Intr_o      => ser_int
+      );
+  end generate;
   no_ser1: if not use_ser1_c generate
     ser_data       <= (others =>'0');
     ser_cs         <= '0';
 --    RTS_o          <= CTS_i;
---    TxD_o          <= RxD_i;
+    TxD_o          <= RxD_i;
     ser_int        <= '0';
-  end generate;      
+  end generate;
+  txd_debug_o <= TxD_s;
+  rxd_debug_o <= RxD_i;
+  TXD_o       <= TxD_s;
      
---  impl_sound : if use_sound_c generate
-----    snd_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 1)=SOUND_BASE_ADDR_c(7 downto 1) else -- 0x50 - 0x51
---    snd_cs <= IORQ when Addr(7 downto 1)=SOUND_BASE_ADDR_c(7 downto 1) else -- 0x50 - 0x51
---              '0';
---    snd_bdir <= snd_cs and gdp_Wr;
---    snd_bc1  <= snd_cs and (gdp_Rd or (gdp_Wr and not Addr(0))); --(not snd_cs) nor Addr(0);    
---
---    process(pixel_clk,reset_n)
---    begin
---      if reset_n = '0' then
---        wav_cnt <= 0;
---        wav_en  <= '0';
---      elsif rising_edge(pixel_clk) then
---        wav_en  <= '0';
---        if wav_cnt < 19 then
---          wav_cnt <= wav_cnt +1;
---        else
---          wav_cnt <= 0;
---          wav_en  <= '1';
---        end if;
---      end if;
---    end process;
---    
---    Sound_inst : entity work.WF2149IP_TOP_SOC
---      port map (
---        SYS_CLK   => pixel_clk,
---        RESETn    => reset_n,
---        WAV_CLK   => wav_en,
---        SELn      => '1',
---        BDIR      => snd_bdir,
---        BC2       => '1',
---        BC1       => snd_bc1,
---        A9n       => '0',
---        A8        => '1',
---        DA_IN     => data_in,
---        DA_OUT    => snd_data,
---        DA_EN     => open,
---        IO_A_IN   => X"00",
---        IO_A_OUT  => open,
---        IO_A_EN   => open,
---        IO_B_IN   => X"00",
---        IO_B_OUT  => open,
---        IO_B_EN   => open,
---  --      OUT_A     => open,
---  --      OUT_B     => open,
---  --      OUT_C     => open
---        PWM_OUT    => PWM_OUT_s
---      );
---  end generate;
+  impl_sound : if use_sound_c generate
+--    snd_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 1)=SOUND_BASE_ADDR_c(7 downto 1) else -- 0x50 - 0x51
+    snd_cs <= IORQ when Addr(7 downto 1)=SOUND_BASE_ADDR_c(7 downto 1) else -- 0x50 - 0x51
+              '0';
+    snd_bdir <= snd_cs and gdp_Wr;
+    snd_bc1  <= snd_cs and (gdp_Rd or (gdp_Wr and not Addr(0))); --(not snd_cs) nor Addr(0);    
+
+    process(pixel_clk,reset_n)
+    begin
+      if reset_n = '0' then
+        wav_cnt <= 0;
+        wav_en  <= '0';
+      elsif rising_edge(pixel_clk) then
+        wav_en  <= '0';
+        if wav_cnt < 19 then
+          wav_cnt <= wav_cnt +1;
+        else
+          wav_cnt <= 0;
+          wav_en  <= '1';
+        end if;
+      end if;
+    end process;
+    
+    Sound_inst : entity work.WF2149IP_TOP_SOC
+      port map (
+        SYS_CLK   => pixel_clk,
+        RESETn    => reset_n,
+        WAV_CLK   => wav_en,
+        SELn      => '1',
+        BDIR      => snd_bdir,
+        BC2       => '1',
+        BC1       => snd_bc1,
+        A9n       => '0',
+        A8        => '1',
+        DA_IN     => data_in,
+        DA_OUT    => snd_data,
+        DA_EN     => open,
+        IO_A_IN   => X"00",
+        IO_A_OUT  => open,
+        IO_A_EN   => open,
+        IO_B_IN   => X"00",
+        IO_B_OUT  => open,
+        IO_B_EN   => open,
+  --      OUT_A     => open,
+  --      OUT_B     => open,
+  --      OUT_C     => open
+        SND_OUT    => SND_s,
+        PWM_OUT    => PWM_OUT_s
+      );
+  end generate;
   no_sound: if not use_sound_c generate
     snd_data       <= (others =>'0');
     snd_cs         <= '0';
     snd_bdir       <= '0';
     snd_bc1        <= '0';
---    PWM_OUT_s      <= '0';
+    PWM_OUT_s      <= 'Z';
     wav_cnt        <= 0;
     wav_en         <= '0';
   end generate;
   
---  PWM_OUT_L_o <= PWM_OUT_s;
+  PWM_OUT_o <= PWM_OUT_s;
 --  PWM_OUT_R_o <= PWM_OUT_s;
 
---  impl_SPI: if use_spi_c generate 
-----    spi_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 1)=SPI_BASE_ADDR_c(7 downto 1) else -- 0x00 - 0x01
---    spi_cs <= IORQ when Addr(7 downto 1)=SPI_BASE_ADDR_c(7 downto 1) else -- 0x00 - 0x01
---              '0';
---    
---    SPI : entity work.SPI_Interface
---      port map (
---        reset_n_i   => reset_n,
---        clk_i       => pixel_clk,
---        SD_SCK_o    => SD_SCK_s,
---        SD_nCS_o    => SD_nCS_s,
---        SD_MOSI_o   => SD_MOSI_s,
---        SD_MISO_i   => SD_MISO_s,
---        Adr_i       => Addr(0 downto 0),
---        en_i        => spi_cs,
---        DataIn_i    => data_in,
---        Rd_i        => gdp_Rd,
---        Wr_i        => gdp_Wr,
---        DataOut_o   => spi_data
---      );
-----      SD_SCK_o <= SD_SCK_s;
-----      SD_nCS_o <= SD_nCS_s(0 downto 0);
-----      SD_MOSI_o <= SD_MOSI_s;
---      --SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
---      --             SD_MISO_i;
---      --SD_MISO_s <= SD_MISO_i;
---      -- duplicate SPI pins to decouple SD-cards and Ethernet controller electrically
---      --ETH_SCK_o  <= SD_SCK_s;
---      --ETH_nCS_o  <= SD_nCS_s(2);
---      --ETH_MOSI_o <= SD_MOSI_s;
---  end generate;
+  impl_SPI: if use_spi_c generate 
+--    spi_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 1)=SPI_BASE_ADDR_c(7 downto 1) else -- 0x00 - 0x01
+    spi_cs <= IORQ when Addr(7 downto 1)=SPI_BASE_ADDR_c(7 downto 1) else -- 0x00 - 0x01
+              '0';
+    
+    SPI : entity work.SPI_Interface
+      port map (
+        reset_n_i   => reset_n,
+        clk_i       => pixel_clk,
+        SD_SCK_o    => SD_SCK_s,
+        SD_nCS_o    => SD_nCS_s,
+        SD_MOSI_o   => SD_MOSI_s,
+        SD_MISO_i   => SD_MISO_s,
+        Adr_i       => Addr(0 downto 0),
+        en_i        => spi_cs,
+        DataIn_i    => data_in,
+        Rd_i        => gdp_Rd,
+        Wr_i        => gdp_Wr,
+        DataOut_o   => spi_data
+      );
+      SD_SCK_o <= SD_SCK_s;
+      SD_nCS_o <= SD_nCS_s(0 downto 0);
+      SD_MOSI_o <= SD_MOSI_s;
+      --SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
+      --             SD_MISO_i;
+      SD_MISO_s <= SD_MISO_i;
+      -- duplicate SPI pins to decouple SD-cards and Ethernet controller electrically
+      --ETH_SCK_o  <= SD_SCK_s;
+      --ETH_nCS_o  <= SD_nCS_s(2);
+      --ETH_MOSI_o <= SD_MOSI_s;
+  end generate;
   no_spi: if not use_spi_c generate
     spi_data       <= (others =>'0');
     spi_cs         <= '0';
---    SD_SCK_o       <= '0';
---    SD_nCS_o       <= (others => '1'); --(others => '1');
---    SD_MOSI_o      <= SD_MISO_i;
---    --ETH_SCK_o      <= SD_SCK_s;
---    --ETH_nCS_o      <= '1';
---    --ETH_MOSI_o     <= ETH_MISO_i;
+    SD_SCK_o       <= '0';
+    SD_nCS_o       <= (others => '1'); --(others => '1');
+    SD_MOSI_o      <= SD_MISO_i;
+    --ETH_SCK_o      <= SD_SCK_s;
+    --ETH_nCS_o      <= '1';
+    --ETH_MOSI_o     <= ETH_MISO_i;
   end generate;
   
---  impl_T1: if use_timer_c generate 
-----    t1_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=T1_BASE_ADDR_c(7 downto 2) else -- 0x00 - 0x01
---    t1_cs <= IORQ when Addr(7 downto 2)=T1_BASE_ADDR_c(7 downto 2) else -- 0x00 - 0x01
---              '0';
---    
---    T1 : entity work.Timer
---      port map (
---        reset_n_i   => reset_n,
---        clk_i       => pixel_clk,
---        irq_o       => t1_irq,
---        Adr_i       => Addr(1 downto 0),
---        en_i        => t1_cs,
---        DataIn_i    => data_in,
---        Rd_i        => gdp_Rd,
---        Wr_i        => gdp_Wr,
---        DataOut_o   => t1_data
---      );
---  end generate;
+  impl_T1: if use_timer_c generate 
+--    t1_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=T1_BASE_ADDR_c(7 downto 2) else -- 0x00 - 0x01
+    t1_cs <= IORQ when Addr(7 downto 2)=T1_BASE_ADDR_c(7 downto 2) else -- 0x00 - 0x01
+              '0';
+    
+    T1 : entity work.Timer
+      port map (
+        reset_n_i   => reset_n,
+        clk_i       => pixel_clk,
+        irq_o       => t1_irq,
+        Adr_i       => Addr(1 downto 0),
+        en_i        => t1_cs,
+        DataIn_i    => data_in,
+        Rd_i        => gdp_Rd,
+        Wr_i        => gdp_Wr,
+        DataOut_o   => t1_data
+      );
+  end generate;
   no_T1: if not use_timer_c generate
     t1_data      <= (others =>'0');
     t1_cs        <= '0';
@@ -746,24 +746,7 @@ begin
 --    GPIO_io         <= (others =>'Z');
   end generate;
   
-   
-  --SRAM_ADDR <= GDP_SRAM_ADDR after 1 ns;
-  --SRAM_DB   <= std_logic_vector(GDP_SRAM_datao) after 1 ns when ((GDP_SRAM_ena(0) or GDP_SRAM_ena(1)) and GDP_SRAM_we)='1' else
-  --             (others => 'Z') after 1 ns;
-  --
-  --GDP_SRAM_datai <= std_ulogic_vector(SRAM_DB);
-  --SRAM_nCS0     <= not GDP_SRAM_ena(0); -- and not clk);
-  --SRAM_nCS1     <= not GDP_SRAM_ena(1);
-  --SRAM_nBHE     <= not GDP_SRAM_BHE after 1 ns;
-  --SRAM_nBLE     <= not GDP_SRAM_BLE after 1 ns;
-  --
-  --SRAM_nWR      <= not (GDP_SRAM_we and not clk_i);
-  --SRAM_nOE      <= not ((GDP_SRAM_ena(0) or GDP_SRAM_ena(1)) and not GDP_SRAM_we);
-
-  
---  nIRQ_o <= '0' when (t1_irq or ser_int)='1' else
---            '1';
---  IRQ0_o <= '1';
---  IRQ1_o <= '1';
+  nIRQ_o <= '0' when (t1_irq or ser_int)='1' else
+            'Z';
 
 end rtl;

@@ -477,6 +477,7 @@ begin
     end case;
     if enable_i='0' then
       next_rd_state <= idle_e;
+      next_rd_data  <= (others => '0');
     end if;    
   end process;
   

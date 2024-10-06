@@ -37,6 +37,7 @@ type BUSCYCLES_t is (INACTIVE, READ, WRITE, ADDRESS);
 --  		OUT_A		: out std_ulogic;
 --  		OUT_B		: out std_ulogic;
 --  		OUT_C		: out std_ulogic
+      SND_OUT     : out std_ulogic_vector(9 downto 0);
       OUT_SUM     : out std_ulogic
   	);
   end component;

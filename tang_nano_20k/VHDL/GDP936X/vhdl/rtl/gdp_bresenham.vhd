@@ -211,7 +211,7 @@ begin
                        wr_ack_i, x1_i,y1_i, 
                        enable_i,wr_req)
       variable dx_v, dy_v          : delta_t;
-      variable slopex_v,slopey_v   : signed(1 downto 0);
+      variable slopex_v,slopey_v   : signed(1 downto 0):=(others =>'0');
     begin
     
       -- default assignments
