@@ -40,7 +40,7 @@ entity gdp_video is
        fifo_ur_o     : out  std_ulogic;   -- fifo_underrun
        -----------------------------
        clut_we_i     : in  std_ulogic;
-       clut_addr_i   : in  std_ulogic_vector(3 downto 0);
+       clut_addr_i   : in  std_ulogic_vector(7 downto 0);
        clut_data_i   : in  std_ulogic_vector(8 downto 0);
        -----------------------------
        pixel_red_o   : out std_ulogic_vector(2 downto 0);
@@ -68,19 +68,6 @@ entity gdp_video is
 end gdp_video;
 
 architecture rtl of gdp_video is
-  component gdp_clut is
-    port (
-      reset_n_i    : in  std_ulogic;
-      clk_i        : in  std_ulogic; 
-      clk_en_i     : in  std_ulogic;
-      WrAddress_i  : in  std_ulogic_vector(3 downto 0); 
-      Data_i       : in  std_ulogic_vector(8 downto 0); 
-      WE_i         : in  std_ulogic; 
-      RdAddress_i  : in  std_ulogic_vector(3 downto 0); 
-      Data_o       : out std_ulogic_vector(8 downto 0)
-    );
-  end component;
-
   constant Stages_c          : natural := 11;
   constant HFRONT_PORCH_c    : natural := 40;
   constant HBACK_PORCH_c     : natural := 88;
@@ -612,15 +599,15 @@ begin
          if rising_edge(clk_i) then
             if clk_en_i = '1' then
                if (VidEn and enable_i)='1' then
-                  if color_mode_reg = '0' then
+                  --if color_mode_reg = '0' then
                      rgb_pixel <= std_ulogic_vector(clut_q);
-                  else
-                     --           R                   G                   B
-                     rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 2) & Pixel(1 downto 0) & "0";
-                     if Pixel(1 downto 0) ="11" then
-                        rgb_pixel(0) <= '1';
-                     end if;
-                  end if;
+                  --else
+                  --   --           R                   G                   B
+                  --   rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 2) & Pixel(1 downto 0) & "0";
+                  --   if Pixel(1 downto 0) ="11" then
+                  --      rgb_pixel(0) <= '1';
+                  --   end if;
+                  --end if;
                else
                   rgb_pixel <= (others => '0');
                end if;
@@ -631,7 +618,7 @@ begin
          end if;
       end process;
 
-      clut_inst : gdp_clut
+   clut_inst : entity work.gdp_clut_256
       port map(
         reset_n_i   => reset_n_i,
         clk_i       => clk_i,
@@ -639,7 +626,7 @@ begin
         WrAddress_i => clut_addr_i,
         Data_i      => clut_data_i,
         WE_i        => clut_we_i,
-        RdAddress_i => Pixel(3 downto 0),
+        RdAddress_i => Pixel,
         Data_o      => clut_q
       );
    end generate;  

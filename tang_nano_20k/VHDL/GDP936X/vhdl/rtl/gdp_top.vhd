@@ -99,7 +99,7 @@ architecture rtl of gdp_top is
   signal vsync,hsync     : std_ulogic;
   signal color_reg       : std_ulogic_vector(15 downto 0); --:= X"0000";
   signal color_mode      : std_ulogic;
-  signal clut_addr       : std_ulogic_vector(3 downto 0); --:= X"0";
+  signal clut_addr       : std_ulogic_vector(7 downto 0); --:= X"00";
   signal temp_reg        : std_ulogic:= '0';
   signal clut_we         : std_ulogic;
   signal clut_data       : std_ulogic_vector(8 downto 0);
@@ -323,7 +323,7 @@ begin
           case to_integer(unsigned(Adr_i(1 downto 0))) is
             when 0  =>
               -- 0xA4: Address Register
-              clut_addr <= DataIn_i(3 downto 0);
+              clut_addr <= DataIn_i;
             when 1  =>
               -- 0xA5: Data high
               temp_reg <= DataIn_i(0);
@@ -376,7 +376,7 @@ begin
         elsif color_support_c and use_clut_c and 
              (clut_en_i and Rd_i) = '1' then
           if Adr_i(1 downto 0) = "00" then
-            DataOut_o <= "0000" & clut_addr(3 downto 0);
+            DataOut_o <= clut_addr(7 downto 0);
           end if;
         end if;
       end if;
