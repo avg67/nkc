@@ -42,8 +42,8 @@ entity gdp_gowin_top is
 --       --------------------------
        RxD_i    : in  std_ulogic;
        TxD_o    : out std_ulogic;
-       txd_debug_o : out std_ulogic;
-       rxd_debug_o : out std_ulogic;
+--       txd_debug_o : out std_ulogic;
+--       rxd_debug_o : out std_ulogic;
 --       RTS_o    : out std_ulogic;
 --       CTS_i    : in  std_ulogic;
        --------------------------
@@ -120,11 +120,11 @@ entity gdp_gowin_top is
        IO_sdram_dq     : inout std_logic_vector(31 downto 0);  -- up to 32 bit bidirectional data bus
        O_sdram_addr   : out std_logic_vector(10 downto 0);  -- up to 13 bit multiplexed address bus
        O_sdram_ba     : out std_logic_vector(1 downto 0);  -- two banks
-       O_sdram_dqm    : out std_logic_vector(3 downto 0)  -- 32/4
+       O_sdram_dqm    : out std_logic_vector(3 downto 0);  -- 32/4
        --------------------------
        -- Debug Signals - GDP
        --------------------------
-       --glob_gdp_en_i : in std_ulogic
+       glob_gdp_en_i : in std_ulogic
 --       debug_o      : out std_ulogic_vector(nr_mon_sigs_c-1 downto 0);
 --       sample_clk_o : out std_ulogic
        );
@@ -134,11 +134,11 @@ architecture rtl of gdp_gowin_top is
 
  
   constant use_ser_key_c   : boolean := false;
-  constant use_ps2_key_c   : boolean := true;
-  constant use_ps2_mouse_c : boolean := true;
-  constant use_ser1_c      : boolean := true;
-  constant use_sound_c     : boolean := true;
-  constant use_spi_c       : boolean := true;
+  constant use_ps2_key_c   : boolean := false;
+  constant use_ps2_mouse_c : boolean := false;
+  constant use_ser1_c      : boolean := false;
+  constant use_sound_c     : boolean := false;
+  constant use_spi_c       : boolean := false;
   constant use_timer_c     : boolean := true;
   constant use_vdip_c      : boolean := false;
   constant use_gpio_c      : boolean := false;
@@ -308,17 +308,16 @@ begin
    audio1 <= std_logic_vector(SND_s) & "000000";
 
   
---  GDP_EN_SYNC : InputSync
---     generic map (
---       ResetValue_g => '1'
---     )
---     port map (
---         Input => glob_gdp_en_i,
---         clk   => pixel_clk,
---         clr_n => reset_n,
---         q     => glob_gdp_en
---     );
-   glob_gdp_en <= '1';
+  GDP_EN_SYNC : entity work.InputSync
+     generic map (
+       ResetValue_g => '1'
+     )
+     port map (
+         Input => glob_gdp_en_i,
+         clk   => pixel_clk,
+         clr_n => reset_n,
+         q     => glob_gdp_en
+     );
 
   bi_inst:entity work.gdp_bi
     port map(
@@ -557,11 +556,11 @@ begin
     ser_data       <= (others =>'0');
     ser_cs         <= '0';
 --    RTS_o          <= CTS_i;
-    TxD_o          <= RxD_i;
+    TxD_s          <= RxD_i;
     ser_int        <= '0';
   end generate;
-  txd_debug_o <= TxD_s;
-  rxd_debug_o <= RxD_i;
+  --txd_debug_o <= TxD_s;
+  --rxd_debug_o <= RxD_i;
   TXD_o       <= TxD_s;
      
   impl_sound : if use_sound_c generate
@@ -622,6 +621,7 @@ begin
     PWM_OUT_s      <= 'Z';
     wav_cnt        <= 0;
     wav_en         <= '0';
+    SND_s          <= (others =>'0');
   end generate;
   
   PWM_OUT_o <= PWM_OUT_s;

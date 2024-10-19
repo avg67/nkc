@@ -37,22 +37,22 @@ architecture rtl of gdp_clut_256 is
   begin
     -- 256 color ANSI palette rg. https://www.hackitu.de/termcolor256/
     -- Only colors 0 - 15 are different, and there are only 6 grey colors available
-    return ("000000000",
-            "111111111",
-            "111111000",
-            "000111000",
-            "111000000",
-            "000000111",
-            "111000111",
-            "000111111",
-            "001001001",
-            "100100100",
-            "011011000",
-            "000011000",
-            "011000000",
-            "000000011",
-            "011000011",
-            "000011011",
+    return ("000000000",   -- 0  Schwarz       
+            "111111111",   -- 1  Weiß          
+            "111111000",   -- 2  Gelb          
+            "000111000",   -- 3  Grün          
+            "111000000",   -- 4  Rot           
+            "000000111",   -- 5  Blau          
+            "111000111",   -- 6  Violett       
+            "000111111",   -- 7  Zyan          
+            "001001001",   -- 8  Dunkelgrau    
+            "100100100",   -- 9  Hellgrau      
+            "011011000",   -- 10 Dunkelgelb    
+            "000011000",   -- 11 Dunkelgrün    
+            "011000000",   -- 12 Dunkelrot     
+            "000000011",   -- 13 Dunkelblau    
+            "011000011",   -- 14 Violett dunkel
+            "000011011",   -- 15 Zyan dunkel   
             "000000000",
             "000000001",
             "000000010",
