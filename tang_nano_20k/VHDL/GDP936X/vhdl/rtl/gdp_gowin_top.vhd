@@ -124,7 +124,7 @@ entity gdp_gowin_top is
        --------------------------
        -- Debug Signals - GDP
        --------------------------
-       glob_gdp_en_i : in std_ulogic
+       glob_gdp_en_i : in std_ulogic:='1'
 --       debug_o      : out std_ulogic_vector(nr_mon_sigs_c-1 downto 0);
 --       sample_clk_o : out std_ulogic
        );

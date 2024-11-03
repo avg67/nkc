@@ -7,9 +7,6 @@
             <Option name="def_top" value="gdp_lattice_top"/>
             <Option name="top" value="gdp_lattice_top"/>
         </Options>
-        <Source name="../../../vhdl/rtl/sound/dac.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
         <Source name="../../vhdl/rtl/gdp_global-p.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
@@ -26,9 +23,6 @@
             <Options/>
         </Source>
         <Source name="../../../vhdl/rtl/Timer.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
-        <Source name="../../../vhdl/rtl/sound/wf2149ip_pkg.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
         <Source name="../../../vhdl/rtl/Ser1.vhd" type="VHDL" type_short="VHDL">
@@ -67,9 +61,6 @@
         <Source name="../../vhdl/rtl/gdp_bresenham.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
-        <Source name="../../../vhdl/rtl/sound/wf2149ip_top_soc.vhd" type="VHDL" type_short="VHDL">
-            <Options/>
-        </Source>
         <Source name="../../vhdl/rtl/gdp_font_ram.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
@@ -82,7 +73,16 @@
         <Source name="../../../vhdl/rtl/PS2Keyboard.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
+        <Source name="../../../vhdl/rtl/sound/dac.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../../../vhdl/rtl/sound/wf2149ip_pkg.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
         <Source name="../../../vhdl/rtl/sound/wf2149ip_wave.vhd" type="VHDL" type_short="VHDL">
+            <Options/>
+        </Source>
+        <Source name="../../../vhdl/rtl/sound/wf2149ip_top_soc.vhd" type="VHDL" type_short="VHDL">
             <Options/>
         </Source>
         <Source name="../../../vhdl/rtl/PS2Mouse.vhd" type="VHDL" type_short="VHDL">

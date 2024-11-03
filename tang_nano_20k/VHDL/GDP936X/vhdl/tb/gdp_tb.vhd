@@ -533,6 +533,9 @@ begin  -- beh
     --wait for 10 ms;
     wait until CPU_Clk'event and CPU_Clk='1';
     
+    read_bus(X"68",read_data);
+    read_bus(X"69",read_data);
+    
     write_bus(X"50",0);
     write_bus(X"51",X"55");     -- Frequenz A = 0x055
     read_bus(X"51",read_data);
