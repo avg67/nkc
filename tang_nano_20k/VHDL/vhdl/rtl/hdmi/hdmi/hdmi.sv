@@ -115,7 +115,8 @@ logic [1:0] invert;
 //wire [102:0] timing = timing0;
 
 // demux timing parameters   
-wire [10:0] start_x           = 11'd8; //timing[102:92];
+wire [10:0] start_x           = 11'd144; //timing[102:92];
+wire [9:0] start_y            = 10'd44; 
 
 //wire [10:0] frame_width       = 11'd880; //timing[91:81];
 //wire [10:0] screen_width      = 11'd800; //timing[80:70];
@@ -164,7 +165,7 @@ begin
     if (reset)
     begin
         cx <= start_x;
-        cy <= 10'd0;    // start_y
+        cy <= start_y;
     end
     else
     begin

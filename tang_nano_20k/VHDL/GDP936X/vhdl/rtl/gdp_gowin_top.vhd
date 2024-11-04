@@ -120,11 +120,11 @@ entity gdp_gowin_top is
        IO_sdram_dq     : inout std_logic_vector(31 downto 0);  -- up to 32 bit bidirectional data bus
        O_sdram_addr   : out std_logic_vector(10 downto 0);  -- up to 13 bit multiplexed address bus
        O_sdram_ba     : out std_logic_vector(1 downto 0);  -- two banks
-       O_sdram_dqm    : out std_logic_vector(3 downto 0);  -- 32/4
+       O_sdram_dqm    : out std_logic_vector(3 downto 0)  -- 32/4
        --------------------------
        -- Debug Signals - GDP
        --------------------------
-       glob_gdp_en_i : in std_ulogic:='1'
+--       glob_gdp_en_i : in std_ulogic:='1'
 --       debug_o      : out std_ulogic_vector(nr_mon_sigs_c-1 downto 0);
 --       sample_clk_o : out std_ulogic
        );
@@ -308,17 +308,18 @@ begin
    audio1 <= std_logic_vector(SND_s) & "000000";
 
   
-  GDP_EN_SYNC : entity work.InputSync
-     generic map (
-       ResetValue_g => '1'
-     )
-     port map (
-         Input => glob_gdp_en_i,
-         clk   => pixel_clk,
-         clr_n => reset_n,
-         q     => glob_gdp_en
-     );
-
+--  GDP_EN_SYNC : entity work.InputSync
+--     generic map (
+--       ResetValue_g => '1'
+--     )
+--     port map (
+--         Input => glob_gdp_en_i,
+--         clk   => pixel_clk,
+--         clr_n => reset_n,
+--         q     => glob_gdp_en
+--     );
+  glob_gdp_en <= '1';
+  
   bi_inst:entity work.gdp_bi
     port map(
       reset_n_i   => reset_n,

@@ -100,36 +100,6 @@ architecture rtl of gdp_vram is
 begin
 
 
---SDRAM_inst : entity work.SDRAM_controller_top_SIP
---  port map (
---    O_sdram_clk              => sdram_clk,
---    O_sdram_cke              => sdram_cke,
---    O_sdram_cs_n             => sdram_cs_n,
---    O_sdram_cas_n            => sdram_cas_n,
---    O_sdram_ras_n            => sdram_ras_n,
---    O_sdram_wen_n            => sdram_wen_n,
---    O_sdram_dqm              => sdram_dqm,
---    O_sdram_addr             => sdram_addr,
---    O_sdram_ba               => sdram_ba,
---    IO_sdram_dq              => sdram_dq,
---    --
---    I_sdrc_rst_n             => reset_n_i,
---    I_sdrc_clk               => clk_i,
---    I_sdram_clk              => clk_i,
---    I_sdrc_selfrefresh       => selfrefresh,
---    I_sdrc_power_down        => power_down,
---    I_sdrc_wr_n              => sdrc_wr_n,
---    I_sdrc_rd_n              => sdrc_rd_n,
---    I_sdrc_addr              => sdrc_addr,
---    I_sdrc_data_len          => sdrc_data_len,
---    I_sdrc_dqm               => sdrc_dqm,
---    I_sdrc_data              => std_logic_vector(sdrc_i_data),
---    O_sdrc_data              => sdrc_o_data,
---    O_sdrc_init_done         => sdrc_init_done,
---    O_sdrc_busy_n            => sdrc_busy_n,
---    O_sdrc_rd_valid          => sdrc_rd_valid,
---    O_sdrc_wrd_ack           => sdrc_wrd_ack
---   );
     SDRAM_inst: entity work.sdram
       port map (
          sd_clk     => sdram_clk,

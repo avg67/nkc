@@ -7,3 +7,4 @@ create_clock -name clk_hdmi -period 5.00 -waveform {0 3.125} [get_nets {video2hd
 //create_clock -name clk_spi -period 10 -waveform {0 5} [get_ports {mspi_clk}] -add
 create_clock -name clk_osc -period 37 -waveform {0 18} [get_ports {refclk_i}] -add
 //create_clock -name clk_32 -period 31 -waveform {0 15} [get_ports {O_sdram_clk}] -add
+
