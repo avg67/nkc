@@ -3,6 +3,7 @@ import time,sys
 import serial
 import os
 from optparse import OptionParser
+import ntpath
 
 from serial.serialutil import SerialTimeoutException, Timeout
 
@@ -67,7 +68,7 @@ class ser_file_transfer:
         header.extend(map(ord, 'H'))                                # 'H': 1
         header.extend(int(self.block_size/256).to_bytes(1,'little'))   # bs : 1
         header.extend(file_size.to_bytes(4,'big'))               # fs: 4
-        header.extend(map(ord, file_name))                          # file_name: <16
+        header.extend(map(ord, ntpath.basename(file_name)))        # file_name: <16
         terminator=0                                                # Terminator                        
         header.extend(terminator.to_bytes(1,'little'))              # zero : 1
         # calculate CRC of Header
@@ -142,8 +143,14 @@ class ser_file_transfer:
     def send_file(self,file_name):
         file_size = os.stat(file_name).st_size
         nr_blocks = int((file_size+self.block_size-1)/self.block_size)
+        file_content=bytearray()
         with open(file_name, "rb") as f:
             bytes_read = f.read()
+            file_content.extend(bytes_read)
+        if file_name[-4:] in [".asm",".txt"]:
+            terminator =0
+            file_content.extend(terminator.to_bytes(1,'little'))              # zero : 1
+            file_size +=1
         if self.check_slave_available()!=0:
             print("Serial slave not available")
             return 1
@@ -161,7 +168,7 @@ class ser_file_transfer:
         while block_nr<nr_blocks:
             idx1=block_nr*self.block_size
             idx2=min((block_nr+1)*self.block_size,file_size)
-            if self.send_frame(bytes_read[idx1:idx2])!=0:
+            if self.send_frame(file_content[idx1:idx2])!=0:
                 print("Error transmitting file")
                 return 1
             block_nr +=1
@@ -217,6 +224,20 @@ class ser_file_transfer:
             #bytes_read = f.read()
             f.write(file)
         print("Done. CRC OK")
+    def send_bl_command(self):
+        sent=self.ser.write(b"\r\nW\r\n");
+        if self.ser.in_waiting>0:
+            temp = self.ser.read(self.ser.in_waiting)
+            print(temp)
+        iterations=0
+        success=False
+        while iterations<100:
+            sent=self.ser.write(b'!');
+            xy=self.ser.read(1);
+            if xy==b'?':
+                success=True
+                break
+        return success
 
 
 print("NKC-Downloader by AVG")
@@ -225,6 +246,7 @@ parser.add_option("-d", "--download", dest="download", help="file to download", 
 parser.add_option("-u", "--upload", dest="upload", help="file to uploadload", metavar = "FILE") #, default="1:rs232d.asm")
 parser.add_option("-p", "--port", dest="port", help="COM-port", default="COM1")
 parser.add_option("-b", "--baud", dest="baud", help="Baudrate", default=19200, type=int )
+parser.add_option("-w", "--write", dest="boot", help="Start bootloader", default=False, action="store_true" )
 #parser.add_option("-r", "--receive", dest="receive", help="Receive Mode", default=True )
 (options, args) = parser.parse_args()
 
@@ -233,6 +255,10 @@ if (not (options.download or options.upload)):
     print("Invalid filename given")
     sys.exit()
 ft = ser_file_transfer(options)
+if (options.boot):
+    if(ft.send_bl_command()==False):
+        print("Failed to start Bootloader!")
+        exit
 if (options.upload != None):
     ft.send_file(options.upload)
 if (options.download != None):

@@ -1,11 +1,11 @@
-        org $400
+;        org $400       ; kein ORG in Jados
 
         ; CRC Polynomial
         POLY equ $1021  ; CCITT CRC16 Polynomial
         CPU equ 2
 
 ;        ser_base equ $ffe0
-        ser_base equ $fff0
+        ser_base equ $fffffff0          ; lange Adressen
         ser_data equ (ser_base)*CPU
         ser_stat equ (ser_base+1)*CPU
         ser_cmd equ  (ser_base+2)*CPU
@@ -13,26 +13,29 @@
 ;
         CTRL_BR9600 equ $1e
         CTRL_BR19200 equ $1f
-        CTRL_BR38400 equ $13    ; GDP-FPGA only
+        CTRL_BR38400 equ $15    ; GDP-FPGA only
         CTRL_BR57600 equ $14    ; GDP-FPGA only
+        CTRL_115200  equ $13    ; GDP-FPGA only
 
         MIN_BS equ 64
         MAX_BS equ 1024
         MAX_HEADER equ 27
 
 MACRO SER_CHK_ERR
-        btst.b #2,ser_stat.w
+        btst.b #2,ser_stat      ; lange Adresse
         bne err2
 ENDMACRO
 
-start:  moveq #25,d7
+start:  movem.l d0-d7/a0-a6,-(a7)
+        moveq #25,d7
         trap #6                 ; Read baudrate from commandline
                                 ; A0 points now to parameters
         movea.l a0,a1           ; Store it to A1
         moveq #0,d7
         trap #6                 ; Get length of string
+        lea br_115200(pc),a3     ; Default is 115200
 ;        lea br_57600(pc),a3     ; Default is 57600
-        lea br_19200(pc),a3     ; Default is 19200 (max for original ser)
+;        lea br_19200(pc),a3     ; Default is 19200 (max for original ser)
         tst.w d1
         beq.s default_br
         lea brtable(pc),a2
@@ -51,20 +54,19 @@ brsearch:
         move.b d1,d0
         bra.s ser_init
 default_br:
-        moveq #$1f,d0          ; 19200,n,8,1
-        ;moveq #$14,d0           ; 57600,n,8,1
+        ;moveq #CTRL_BR19200,d0   ; 19200,n,8,1
+        ;moveq #CTRL_BR57600,d0  ; 57600,n,8,1
+        moveq #CTRL_115200,d0    ; 115200,n,8,1
 ser_init:
         moveq #$0b,d1
-        move.b d0,ser_debug
-;        moveq #!siinit,d7
-;        trap #1
+;        move.b d0,ser_debug
         bsr siinit
         bsr init_crc
 
         lea welcome_msg(pc),a0
         moveq #7,d7
         trap #6                 ; Schreibe
-        movea a3,a0
+        movea.l a3,a0
         moveq #7,d7
         trap #6                 ; Write Baudrate
         lea part2(pc),a0
@@ -73,14 +75,8 @@ ser_init:
         lea con_stat(pc),a0
         clr.b (a0)
 
-wait_cmd: ;moveq #!sosts,d7
-        ;trap #1
-        ;beq.s m2
-        ;btst.b #4,ser_stat.w
-        ;bne.s m2
+wait_cmd:
         moveq #'?',d0
-;        moveq #!so,d7
-;        trap #1
         bsr ser_so
 m2:     moveq #!csts,d7
         trap #1
@@ -90,10 +86,8 @@ m2:     moveq #!csts,d7
         cmp.b #'x',d0
         beq exit
 no_char:
-        btst.b #3,ser_stat.w    ; Byte received?
+        btst.b #3,ser_stat      ; Byte received?
         beq.s m2
-;        moveq #!si,d7
-;        trap #1
         bsr ser_si
 b1:     cmp.b #'U',d0
         ;bne.s wait_cmd
@@ -133,15 +127,6 @@ rx:     bsr.s check_connected
         bra.s rx_payload
 rx_fail:
         ; Failure -> Print error Message
-;        cmp.b #2,d0
-;        bls.s rxf1
-;        moveq #1,d0     ; Default error msg
-;rxf1:   lea err_str_table(pc),a0
-;        subq.b #1,d0
-;        lsl.b #2,d0     ; *4
-;        ext.w d0
-;        movea.l 0(a0,d0.w),a0   ; print message
-;        jsr (a0)
         lea err_str_table(pc),a0
         bsr pr_err
         moveq #1,d0
@@ -194,7 +179,7 @@ rx_done:
         and.w #$07FF,d0
         beq.s m5
         addq.l #1,d2
-m5:     move.l d2,count ; DEBUG
+m5:     ;move.l d2,count ; DEBUG
         moveq #57,d7
         trap #6
         moveq #14,d7
@@ -204,7 +189,8 @@ done:   lea done_msg(pc),a0
         moveq #7,d7
         trap #6
         bra wait_cmd
-exit:   rts
+exit:   movem.l (a7)+,d0-d7/a0-a6
+        rts
 
 ;; **** Transmit file
 tx_fail:
@@ -232,10 +218,6 @@ tx_hdr_ok:
         bne.s no_drive
         clr.w d0
         move.b (a0),d0          ; Get drive letter
-;        cmp.b #'A',d0
-;        bls.s d1
-;        sub.b #'A',d0
-;        bra.s d2
 d1:     sub.b #'0',d0
 d2:     moveq #54,d7
 ;        move.w d0,debug1
@@ -245,7 +227,6 @@ no_drive:
 
 ;*** 1. Anzahl bytes senden (32 bit)
 ;; 1.1 Datei-info abfragen
-;;        lea fname(pc),a0
         lea fcb(pc),a1
         moveq #18,d7    ; fillfcb
         trap #6
@@ -258,7 +239,7 @@ no_drive:
         moveq #4,d2     ; Debug
         tst.b d0
         bne.s f_nf
-        ; dateilûnge ist nun in d1.l
+        ; dateilaenge ist nun in d1.l
         ; nun als BE zum Host senden
         move.l d1,d0    ; Store file size in d0
         bra.s f_ok
@@ -307,18 +288,12 @@ tx_loop:
         bhi.s tx1
         move.w d5,d4            ; copy remains to d4
 tx1:
-;        moveq #'.',d0
-;       movem.l a0-a2,-(a7)
-;       moveq #!co,d7
-;       trap #1
-;       movem.l (a7)+,a0-a2
         lea progress(pc),a2       ; print status
         bsr tx_frame
-        move.b d0,status_debug
+;        move.b d0,status_debug
         moveq #10,d2            ; Error #
         tst.b d0
         bne tx_fail             ; no recoverable error
-;        bne ferr
         sub.l d4,d5             ; substract from fs
         bne.s tx_loop
         ; Successfully Done :-)
@@ -342,10 +317,10 @@ errf1:  ;lea tx_err_str_table(pc),a0
 ; D0.b character used for progress
 progress:
 ;       moveq #'.',d0
-        movem.l a0-a2,-(a7)
+        movem.l a0-a2/a5, -(a7)
         moveq #!co,d7
         trap #1
-        movem.l (a7)+,a0-a2
+        movem.l (a7)+,a0-a2/a5
         rts
 
 ; A0 points to Message
@@ -354,7 +329,6 @@ progress:
 print_info:
         moveq #7,d7
         trap #6
-;        lea fname(pc),a0
         movea.l a1,a0
         moveq #7,d7
         trap #6
@@ -389,12 +363,14 @@ ferr:   lea err_msg(pc),a0
         moveq #7,d7
         trap #6         ; Print filename received
         clr.l d0
+        bsr pr_crlf
+        bra wait_cmd
+
 pr_crlf: lea crlf(pc),a0
         adda.l d0,a0
 ;        movea.l d0,a0
         moveq #7,d7
         trap #6         ; CRLF
-
         rts
 
 rx_err: lea rxerr(pc),a0
@@ -407,16 +383,16 @@ overflow: lea ovf_msg(pc),a0
         trap #6
         rts
 
-ser_so: btst.b #4,ser_stat.w
+ser_so: btst.b #4,ser_stat      ; lange Adresse
         beq.s ser_so
-        move.b d0,ser_data.w
+        move.b d0,ser_data      ; lange Adresse
         rts
 
-ser_si: move.b ser_stat.w,d0
+ser_si: move.b ser_stat,d0      ; lange Adresse
         btst.b #3,d0
         beq.s ser_si
         lsl.w #8,d0
-        move.b ser_data.w,d0
+        move.b ser_data,d0      ; lange Adresse
         rts
 
 ; if D0.b=0 -> ACK otherwise NACK
@@ -436,7 +412,7 @@ rx_header: lea header(pc),a0
         ; 1. Length (two byte)
         moveq #1,d6
 hdr1:
-;        btst.b #2,ser_stat.w
+;        btst.b #2,ser_stat
 ;        bne.s err2
         .SER_CHK_ERR
 
@@ -453,7 +429,7 @@ hdr1:
         move.w d3,d6
 
         ; 2. Header opcode 'H'
-;        btst.b #2,ser_stat.w
+;        btst.b #2,ser_stat
 ;        bne.s err2
         .SER_CHK_ERR
 
@@ -464,16 +440,16 @@ hdr1:
         move.b d0,(a0)+
 
 rx1:
-;        btst.b #2,ser_stat.w
+;        btst.b #2,ser_stat
 ;        bne.s err2
         .SER_CHK_ERR
 
-        bsr.s ser_si
+        bsr ser_si
         move.b d0,(a0)+
         bsr upd_crc
         dbra d6,rx1
 
-        move.w d1, crc_debug
+;        move.w d1, crc_debug
         moveq #0, d0        ; status ok
         tst.w d1
         beq.s rx_crc_ok
@@ -482,13 +458,13 @@ rx_crc_ok:
         moveq #11,d7
         lea hdr_fn(pc),a0
         trap #6         ; Upper Case
-        move.b d0,status_debug
+;        move.b d0,status_debug
         rts
 err1:   moveq #1,d0
-        move.b d0, status_debug
+;        move.b d0, status_debug
         rts
 err2:   moveq #2,d0    ; Overflow occured
-        move.b d0,status_debug
+;        move.b d0,status_debug
         rts
 
 ; A0 points to buffer
@@ -496,16 +472,17 @@ err2:   moveq #2,d0    ; Overflow occured
 ; nr of bytes received in D4
 rx_frame:
         lea crc_buffer(pc),a1
-        clr.w len_debug
+;        clr.w len_debug
 
-        ; 1. Length (two byte)
-        moveq #1,d6
+
         moveq #5,d7        ; max. retries
 frame2:
+        ; 1. Length (two byte)
+        moveq #1,d6
         moveq #$FF,d1           ; init CRC
         movea.l a0,a5           ; backup A0 in A5
 frame1:
-;        btst.b #2,ser_stat.w    ; abort in case of an overflow
+;        btst.b #2,ser_stat      ; abort in case of an overflow
 ;        bne.s err2
         .SER_CHK_ERR
 
@@ -515,7 +492,7 @@ frame1:
         lsl.w #8,d3
         or.b d0,d3      ; store len in d3
         dbra d6,frame1
-        move.w d3,len_debug
+;        move.w d3,len_debug
 
         move.b hdr_bs(pc),d0    ; check against Blocksize
         lsl.w #8,d0
@@ -534,7 +511,7 @@ rx_ok1:
         subq.w #1,d6            ; correct for dbra
 
 rx2:
-;        btst.b #2,ser_stat.w
+;        btst.b #2,ser_stat
 ;        bne.s err2
         .SER_CHK_ERR
 
@@ -542,11 +519,11 @@ rx2:
         move.b d0,(a0)+
         bsr upd_crc
         dbra d6,rx2
-        move.w d1,crc_debug
+;        move.w d1,crc_debug
         ; Now read 2 bytes CRC
         moveq #1,d6
 f_crc:
-;        btst.b #2,ser_stat.w    ; abort in case of an overflow
+;        btst.b #2,ser_stat      ; abort in case of an overflow
 ;        bne.s err2
         .SER_CHK_ERR
 
@@ -587,7 +564,7 @@ f_crc_ok:
 ; nr of bytes to transmit in D4
 tx_frame:
         lea crc_buffer(pc),a1
-        clr.w len_debug
+;        clr.w len_debug
         movea.l a0,a5           ; Backup A0
         moveq #5,d7        ; max. retries
 tx_fr2:
@@ -610,7 +587,7 @@ tx2:    move.b (a0)+,d0
         bsr ser_so
         bsr.s upd_crc
         dbra d6,tx2
-        move.w d1,crc_debug
+;        move.w d1,crc_debug
         ; Now send 2 bytes CRC
         moveq #1,d6
 
@@ -675,8 +652,8 @@ upd_crc: move.w d1,d2
         eor.w d2,d1
         rts
 
-siinit: move.b d0,ser_ctrl.w
-        move.b d1,ser_cmd.w
+siinit: move.b d0,ser_ctrl      ; lange Adressen
+        move.b d1,ser_cmd
         rts
 
 
@@ -684,11 +661,13 @@ br_9600: dc.b '9600',0
 br_19200: dc.b '19200',0
 br_38400: dc.b '38400',0
 br_57600: dc.b '57600',0
+br_115200: dc.b '115200',0
 ds 0
-brtable: dc.l br_9600, CTRL_BR9600
+brtable: dc.l br_9600,  CTRL_BR9600
          dc.l br_19200, CTRL_BR19200
-         dc.l br_38400,CTRL_BR38400
-         dc.l br_57600,CTRL_BR57600
+         dc.l br_38400, CTRL_BR38400
+         dc.l br_57600, CTRL_BR57600
+         dc.l br_115200,CTRL_115200
          dc.l 0,0
 
 welcome_msg: dc.b $d,$a,'RS232-Up/Downloader',$d,$a,'Baudrate: ',0
@@ -721,14 +700,14 @@ ds 0
 bytes_read: ds.l 1        ; bytes_read
 
 crc_buffer: ds.w 256
-count: ds.l 1
-len_debug: ds.w 1
-blocksize: ds.w 1
-crc_debug: ds.w 1
-ser_debug: dc.b 1
-status_debug: dc.b 1
-ds 0
-debug1: ds.l 1
+;count: ds.l 1
+;len_debug: ds.w 1
+;blocksize: ds.w 1
+;crc_debug: ds.w 1
+;ser_debug: dc.b 1
+;status_debug: dc.b 1
+;ds 0
+;debug1: ds.l 1
 ds 0
 fcb: ds.b 48
 buffer:
