@@ -855,6 +855,11 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
 #define TIMER1_HI         0xFFFFFFF5*cpu
 #define TIMER1_LO         0xFFFFFFF6*cpu
 
+static inline __attribute__((always_inline)) uint16_t get_timer(void)
+{
+    return ((uint16_t)FPGAT1.th << 8) | FPGAT1.tl;
+}
+
 /* ----------------------------------------------------------------------------- FLOPPY ------------------------------------------------------------------------------------------------------------- */
 
 #define FLO_COMMAND         0xFFFFFFC0*cpu
@@ -939,18 +944,19 @@ CSR 	32 		Card Status; information about the card status (See 4.10.1). Mandatory
 #define NKC_SER1_RX          0xFFFFFFF0*cpu
 
 // System-call bits
-#define IS_08    (1u<<0u)
-#define IS_00    (1u<<1u)
-#define IS_20    (1u<<2u)
-#define GDP_HS   (1u<<3u)
-#define UHR      (3u<<5u)
-#define HDD      (1u<<15u)
-#define KEY3     (1u<<16u)
-#define SER      (1u<<17u)
-#define SER2     (1u<<18u)
-#define GIDE     (1u<<19u)
-#define RAMDISK  (1u<<20u)
-#define GDP_FPGA (1u<<21u)
+#define IS_08      (1u<<0u)
+#define IS_00      (1u<<1u)
+#define IS_20      (1u<<2u)
+#define GDP_HS     (1u<<3u)
+#define UHR        (3u<<5u)
+#define SMARTWATCH (3u<<5u)
+#define HDD        (1u<<15u)
+#define KEY3       (1u<<16u)
+#define SER        (1u<<17u)
+#define SER2       (1u<<18u)
+#define GIDE       (1u<<19u)
+#define RAMDISK    (1u<<20u)
+#define GDP_FPGA   (1u<<21u)
 
 
 /* ----------------------------------------------------------------------------- KEYBOARD ------------------------------------------------------------------------------------------------------------- */

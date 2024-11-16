@@ -272,7 +272,9 @@ void _start(int stackmagi, char **argv, char **envp)
    //   VIA.ier=0;
    FPGAT1.ctrl=0;
    DISABLE_CPU_INTERRUPTS;
-   SC.command |=0x1f;
+   //SC.command |=0x1f;
+   SC.command = 0x0b;    // Disable all interrupts
+   SC.control = 0;
 
 #if 0
    asm   volatile(
@@ -305,7 +307,10 @@ void _exit(int ret)
 
     FPGAT1.ctrl=0;
     DISABLE_CPU_INTERRUPTS;
-    SC.command |=0x1f;
+
+    //SC.command |=0x1f;
+    SC.command = 0x0b;  // Disable all interrupts
+    SC.control = 0;
 
     /*
     * Returnvalue in register d0.

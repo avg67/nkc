@@ -127,7 +127,7 @@ volatile char gp_ci(void)
 
 
 
-DEVICE _device_ary = {"tty0", 0, DTYP_ASYNC, 0, _getcon, _putcon, _ctlcon, _initcon, _opencon, _closecon, 0};
+DEVICE _device_ary = {"tty0", 0, DTYP_NO, 0, _getcon, _putcon, _ctlcon, _initcon, _opencon, _closecon, 0};
 DEVICE _dev1       = {"tty1", 0, DTYP_ASYNC, 0, _getser, _putser, _ctlser, _initser, _openser, _closeser, 0};
 
 void _init_dev(){
@@ -463,8 +463,9 @@ __attribute__((__interrupt_handler__)) static void intr_handler(void)
     {
       FPGAT1.ctrl = 0x81;
       _clock_value++;
-      if(_clock_fu)
+      if(_clock_fu){
           _clock_fu();
+      }
     }
     uint8_t i;
     if (((i=SC.status) & 0x88)==0x88){
@@ -744,6 +745,7 @@ clock_t _clock(void (*clock_fu)(void))
     if(clock_fu) _clock_fu = clock_fu;
     if(!_clock_installed){
         _clock_installed = true;
+        DISABLE_CPU_INTERRUPTS;
    //     oldvec=(unsigned long)EXCEPT_VEC(INT_TIMER);
 
       //for (i=25;i<32;i++)

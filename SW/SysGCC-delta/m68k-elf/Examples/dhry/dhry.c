@@ -817,7 +817,8 @@ int main (void)
   REG   long             Number_Of_Runs;
   char x[80];
   long n;
-
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
 
 /* Initializations */
 
@@ -990,8 +991,8 @@ int main (void)
     printf ("Dhrystones per Second:                      ");
     printf ("%6d \n\r", Dhrystones_Per_Second);
     printf ("\n\r");
-    gets(x);
-	#if defined ndrcomp 
+    //gets(x);
+/*	#if defined ndrcomp
 //		VIA.ier=0;
 		FPGAT1.ctrl=0;
 		FPGAT1.th=1;
