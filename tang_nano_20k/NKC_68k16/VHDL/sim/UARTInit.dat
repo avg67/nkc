@@ -1,0 +1,8 @@
+  -- CMD.DAT
+  -- Steuerdatei für ser. Transmitter
+  -- Andreas Voggeneder
+
+8 1 e 9600  -- 8 Datenbits, 1 Stopbit, no Parity, 9600 Baud
+--
+I 1 D 49 I 1 D 50 D 51 D52 D53 
+I 10000
