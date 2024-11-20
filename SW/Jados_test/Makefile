@@ -38,7 +38,7 @@ gccdir = /c/SysGCC/m68k-elf
 ISEARCH = #-I. -I./Stack
 
 #LIBDIRS =  -L $(gccdir)/m68k-elf/lib/m68000
-COMMON_DIR = ../../nkc_common/
+COMMON_DIR = $(gccdir)/nkc_common/
 
 LIBS = 
 
@@ -47,12 +47,12 @@ LIBS =
 # Compile with debugging info (-g), with size optimization (-Os)
 # and 16-bit integers (-mshort)
 #CFLAGS=-g -Os -Wall -mshort -fomit-frame-pointer -std=gnu99 # -mrelax -nostartfiles
-CFLAGS=-g -Os -m68000 -Wall -fomit-frame-pointer -nostartfiles -std=gnu99 -Dndrcomp $(ISEARCH) -DUSE_JADOS #-ffunction-sections -fdata-sections
+CFLAGS=-g -Os -m68000 -fPIC -Wall -fomit-frame-pointer -nostartfiles -std=gnu99 -Dndrcomp $(ISEARCH) -DUSE_JADOS #-ffunction-sections -fdata-sections
 #CFLAGS=-std=gnu99 -t -save-temps -mc68000 -Dndrcomp  -mpcrel -aux-info funcs.h -fomit-frame-pointer -nostartfiles -Wno-attributes -T rm_ram1.ld -Wa,--w,--pcrel,-acdhls=file.asm -O5 -lm
 ASFLAGS= #-DM68000 
 
 # Linker Flags
-LDFLAGS= -T $(COMMON_DIR)rm_ram1.ld -Wl,-Map,$(OUTDIR)$(TARGET).map $(LIBDIRS) $(LIBS) #-Wl,--gc-section #,-nostartfiles #-Wl,-m,m68kelf #-nostartfiles #-mrelax
+LDFLAGS= -T $(COMMON_DIR)rm_ram1.ld -fPIC -Wl,-Map,$(OUTDIR)$(TARGET).map $(LIBDIRS) $(LIBS) #-Wl,--gc-section #,-nostartfiles #-Wl,-m,m68kelf #-nostartfiles #-mrelax
 #LDFLAGS= #-T rm_ram1.ld -Wl,-Map,$(TARGET).map $(LIBDIRS) #$(LIBS)  #-nostartfiles #-Wl,-m,m68kelf #-nostartfiles #-mrelax
 
 

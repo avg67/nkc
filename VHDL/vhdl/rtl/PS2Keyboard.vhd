@@ -18,6 +18,8 @@
 --line released (HIGH). Make sure to bring the DATA line LOW before releasing the CLOCK line. 
 --Some time later (up to 10 milliseconds) the keyboard will start to generate clock signals. 
 --At each HIGH to LOW clock transition the keyboard will clock in a new bit.
+-- Commands: https://stanislavs.org/helppc/keyboard_commands.html
+
 
 library IEEE;
 use IEEE.std_logic_1164.all;

@@ -27,16 +27,16 @@ module sdram (
 `ifdef VERILATOR
 	input [31:0]	  sd_data_in,
 `endif
-	output reg [12:0] sd_addr, // 11 bit multiplexed address bus
-	output     [3:0]  sd_dqm, // two byte masks
-	output reg [1:0]  sd_ba, // two banks
+	output reg [12:0] sd_addr, // 13 bit multiplexed address bus
+	output     [3:0]  sd_dqm, // four byte masks
+	output reg [1:0]  sd_ba, // four banks
 	output		  sd_cs, // a single chip select
 	output		  sd_we, // write enable
 	output		  sd_ras, // row address select
 	output		  sd_cas, // columns address select
 
 	// cpu/chipset interface
-	input		  clk, // sdram is accessed at 32MHz
+	input		  clk, // sdram is accessed at 40MHz
 	input		  reset_n, // init signal after FPGA config to initialize RAM
 
 	output		  ready, // ram is ready and has been initialized
