@@ -38,7 +38,7 @@ gccdir = /c/SysGCC/m68k-elf
 ISEARCH = #-I. -I./Stack
 
 #LIBDIRS =  -L $(gccdir)/m68k-elf/lib/m68000
-COMMON_DIR = ../../nkc_common/
+COMMON_DIR = $(gccdir)/nkc_common/
 
 LIBS = 
 

@@ -92,12 +92,12 @@ static inline void cs_reset(void)
             asm volatile(
             "# asm"                 "\n\t" \
             "lea %0,%%a0"           "\n\t" /*CS8900.data0_l*/ \
-    "wf1_%=: movew %%a1@+,%%d0"     "\n\t" \
+    "wf1_%=: movew %%a1@+,%%d0"     "\n\t" /* 8 */ \
     /*"wf1_%=: moveb %%a1@+,%%d0"*/     "\n\t" \
             /*"lslw #8,%%d0"*/          "\n\t" \
             /*"moveb %%a1@+,%%d0"*/     "\n\t" \
-            "movepw %%d0,0(%%a0)"   "\n\t" \
-            "dbra %%d1,wf1_%="      "\n\t" \
+            "movepw %%d0,0(%%a0)"   "\n\t"  /* 16  -> 12 (single move a1+,(a0)) -> total: 34 -> 22 cycles -> ~34% reduction */ \
+            "dbra %%d1,wf1_%="      "\n\t" /* 10 */ \
             "movew %1,%%d0"         "\n\t" /*len*/ \
             "btstb #0,%%d0"         "\n\t" \
             "beqs wf2_%="           "\n\t" \
