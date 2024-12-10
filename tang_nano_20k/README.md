@@ -27,9 +27,13 @@ CPU-Zugriff auf GDP-Video-RAM:
 *****************************
 Beim NKC-SOC (mit integrierter CPU) ist der volle GDP-Videoram in den CPU-Adressraum gemappt.
 1MB RAM, GP7.10R6 intern @ 0x1D0000, 64kB GP-Ram @ 0x1E0000, Video-RAM in CPU-Adressraum @ 0x800000 (256kB per page)
--PAGE0: 0x800000 -  0x83FFFF
--PAGE2: 0x840000 -  0x87FFFF
--PAGE3: 0x880000 -  0x8BFFFF
--PAGE4: 0x8C0000 -  0x8FFFFF
+
+- PAGE0: 0x800000 -  0x83FFFF
+
+- PAGE2: 0x840000 -  0x87FFFF
+
+- PAGE3: 0x880000 -  0x8BFFFF
+
+- PAGE4: 0x8C0000 -  0x8FFFFF
 
 Jede Page 512x512 - 8bit/Pixel
