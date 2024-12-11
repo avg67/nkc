@@ -1,6 +1,6 @@
 # NKC System on Chip für Tang-Nano
-FPGA-Files:
-***********
+
+*FPGA-Files:*
 - GDP64HS_FPGA.fs
    - Bus-Slave mit GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
 - GDP_and_TIMER.fs
