@@ -1,6 +1,6 @@
 # NKC System on Chip für Tang-Nano
-FPGA-Files:
-***********
+
+## FPGA-Files:
 - GDP64HS_FPGA.fs
    - Bus-Slave mit GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
 - GDP_and_TIMER.fs
@@ -23,8 +23,9 @@ FPGA-Files:
 - only_timer.fs
    - Nur Timer
 
-CPU-Zugriff auf GDP-Video-RAM: 
 *****************************
+## CPU-Zugriff auf GDP-Video-RAM: 
+
 Beim NKC-SOC (mit integrierter CPU) ist der volle GDP-Videoram in den CPU-Adressraum gemappt.
 1MB RAM, GP7.10R6 intern @ 0x1D0000, 64kB GP-Ram @ 0x1E0000, Video-RAM in CPU-Adressraum @ 0x800000 (256kB per page)
 
