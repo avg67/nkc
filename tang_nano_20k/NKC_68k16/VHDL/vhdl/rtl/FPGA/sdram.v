@@ -122,6 +122,7 @@ reg dout_valid_reg;
 reg busy_count;
 reg [3:0] burst_count;
 reg [1:0] cas_pipe;
+reg [2:0] max_cnt;
 
 assign is_idle = (state == STATE_IDLE)?1'b1:1'b0;
 assign cmd_ready = is_idle && ready && ((busy_count==0)?1'b1:1'b0);
@@ -141,6 +142,7 @@ always @(posedge clk) begin
       dout_valid_reg <= 1'b0;
       sd_data_reg    <= 32'd0;
       busy_count     <= 1'b0;
+      max_cnt        <= STATE_READ;
    end else begin
       if(init_state != 0)
         state <= state + 3'd1;
@@ -154,7 +156,6 @@ always @(posedge clk) begin
       
       // initialization takes place at the end of the reset
       if(state == STATE_IDLE) begin
-	 
          if(init_state == 13) begin
             sd_cmd      <= CMD_PRECHARGE;
             sd_addr[10] <= 1'b1;      // precharge all banks
@@ -179,6 +180,7 @@ always @(posedge clk) begin
       if(state == STATE_IDLE) begin
         // ... rising edge of cs
         if (cs && !csD) begin
+        //if (cs) begin
           if(!refresh) begin
             // RAS phase
             sd_cmd      <= CMD_ACTIVE;
@@ -195,8 +197,8 @@ always @(posedge clk) begin
 //               burst_count <= 4'd0;
 //            end
           end else
-          sd_cmd     <= CMD_AUTO_REFRESH;
-          busy_count <= 1'd1;
+            sd_cmd     <= CMD_AUTO_REFRESH;
+            busy_count <= 1'd1;
         end
       end else begin
         // always advance state unless we are in idle state
@@ -207,6 +209,7 @@ always @(posedge clk) begin
         // CAS phase 
          if(state == STATE_CMD_CONT) begin
             sd_cmd  <= we?CMD_WRITE:CMD_READ;
+            max_cnt <= we?3:STATE_READ;
             //sd_addr <= { 3'b100, addr[8:1] };
             sd_addr <= { 3'b100, addr[7:0] };
             if (read_burst && !we) begin
@@ -222,33 +225,25 @@ always @(posedge clk) begin
          if(state > STATE_CMD_CONT && state < STATE_READ)
             sd_cmd <= CMD_NOP;
       
-         if(state == STATE_READ) begin
-            state <= 3'b0;
+         //if(state == STATE_READ) begin
+         if(state == max_cnt) begin // write cyle is shorter by 1 clock than a read-cycle
+         //if((!read_burst && state == 3) ||(read_burst && state == STATE_READ)) begin
+            state <= STATE_IDLE;
          end
-        // read phase
-        if (!cas_pipe[1] && !we) begin
          
-        //if(state == STATE_READ && !we) begin
-//        if(state == STATE_READ) begin
-//            if (burst_count >0) begin
-//               state <= state;
-//               burst_count <= burst_count - 1; 
-//            end else begin
-//               state <= 3'b0;
-//            end
-//            if (!we) begin
-               debug1         <= ~debug1;
-               dout_valid_reg <= 1'b1;
-`ifdef VERILATOR
-               //dout <= addr[0]?sd_data_in[15:0]:sd_data_in[31:16];
-               dout <= sd_data_in;
-`else
-               //dout <= addr[0]?sd_data[15:0]:sd_data[31:16];
-               dout <= sd_data;
-`endif
-//            end
-        end
       end
+      // read phase
+      if (!cas_pipe[1] && !we) begin
+            debug1         <= ~debug1;
+            dout_valid_reg <= 1'b1;
+`ifdef VERILATOR
+            
+            dout <= sd_data_in;
+`else
+            dout <= sd_data;
+`endif
+      end
+
    end
 end
    

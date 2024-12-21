@@ -78,6 +78,16 @@ architecture rtl of SPI_Interface is
   signal initial                 : std_ulogic;
   
 begin
+
+-- Divider:
+-- 0: /2
+-- 1: /4
+-- 2: /6
+-- 3: /8
+-- 4: /10
+-- 5: /12
+-- 6: /14
+-- 7: /16
     
 --    with to_integer(unsigned(Adr_i(1 downto 0))) select
 --      DataOut   <=  "00000"  & ctrl_reg   when 0,

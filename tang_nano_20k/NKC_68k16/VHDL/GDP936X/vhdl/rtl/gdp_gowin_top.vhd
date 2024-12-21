@@ -161,7 +161,7 @@ architecture rtl of gdp_gowin_top is
 --  constant SFR_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"40"; -- w
 --  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
 --  constant DIP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"49"; -- r
-  
+  signal zeros             : std_ulogic_vector(31 downto 0);
   signal pixel_clk         : std_ulogic;
   signal sdctrl_clk        : std_ulogic;
   signal sdram_clk         : std_ulogic;
@@ -251,7 +251,7 @@ architecture rtl of gdp_gowin_top is
   signal audio0            : std_logic_vector(15 downto 0);
   signal audio1            : std_logic_vector(15 downto 0);
 begin
-
+  zeros <= (others => '0');
   dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
 --           dipswitches1_c;
 
@@ -411,6 +411,16 @@ begin
       --Hsync_o     => Hsync_o,
       --Vsync_o     => Vsync_o,
       vreset_o    => vreset,
+      
+      cpu_req_i     => '0',
+      cpu_wr_i      => '0',
+      cpu_addr_i    => zeros(21 downto 0),
+      cpu_data_i    => zeros(15 downto 0),
+      cpu_data_bv_i => "00",
+      cpu_data_o    => open,
+      cpu_busy_o    => open,
+      cpu_ack_o     => open,
+      
 
 --      kernel_req_o  => kernel_req,
 --      kernel_wr_o   => kernel_wr,

@@ -297,7 +297,7 @@ begin
          re_detected := true;
          re := now;
       elsif falling_edge(rd_data_valid_i) then
-         assert re_detected=false or (now - re) >=200ns report "Invalid fifo write detected" severity error;
+         assert re_detected=false or (now = re) or (now - re) >=200ns report "Invalid fifo write detected" severity error;
          re_detected := false;
       end if;
    end process;

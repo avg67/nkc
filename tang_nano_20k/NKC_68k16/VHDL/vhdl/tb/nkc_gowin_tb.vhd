@@ -58,13 +58,22 @@ architecture beh of nkc_gowin_tb is
   signal SDRAM_nCS1  : STD_LOGIC;
   signal SDRAM_BA1   : std_logic_vector(1 downto 0);
 
-  signal SD_nCS         : std_ulogic_vector(0 downto 0);
+  signal SD_nCS         : std_ulogic_vector(1 downto 0);
   signal SD_MOSI        : std_ulogic;
   signal Ps2Clk         : std_logic;
   signal Ps2Dat         : std_logic;
   signal Ps2MouseClk    : std_logic;
   signal Ps2MouseDat    : std_logic;
   signal TxD            : std_ulogic;
+  
+  signal nkc_DB      : std_logic_vector(7 downto 0):=(others =>'H');
+  signal nkc_ADDR    : std_ulogic_vector(7 downto 0);
+  signal nkc_nRD     : std_ulogic;
+  signal nkc_nWR     : std_ulogic;
+  signal nkc_nIORQ   : std_ulogic;
+  signal driver_nEN  : std_ulogic;
+  signal driver_DIR  : std_ulogic;
+  signal gpio_reg    : std_logic_vector(7 downto 0):=(others =>'0');
 begin  -- beh
 
   -- clock generation
@@ -73,8 +82,15 @@ begin  -- beh
   DUT: entity work.nkc_gowin_top
     generic map(sim_g => true)
     port map (
-      reset_i   => reset_i,
-      refclk_i    => clk,
+      reset_i      => reset_i,
+      refclk_i     => clk,
+      nkc_DB       => nkc_DB,
+      nkc_ADDR_o   => nkc_ADDR,
+      nkc_nRD_o    => nkc_nRD,
+      nkc_nWR_o    => nkc_nWR,
+      nkc_nIORQ_o  => nkc_nIORQ,
+      driver_nEN_o => driver_nEN,
+      driver_DIR_o => driver_DIR,
       RxD_i       => TxD,
       TxD_o       => open,
 --      CTS_i       => '1',
@@ -125,6 +141,14 @@ begin  -- beh
     SDRAM_BA1   <= SDRAM_BA   after 1 ns;
 
    reset_i <= '1', '0' after 1 us;
-
+   
+   nkc_DB <= gpio_reg when nkc_nIORQ='0' and nkc_nRD='0' and nkc_ADDR=X"30" else
+             (others => 'Z') after 150 ns;
+   
+   process(nkc_DB,nkc_ADDR,   nkc_nRD, nkc_nWR, nkc_nIORQ)
+   begin
+      if nkc_nWR='0' and nkc_nIORQ='0' and  nkc_ADDR=X"30" then
+         gpio_reg <= nkc_DB;
+      end if;
+   end process;   
 end beh;
-

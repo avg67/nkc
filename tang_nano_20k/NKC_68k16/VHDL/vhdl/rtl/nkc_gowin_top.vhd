@@ -23,6 +23,19 @@ entity nkc_gowin_top is
   generic(sim_g      : boolean := false);
   port(reset_i       : in  std_ulogic:='0';
        refclk_i      : in  std_ulogic;
+       --------------------------
+       -- NKC Bus
+       --------------------------
+       nkc_nreset_o  : out std_ulogic;
+       nkc_DB        : inout std_logic_vector(7 downto 0);
+       nkc_ADDR_o    : out std_ulogic_vector(7 downto 0);
+       nkc_nRD_o     : out std_ulogic;
+       nkc_nWR_o     : out std_ulogic;
+       nkc_nIORQ_o   : out std_ulogic;
+       driver_nEN_o  : out std_ulogic;
+       driver_DIR_o  : out std_ulogic;
+       driver_DIR1_o : out std_ulogic;
+--       nIRQ_i        : in  std_logic :='1';
 --	   
 --       --------------------------
 --       -- UART Receiver
@@ -75,9 +88,13 @@ entity nkc_gowin_top is
 --       -- SPI-Signals
 --       --------------------------
        SD_SCK_o  : out std_ulogic;
-       SD_nCS_o  : out std_ulogic_vector(0 downto 0);
+       SD_nCS_o  : out std_ulogic_vector(1 downto 0);
        SD_MOSI_o : out std_ulogic;
        SD_MISO_i : in  std_ulogic;
+       --
+       SD1_SCK_o  : out std_ulogic;
+       SD1_MOSI_o : out std_ulogic;
+       SD1_MISO_i : in  std_ulogic := '1';
 --       --------------------------
 --       -- GPIO-Signals
 --       --------------------------
@@ -644,12 +661,15 @@ begin
         Wr_i        => gdp_Wr,
         DataOut_o   => spi_data
       );
-      SD_SCK_o <= SD_SCK_s;
-      SD_nCS_o <= SD_nCS_s(0 downto 0);
-      SD_MOSI_o <= SD_MOSI_s;
+      SD_SCK_o   <= SD_SCK_s;
+      SD1_SCK_o  <= SD_SCK_s;
+      SD_nCS_o   <= SD_nCS_s(1 downto 0);
+      SD_MOSI_o  <= SD_MOSI_s;
+      SD1_MOSI_o <= SD_MOSI_s;
       --SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
       --             SD_MISO_i;
-      SD_MISO_s <= SD_MISO_i;
+      SD_MISO_s <= SD1_MISO_i when SD_nCS_s(1)='0' else
+                   SD_MISO_i;
       -- duplicate SPI pins to decouple SD-cards and Ethernet controller electrically
       --ETH_SCK_o  <= SD_SCK_s;
       --ETH_nCS_o  <= SD_nCS_s(2);
@@ -748,9 +768,10 @@ begin
             
             
    CPU: block  
-      constant ROM_ADDR_c   : std_ulogic_vector(23 downto 0) :=X"1D0000";
-      constant GP_RAM_ADDR_c: std_ulogic_vector(23 downto 0) :=X"1E0000";
-      constant VID_RAM_ADDR_c: std_ulogic_vector(23 downto 0) :=X"800000";
+      constant ROM_ADDR_c      : std_ulogic_vector(23 downto 0) :=X"1D0000";
+      constant GP_RAM_ADDR_c   : std_ulogic_vector(23 downto 0) :=X"1E0000";
+      constant VID_RAM_ADDR_c  : std_ulogic_vector(23 downto 0) :=X"800000";
+      constant IO_WAITSTATES_c : natural := 5;
       signal logic1         : std_ulogic;
       signal logic0         : std_ulogic;
       signal reset          : std_ulogic;
@@ -777,6 +798,14 @@ begin
       signal cpu_req1       : std_ulogic;
       signal cpu_req_d      : std_ulogic;
       signal IPLn           : std_ulogic_vector(2 downto 0);
+      signal INT_IORQ       : std_ulogic;
+      signal EXT_IORQ       : std_ulogic;
+      signal EXT_IORQ_d     : std_ulogic;
+      signal ext_io_dly     : natural range 0 to IO_WAITSTATES_c;
+      signal ext_io_dtack   : std_ulogic;
+      signal ext_data_reg   : std_ulogic_vector(7 downto 0);
+      signal ext_driver_en  : std_ulogic;
+      signal driver_DIR     : std_ulogic;
       --signal bus_watch      : natural range 0 to 500;
    begin
       logic1 <= '1';
@@ -794,6 +823,10 @@ begin
             always_boot  <= '1';
             cpu_req_d    <= '0';
             --bus_watch    <= 0;
+            ext_io_dly   <= 0;
+            ext_io_dtack <= '0';
+            EXT_IORQ_d   <= '0';
+            ext_data_reg <= (others => '0');
          elsif rising_edge(pixel_clk) then
             clkDivisor <= clkDivisor + 1;
             if pwrup_dly/=0 then
@@ -804,12 +837,28 @@ begin
             end if;
             nWR_d    <= nWR;
             nRD_d    <= nRD;
-            gdp_Rd   <= not nRD and nRD_d;
-            gdp_Wr   <= not nWR and nWR_d;
+            gdp_Rd   <= not nRD and nRD_d and not UDSn;
+            gdp_Wr   <= not nWR and nWR_d and not UDSn;
             if rom_en='1' then
                always_boot  <= '0';
             end if;
             cpu_req_d <= cpu_req1;
+            EXT_IORQ_d<= EXT_IORQ;
+            if (not EXT_IORQ_d and  EXT_IORQ)='1' then
+               ext_io_dtack <= '1';
+               ext_io_dly   <= IO_WAITSTATES_c;
+            elsif EXT_IORQ='1' then
+               if ext_io_dly/=0 then
+                  if enPhi2='1' then
+                     ext_io_dly <= ext_io_dly - 1;
+                  end if;
+               else
+                  ext_io_dtack <= '0';
+                  if nRD='0' then
+                     ext_data_reg <= std_ulogic_vector(nkc_DB);
+                  end if;
+               end if;
+            end if;
             --if cpu_req1='1' and cpu_busy/='0' then
             --   if enPhi2='1' and bus_watch/=7 then
             --      bus_watch <= bus_watch+1;
@@ -860,7 +909,8 @@ begin
       VPAn   <= '0' when fc="111" and ASn='0' else
                 '1';
       --DTACKn <= '1' when bus_watch/=7 and cpu_req1='1' and cpu_busy/='0' else
-      DTACKn <= '1' when cpu_req1='1' and cpu_busy/='0' else
+      DTACKn <= '1'          when cpu_req1='1' and cpu_busy/='0' else
+                ext_io_dtack when EXT_IORQ='1' else
                 '0';
     test_rom_inst: if sim_g generate
         test_rom: entity work.test
@@ -881,7 +931,8 @@ begin
       
       iEdb <= rom_dout  when (always_boot or rom_en)='1' else
               cpu_datao when cpu_req1='1' else
-              std_ulogic_vector(nkc_DB_in) & X"00" when IORQ='1' else
+              std_ulogic_vector(nkc_DB_in)    & X"00" when INT_IORQ='1' else
+              std_ulogic_vector(ext_data_reg) & X"00" when EXT_IORQ='1' else
               (others => '1');
       
       
@@ -901,13 +952,16 @@ begin
                    '0';
       -- 1MB of SDRAM (0 - 0xfffff) and 64kB at 0x1E0000 -  0x1EFFFF
       cpu_req1 <= MREQ when ((RWn='1' or LDSn='0' or UDSn='0') and always_boot='0') and 
-                       (eab(23 downto 20)="0000" or gp_ram_en='1' or vid_ram_en='1') else
+                       (unsigned(eab(23 downto 16))<unsigned(ROM_ADDR_c(23 downto 16)) or gp_ram_en='1' or vid_ram_en='1') else   -- 0 - 0x1F_FFFF (2MB)
+                       --(unsigned(eab(23 downto 20))=0 or gp_ram_en='1' or vid_ram_en='1') else   -- 0 - 0x1F_FFFF (2MB)
+                       --(eab(23 downto 20)="0000" or gp_ram_en='1' or vid_ram_en='1') else   -- 0 - 0x0F_FFFF (1MB)
                   '0';
       cpu_req     <= cpu_req1 and not cpu_req_d;
       cpu_wr      <= MREQ and not nWR;
       --cpu_addr    <= eab(22 downto 1);
       cpu_addr    <= "111" & eab(19 downto 1) when vid_ram_en='1' else
-                     "00" & eab(20 downto 1);
+                     "0" & eab(21 downto 1);
+                     --"00" & eab(20 downto 1);
       cpu_datai   <= oEdb;
       cpu_data_bv <= not(UDSn & LDSn);
       Addr        <= eab(8 downto 1);
@@ -915,6 +969,45 @@ begin
       IPLn(0)     <= nIRQ;
       IPLn(1)     <= '1'; -- NMI
       IPLn(2)     <= nIRQ;
+      
+      -- indicates and FPGA internal IORQ when '1'
+      INT_IORQ     <= IORQ and fpga_en;
+      
+      
+      nkc_nreset_o <= reset_n;
+      --nkc_DB       <= std_logic_vector(oEdb(15 downto 8)) when EXT_IORQ = '1' and nWR='0' else
+      nkc_DB       <= std_logic_vector(oEdb(15 downto 8)) when driver_DIR='0' else
+                      (others => 'Z');
+      process(pixel_clk)
+      begin
+         if rising_edge(pixel_clk) then
+            EXT_IORQ      <= IORQ and not fpga_en;
+            ext_driver_en <= IORQ and not fpga_en and not RWn;
+            nkc_nRD_o     <= '1';
+            if (not nRD and EXT_IORQ)='1' then
+               nkc_nRD_o     <= '0';
+            end if;
+            nkc_nWR_o     <= '1';
+            driver_DIR    <= not ext_driver_en;
+            if (not nWR and EXT_IORQ)='1' then
+               nkc_nWR_o     <= '0';
+               -- set 245 to output (B->A) for an external IO-Write
+               --driver_DIR_o  <= '0';
+            end if;
+         end if;
+      end process;
+      nkc_ADDR_o   <= eab(8 downto 1);
+      --nkc_nRD_o    <= nRD when EXT_IORQ='1' else
+      --                '1';
+      --nkc_nWR_o    <= nWR when EXT_IORQ='1' else
+      --                '1';
+      nkc_nIORQ_o  <= not EXT_IORQ;
+      driver_nEN_o <= not reset_n; 
+      -- set 245 to output (B->A) for an external IO-Write
+      driver_DIR_o <= driver_DIR;
+      --driver_DIR_o <= '0' when (EXT_IORQ and not nWR)='1' else
+      --                '1';
+      driver_DIR1_o<= '0';
    end block;
 
 end rtl;

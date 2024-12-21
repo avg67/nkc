@@ -97,6 +97,7 @@ add wave -group {sdram_ctrl} -noupdate -radix hex /dut/gdp/vram/sdram_inst/*
 add wave -group {GDP_Top} -noupdate -radix hex /dut/gdp/*
 add wave -noupdate -divider
 add wave -group {Ser1} -noupdate -radix hex /dut/impl_key1/Ser_key/*
+add wave -group {SPI} -noupdate -radix hex /dut/impl_spi/spi/*
 
 
 TreeUpdate [SetDefaultTree]
