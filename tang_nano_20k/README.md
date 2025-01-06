@@ -23,7 +23,7 @@
 - only_timer.fs
    - Nur Timer
 - NKC_Z80.fs
-      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Maus, Sound, SDIO SD-Card Interface, 
+      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, 
       sowie externen I/O-Bus
 
 *****************************
