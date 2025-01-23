@@ -19,11 +19,15 @@
 - NKC_ser_key.fs
    - NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Maus, Sound, SPI (SD-Card)
      Key via (virt.) RS232 über Tang-Nano mit 9600 Baud
-     KEIN externer Bus!
+     sowie externen I/O-BUS (3 WS) und gepatchtem GP710r6 für bessere SD-Karten Kompatibilität
 - only_timer.fs
    - Nur Timer
 - NKC_Z80.fs
-      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Maus, Sound, SDIO SD-Card Interface, 
+      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Keyboard und PS/2-Maus, Sound, SDIO SD-Card Interface, 
+      sowie externen I/O-Bus
+- NKC_Z80_ser_key_ext_bus.fs
+      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, Sound, SDIO SD-Card Interface, 
+      Key via (virt.) RS232 über Tang-Nano mit 9600 Baud
       sowie externen I/O-Bus
 
 *****************************
