@@ -64,7 +64,7 @@ architecture beh of nkc_gowin_tb is
   signal Ps2Dat         : std_logic;
   signal Ps2MouseClk    : std_logic;
   signal Ps2MouseDat    : std_logic;
-  signal TxD            : std_ulogic;
+  signal TxD            : std_ulogic:='1';
   
   signal nkc_DB      : std_logic_vector(7 downto 0):=(others =>'H');
   signal nkc_ADDR    : std_ulogic_vector(7 downto 0);
@@ -80,7 +80,7 @@ begin  -- beh
   Clk     <= not Clk after 18.51851859 ns; -- 27 MHz
 
   DUT: entity work.nkc_gowin_top
-    generic map(sim_g => true)
+    generic map(sim_g => false)
     port map (
       reset_i      => reset_i,
       refclk_i     => clk,
@@ -101,7 +101,7 @@ begin  -- beh
       SD_SCK_o    => open,
       SD_nCS_o    => SD_nCS,
       SD_MOSI_o   => SD_MOSI,
-      SD_MISO_i   => SD_MOSI,
+      SD_MISO_i   => '1',
       O_sdram_clk   => SDRAM_CLK, --SDRAM_CLK_neg,
       O_sdram_cke   => SDRAM_CKE,
       O_sdram_cs_n  => SDRAM_nCS,
@@ -115,8 +115,8 @@ begin  -- beh
       --glob_gdp_en_i => '1'
     );
 
-  TX : entity work.RS_232_TX
-    port map(TX => TxD);
+--  TX : entity work.RS_232_TX
+--    port map(TX => TxD);
 
   DRAM_1: entity work.sdram_sim_model
     port map (

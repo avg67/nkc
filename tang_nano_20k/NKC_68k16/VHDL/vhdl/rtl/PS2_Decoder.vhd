@@ -317,6 +317,7 @@ begin
     LookupEn           <= '0';
     next_evaluate      <= evaluate; 
     cpu_reset_stb      <= '0';
+    ScanCode_v         := ScanCode_i;
     
     if enable_i = '1' then
       case fetch_state is

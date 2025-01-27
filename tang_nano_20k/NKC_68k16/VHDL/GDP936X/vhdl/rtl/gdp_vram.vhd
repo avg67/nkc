@@ -21,6 +21,9 @@ library ieee;
   use work.DffGlobal.all;
 
 entity gdp_vram is
+  generic (
+   cpu_early_ack_g : boolean :=true   -- 68k needs early ack, Z80 not
+  );
   port (
     clk_i             : in  std_ulogic;
     clk_en_i          : in  std_ulogic;
@@ -339,13 +342,17 @@ begin
       when cpu_read_e =>
         if srdc_cmd_ready='0' then
            next_state   <= dram_cpu_busy_e;
-           next_cpu_ack <= '1';
+           if cpu_early_ack_g then
+               next_cpu_ack <= '1';
+           end if;
         end if;
       when cpu_write_e =>
          -- wait until command execution starts
          if srdc_cmd_ready='0' then
             next_state       <= dram_cpu_busy_e;
-            next_cpu_ack     <= '1';
+            if cpu_early_ack_g then
+               next_cpu_ack     <= '1';
+            end if;
             --next_kernel_ack  <= '1';
          end if;
       when dram_cpu_busy_e =>
@@ -357,7 +364,9 @@ begin
          if srdc_cmd_ready='1' then
             next_state   <= idle_e;
             next_ram_en  <= '0';
-            --next_cpu_ack <= '1';
+            if not cpu_early_ack_g then
+               next_cpu_ack <= '1';
+            end if;
          end if;
       when refresh_e =>
          refresh_done <= '1';
@@ -511,7 +520,7 @@ begin
 --  cpu_data_o <= cpu_data1; --cpu_data1;
   
     process(cpu_rd_state, cpu_req_i, cpu_wr_i, cpu_addr_i, cpu_data1, cache_valid,
-            stored_cpu_address, sdrc_o_data)
+            stored_cpu_address, sdrc_o_data, set_store_data, store_data, sdrc_rd_valid)
     begin
       next_cpu_rd_state       <= cpu_rd_state;
       next_cpu_req            <= cpu_req_i;

@@ -23,6 +23,9 @@ use work.gdp_global.all;
 --       0xA5,A6 = Datenregister
 
 entity gdp_top is
+  generic (
+      cpu_vram_early_ack_g : boolean :=true   -- 68k needs early ack, Z80 not
+  );
   port(reset_n_i     : in  std_ulogic;
        clk_i         : in  std_ulogic;
        clk_en_i      : in  std_ulogic;
@@ -247,6 +250,9 @@ begin
                   "00"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
   
   vram : entity work.gdp_vram
+    generic map (
+      cpu_early_ack_g => cpu_vram_early_ack_g
+    )
     port map(
       clk_i           => clk_i,
       clk_en_i        => clk_en_i,
