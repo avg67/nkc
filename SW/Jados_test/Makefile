@@ -72,7 +72,7 @@ OBJS          += $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(
 PROGS=$(OUTDIR)$(TARGET).elf
 LIST=$(PROGS:.elf=.lst)
 
-all:: createdirs $(PROGS) create_bin print_codesize
+all:: createdirs $(PROGS) create_bin $(TARGET).s19 print_codesize
 
 clean_all: clean all
 
