@@ -29,6 +29,9 @@
       Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, Sound, SDIO SD-Card Interface, 
       Key via (virt.) RS232 über Tang-Nano mit 9600 Baud
       sowie externen I/O-Bus
+  NKC_68k_PS2_KEYB_PCB.fs
+     NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+     sowie externen I/O-BUS (3 WS) für PCB von USE
 
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM: 
