@@ -46,22 +46,14 @@ LIBS =
 
 # Compile with debugging info (-g), with size optimization (-Os)
 # and 16-bit integers (-mshort)
-#CFLAGS=-g -Os -Wall -mshort -fomit-frame-pointer -std=gnu99 # -mrelax -nostartfiles
-CFLAGS=-g -Os -m68000 -fPIC -Wall -fomit-frame-pointer -nostartfiles -std=gnu99 -Dndrcomp $(ISEARCH) -DUSE_JADOS #-ffunction-sections -fdata-sections
-#CFLAGS=-std=gnu99 -t -save-temps -mc68000 -Dndrcomp  -mpcrel -aux-info funcs.h -fomit-frame-pointer -nostartfiles -Wno-attributes -T rm_ram1.ld -Wa,--w,--pcrel,-acdhls=file.asm -O5 -lm
+CFLAGS=-g -Os -m68000 -Wall -fomit-frame-pointer -nostartfiles -std=gnu99 -Dndrcomp -DUSE_JADOS $(ISEARCH)  
+
 ASFLAGS= #-DM68000 
 
 # Linker Flags
-LDFLAGS= -T $(COMMON_DIR)rm_ram1.ld -fPIC -Wl,-Map,$(OUTDIR)$(TARGET).map $(LIBDIRS) $(LIBS) #-Wl,--gc-section #,-nostartfiles #-Wl,-m,m68kelf #-nostartfiles #-mrelax
-#LDFLAGS= #-T rm_ram1.ld -Wl,-Map,$(TARGET).map $(LIBDIRS) #$(LIBS)  #-nostartfiles #-Wl,-m,m68kelf #-nostartfiles #-mrelax
+LDFLAGS= -T $(COMMON_DIR)rm_ram1.ld -Wl,-Map,$(OUTDIR)$(TARGET).map $(LIBDIRS) $(LIBS)
 
 
-
-# Flags for objcopy tool
-OBJCOPY_FLAGS=--only-section=.text \
-              --only-section=.rodata \
-              --only-section=.vectors \
-              --only-section=.data
 
 # List of C sources
 CSRCS=  test.c
@@ -80,7 +72,7 @@ OBJS          += $(addprefix $(OBJPATH)/, $(addsuffix .o, $(notdir $(basename $(
 PROGS=$(OUTDIR)$(TARGET).elf
 LIST=$(PROGS:.elf=.lst)
 
-all:: createdirs $(PROGS) create_bin print_codesize
+all:: createdirs $(PROGS) create_bin $(TARGET).s19 print_codesize
 
 clean_all: clean all
 
@@ -102,9 +94,9 @@ $(PROGS):	$(OBJS) #llnkc.o
 	$(OBJDUMP) -S $(PROGS) > $(LIST)
 
 $(TARGET).s19:    $(PROGS)
-	$(OBJCOPY) $(OBJCOPY_FLAGS) --output-target=srec $< $(OUTDIR)$@
+	$(OBJCOPY) --output-target=srec $< $(OUTDIR)$@
 
-create_bin:   $(TARGET).s19
+create_bin:   $(PROGS)
 	$(OBJCOPY) --output-target=binary $(OUTDIR)$(TARGET).elf $(OUTDIR)$(TARGET).68k
 
 # print codesize
