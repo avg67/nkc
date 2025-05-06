@@ -22,7 +22,8 @@ vlog -work work ../vhdl/rtl/hdmi/hdmi/audio_clock_regeneration_packet_sim.sv \
                 ../vhdl/rtl/hdmi/video2hdmi.sv \
                 ../vhdl/rtl/hdmi/gowin_rpll_200/gowin_rpll/pll_200m.v \
                 ../vhdl/rtl/hdmi/gowin_clkdiv/gowin_clkdiv.v \
-                ../vhdl/rtl/FPGA/gowin_rpll/gowin_rpll_40.v
+                ../vhdl/rtl/FPGA/gowin_rpll/gowin_rpll_40.v \
+                ../vhdl/rtl/FPGA/gowin_rpll_80/pll_80m.v
 
 vcom -2008  ../GDP936X/vhdl/tb/gdp_bitmap-p.vhd \
             ../vhdl/rtl/src/UART_pkg.vhd \
@@ -44,6 +45,7 @@ vcom -93                  ../GDP936X/vhdl/rtl/Dffdecl-p.vhd \
                           ../GDP936X/vhdl/rtl/gdp_clut.vhd \
                           ../GDP936X/vhdl/rtl/gdp_clut_256.vhd \
                           ../GDP936X/vhdl/rtl/FPGA/fifo_sc_hs/video_fifo.vho \
+                          ../GDP936X/vhdl/rtl/FPGA/dual_video_fifo/dual_video_fifo.vho \
                           ../GDP936X/vhdl/rtl/gdp_video.vhd \
                           ../GDP936X/vhdl/rtl/gdp_top.vhd \
                           ../vhdl/rtl/PS2_Interface.vhd \

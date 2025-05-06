@@ -30,7 +30,7 @@ entity gdp_top is
        clk_i         : in  std_ulogic;
        clk_en_i      : in  std_ulogic;
        sdctrl_clk_i  : in  std_ulogic;
-       sdram_clk_i   : in  std_ulogic;
+       --sdram_clk_i   : in  std_ulogic;
        --------------------------
        -- internal data bus (Register)
        --------------------------
@@ -136,6 +136,7 @@ begin
     reset_n_i  => reset_n_i,
     clk_i      => clk_i,
     clk_en_i   => clk_en_i,
+    clk_2x_i   => sdctrl_clk_i,
     -----------------------------
     -- interface to VRAM
     -----------------------------
@@ -257,7 +258,7 @@ begin
       clk_i           => clk_i,
       clk_en_i        => clk_en_i,
       sdctrl_clk_i    => sdctrl_clk_i,
-      sdram_clk_i     => sdram_clk_i,
+      --sdram_clk_i     => sdram_clk_i,
       reset_n_i       => reset_n_i,
       kernel_clk_en_i => '1',
       kernel_req_i    => kernel_req,

@@ -28,7 +28,7 @@ entity gdp_vram is
     clk_i             : in  std_ulogic;
     clk_en_i          : in  std_ulogic;
     sdctrl_clk_i      : in  std_ulogic;   -- needs to be synch to clk_o
-    sdram_clk_i       : in  std_ulogic;   -- same fraquency as sdctrl_clk_i but maybe phase shifted
+    --sdram_clk_i       : in  std_ulogic;   -- same fraquency as sdctrl_clk_i but maybe phase shifted
     reset_n_i         : in  std_ulogic;
     -- kernel port (read & write)
     kernel_clk_en_i   : in  std_ulogic;
@@ -104,7 +104,9 @@ architecture rtl of gdp_vram is
   signal next_sdrc_read_burst, sdrc_read_burst   : std_logic;
   signal sdrc_init_done                     : std_logic;
   signal srdc_cmd_ready                     : std_logic;
-  signal sdrc_rd_valid                      : std_logic;
+  signal sdrc_rd_valid                         : std_logic; -- fast clock
+  signal sdrc_rd_valid_tgl,sdrc_rd_valid_tgl_d : std_logic; -- fast clock
+  signal sdram_rd_data_valid                   : std_logic;
   signal rd_data_valid                      : std_logic;
   signal cpu_prio, next_cpu_prio            : std_ulogic;
   signal is_cpu_acc, next_is_cpu_acc        : std_ulogic;
@@ -128,24 +130,24 @@ begin
          sd_ras     => sdram_ras_n,
          sd_cas     => sdram_cas_n,
                     
-         clk        => sdctrl_clk_i,
-         mem_clk    => sdram_clk_i,
-         reset_n    => reset_n_i,
-                    
-         ready      => sdrc_init_done,
-         refresh    => ram_refresh,
-         din        => sdrc_i_data,
-         dout       => sdrc_o_data,
-         dout_valid => sdrc_rd_valid,
-         addr       => sdrc_addr,
-         ds         => sdrc_dqm,
-         cs         => ram_en,
-         we         => ram_wren,
-         cmd_ready  => srdc_cmd_ready,
-         read_burst => sdrc_read_burst
+         clk_i            => sdctrl_clk_i,
+         reset_n_i        => reset_n_i,
+                          
+         ready_o          => sdrc_init_done,
+         refresh_i        => ram_refresh,
+         din              => sdrc_i_data,
+         dout             => sdrc_o_data,
+         dout_valid_o     => sdrc_rd_valid, -- 80 MHz 
+         dout_valid_tgl_o => sdrc_rd_valid_tgl,
+         addr_i           => sdrc_addr,
+         ds_i             => sdrc_dqm,
+         cs_i             => ram_en,
+         we_i             => ram_wren,
+         cmd_ready_o      => srdc_cmd_ready,
+         read_burst_i     => sdrc_read_burst
       );
 
-
+   sdram_rd_data_valid <= sdrc_rd_valid_tgl xor sdrc_rd_valid_tgl_d;
 
     power_down  <= '0';
     sdrc_addr   <=  std_logic_vector(ram_address);
@@ -156,7 +158,7 @@ begin
   -- RAM Arbiter FSM for ext. SDRAM
   process(state,ram_address, kernel_addr_i,kernel_wr_i,rd_addr_i,wr_data,ram_wren, ram_en, ram_refresh,
           kernel_req_i,kernel_req_pend,rd_req_i,rd_pend,kernel_data,kernel_clk_en_i,do_refresh,
-          sdrc_o_data,sdrc_dqm,srdc_cmd_ready,sdrc_init_done,sdrc_read_burst,sdrc_rd_valid,
+          sdrc_o_data,sdrc_dqm,srdc_cmd_ready,sdrc_init_done,sdrc_read_burst,sdrc_rd_valid,sdram_rd_data_valid,
           next_cpu_req,cpu_req_pend,cpu_wr_i,cpu_addr_i,cpu_data_bv_i,cpu_prio,is_cpu_acc
          )
     variable cpu_req_v, kernel_req_v : std_ulogic;
@@ -310,7 +312,8 @@ begin
       
       
       when dram_busy_e =>
-         set_kernel_data  <= sdrc_rd_valid and not ram_wren;
+         --set_kernel_data  <= sdrc_rd_valid and not ram_wren;
+	 set_kernel_data  <= sdram_rd_data_valid and not ram_wren;
          case kernel_addr_i(1 downto 0) is
             when "00" =>
                next_kernel_data <= std_ulogic_vector(sdrc_o_data(31 downto 24));
@@ -405,6 +408,7 @@ begin
       cpu_prio      <= '0';
       is_cpu_acc    <= '0';
       store_data    <= '0';
+      sdrc_rd_valid_tgl_d <= '0';
     elsif rising_edge(clk_i) then
       if clk_en_i = '1' then
          state       <= next_state;
@@ -417,7 +421,7 @@ begin
          if set_store_data='1' then
             store_data <= '1';
          end if;
-         if ((set_store_data or store_data) and sdrc_rd_valid)='1' then
+         if ((set_store_data or store_data) and sdram_rd_data_valid)='1' then
             store_data <= '0';
             cpu_data   <= next_cpu_data;
          --elsif next_cache_hit='1' then
@@ -434,6 +438,7 @@ begin
          ram_refresh <= next_ram_refresh;
          sdrc_dqm    <= next_sdrc_dqm;
          sdrc_read_burst <= next_sdrc_read_burst;
+         sdrc_rd_valid_tgl_d <= sdrc_rd_valid_tgl;
 
          kernel_ack_o<= next_kernel_ack;
          cpu_ack_o   <= next_cpu_ack;
@@ -515,12 +520,14 @@ begin
       end case;
     end process;
     
-  cpu_data1  <= check_x(std_ulogic_vector(sdrc_o_data)) when ((set_store_data or store_data) and sdrc_rd_valid)='1' else
+--
+  --cpu_data1  <= check_x(std_ulogic_vector(sdrc_o_data)) when ((set_store_data or store_data) and sdrc_rd_valid)='1' else
+  cpu_data1  <= check_x(std_ulogic_vector(sdrc_o_data)) when ((set_store_data or store_data) and sdram_rd_data_valid)='1' else
                 check_x(cpu_data); 
 --  cpu_data_o <= cpu_data1; --cpu_data1;
   
     process(cpu_rd_state, cpu_req_i, cpu_wr_i, cpu_addr_i, cpu_data1, cache_valid,
-            stored_cpu_address, sdrc_o_data, set_store_data, store_data, sdrc_rd_valid)
+            stored_cpu_address, sdrc_o_data, set_store_data, store_data, sdram_rd_data_valid)
     begin
       next_cpu_rd_state       <= cpu_rd_state;
       next_cpu_req            <= cpu_req_i;
@@ -550,7 +557,8 @@ begin
           end if;
         when RD_REQ_e =>
           --if set_cpu_data='1' then
-          if ((set_store_data or store_data) and sdrc_rd_valid) = '1' then
+          --if ((set_store_data or store_data) and sdrc_rd_valid) = '1' then
+          if ((set_store_data or store_data) and sdram_rd_data_valid) = '1' then
             next_stored_cpu_address <= cpu_addr_i(cpu_addr_i'high downto 1);
             --next_stored_cpu_data    <= check_x(std_ulogic_vector(sdrc_o_data));
             next_cpu_rd_state       <= idle_e;

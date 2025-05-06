@@ -1,0 +1,35 @@
+[General]
+ipc_version=4
+file=dual_video_fifo
+module=dual_video_fifo
+target_device=gw2ar18c-000
+type=fifo_hs
+version=1.0
+
+[Config]
+AlmostEmptyFlag=true
+AlmostEmptyFlagItem=Empty_Single Threshold Input Parameter
+AlmostFullFlag=false
+AlmostFullFlagItem=Full_Dual Threshold Constant Parameter
+BSRAM=true
+ControlledByRdEn=false
+ECCSelected=false
+EmptyClear=1
+EmptySet=1
+EnReset=true
+FirstWordFallThrough=true
+FullClear=1
+FullSet=1
+LANG=1
+OutputRegistersSelected=false
+REG=false
+ReadDataNum=false
+ReadDataWidth=32
+ReadDepth=32
+ResetSynchronization=false
+SSRAM=false
+StandardFIFO=false
+Synthesis_tool=GowinSynthesis
+WriteDataNum=false
+WriteDataWidth=32
+WriteDepth=32

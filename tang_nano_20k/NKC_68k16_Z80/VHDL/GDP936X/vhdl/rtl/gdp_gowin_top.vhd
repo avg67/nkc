@@ -162,10 +162,12 @@ architecture rtl of gdp_gowin_top is
 --  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
 --  constant DIP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"49"; -- r
   signal zeros             : std_ulogic_vector(31 downto 0);
-  signal pixel_clk         : std_ulogic;
+  signal clk_40            : std_ulogic;
+  signal pixel_clk,clk_80  : std_ulogic;
   signal sdctrl_clk        : std_ulogic;
   signal sdram_clk         : std_ulogic;
   signal reset_n           : std_ulogic:='0';
+  signal pll_80m_reset     : std_ulogic;
   signal rpll2_reset       : std_ulogic;
   --signal GDP_SRAM_ADDR     : std_ulogic_vector(15 downto 0);
   --signal GDP_SRAM_datao    : std_ulogic_vector(7 downto 0);
@@ -240,7 +242,8 @@ architecture rtl of gdp_gowin_top is
   signal SND_s             : std_ulogic_vector(9 downto 0);
   signal TxD_s             : std_ulogic;
   
-  signal vpll_lock,pll_lock: std_ulogic;
+  signal pll_lock          : std_ulogic;
+  signal pll_80m_lock      : std_ulogic;
   signal red               : std_ulogic_vector(2 downto 0);
   signal green             : std_ulogic_vector(2 downto 0);
   signal blue              : std_ulogic_vector(2 downto 0);
@@ -274,7 +277,7 @@ begin
       if rising_edge(pixel_clk) then
         reset_n  <= tmp_v(1);
         tmp_v(1) := tmp_v(0);
-        tmp_v(0) := (reset_n_i and not reset_i) and pll_lock;
+        tmp_v(0) := (reset_n_i and not reset_i) and pll_80m_lock;
       end if;
     end process reset_sync;
   end generate;
@@ -283,11 +286,21 @@ begin
     reset_n  <= reset_n_i;
   end generate;
 
+   pll_80 : entity work.pll_80m
+      port map (
+         reset    => pll_80m_reset,
+         clkin    => clk_40,
+         clkout   => clk_80,
+         lock     => pll_80m_lock,
+         clkoutd  => pixel_clk
+      );
+   pll_80m_reset <= not pll_lock;
+
 
   video2hdmi: entity work.video2hdmi
     port map (
       clk            => refclk_i,
-      clk_40         => pixel_clk,
+      clk_40         => clk_40, --pixel_clk,
       pll_lock       => pll_lock, --vpll_lock,
       vreset         => vreset,
       vvmode         => vvmode,
@@ -392,8 +405,8 @@ begin
       reset_n_i   => reset_n,
       clk_i       => pixel_clk,
       clk_en_i    => '1',
-      sdctrl_clk_i=> pixel_clk, --sdctrl_clk,
-      sdram_clk_i => pixel_clk, --sdram_clk,
+      sdctrl_clk_i=> clk_80, --sdctrl_clk,
+      --sdram_clk_i => pixel_clk, --sdram_clk,
       Adr_i       => Addr(3 downto 0),
 --      CS_i        => gdp_cs,
       gdp_en_i    => gdp_en,
