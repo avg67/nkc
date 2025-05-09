@@ -22,7 +22,7 @@ library ieee;
 
 entity gdp_vram is
   generic (
-   cpu_early_ack_g : boolean :=true   -- 68k needs early ack, Z80 not
+   cpu_early_ack_g : boolean :=true   -- 68k needs early ack, Z80 not, acknowledge read-access early (only for 68000 possible)
   );
   port (
     clk_i             : in  std_ulogic;
@@ -72,7 +72,7 @@ entity gdp_vram is
 end;
 
 architecture rtl of gdp_vram is
-
+  constant early_request_c                  : boolean := true;
   constant Refresh_time_c                   : natural := 600; -- 4096 times every 64ms -> every 15 us
   type state_t is(init_e,idle_e,kernel_write_e,kernel_read_e,dram_busy_e,vid_read_e,vid_busy_e, refresh_e, cpu_write_e,cpu_read_e, dram_cpu_busy_e);
   signal wr_data                            : std_ulogic_vector(7 downto 0);
@@ -280,22 +280,13 @@ begin
               do_cpu_acc_p;
             elsif kernel_req_v='1' then
               do_kernel_acc_p;
---            elsif (kernel_req_v and (not cpu_req_v or not cpu_prio))='1' then
---               if (cpu_req_v and kernel_req_v)='1' then
---                  next_cpu_prio    <= not cpu_prio; -- need a better system for priorization! if cpu-req is approaching while a kernel-request is running set cpu_prio and vice versa
---               end if;
---               do_kernel_acc_p;
---            elsif (cpu_req_v and (not kernel_req_v or     cpu_prio))='1' then
---               if (cpu_req_v and kernel_req_v)='1' then
---                  next_cpu_prio    <= not cpu_prio;
---               end if;
---               do_cpu_acc_p;
             end if;
          end if;
 
       when vid_read_e =>
         if srdc_cmd_ready='0' then
           next_state   <= vid_busy_e;
+            next_ram_en  <= '0'; -- !!! Terminate CS early
         end if;
         
       when vid_busy_e =>
@@ -304,16 +295,21 @@ begin
           next_state   <= idle_e;
           next_ram_en  <= '0';
           next_rd_ack  <= '1';
-          --if cpu_req_v='1' then
-          --  do_cpu_acc_p;
-          --end if;
+            if early_request_c then
+               if do_refresh ='1' then
+                  do_refresh_p;
+               elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
+                  do_kernel_acc_p;
+               elsif cpu_req_v='1' then
+                  do_cpu_acc_p;
+               end if;
+            end if;
               
         end if;
       
       
       when dram_busy_e =>
-         --set_kernel_data  <= sdrc_rd_valid and not ram_wren;
-	 set_kernel_data  <= sdram_rd_data_valid and not ram_wren;
+         set_kernel_data  <= sdram_rd_data_valid and not ram_wren;
          case kernel_addr_i(1 downto 0) is
             when "00" =>
                next_kernel_data <= std_ulogic_vector(sdrc_o_data(31 downto 24));
@@ -329,34 +325,49 @@ begin
             next_state  <= idle_e;
             next_ram_en <= '0';
             next_kernel_ack  <= '1';
-            --if cpu_req_v='1' then -- cs needs at least one cycle be low
-            --   do_cpu_acc_p;
-            --end if;
+             
+            if early_request_c then
+               if (rd_req_i or rd_pend)='1' then
+                 do_vid_rd_p;
+               elsif do_refresh ='1' then
+                 do_refresh_p;
+                --elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
+                --  do_kernel_acc_p;
+               elsif cpu_req_v='1' then
+                  do_cpu_acc_p;
+               end if;
+            end if;
          end if;
       when kernel_read_e =>
         if srdc_cmd_ready='0' then
            next_state   <= dram_busy_e;
+           next_ram_en  <= '0'; -- !!! Terminate CS early
         end if;
       when kernel_write_e =>
          -- wait until command execution starts
          if srdc_cmd_ready='0' then
-            next_state       <= dram_busy_e;
+            --next_state       <= dram_busy_e;
+	    next_state       <= idle_e;
+            next_ram_en      <= '0'; -- !!! Terminate CS early
+            next_kernel_ack  <= '1';   -- !!! early kernel ack
          end if;
       when cpu_read_e =>
         if srdc_cmd_ready='0' then
            next_state   <= dram_cpu_busy_e;
-           if cpu_early_ack_g then
+           next_ram_en  <= '0'; -- !!! Terminate CS early
+           if cpu_early_ack_g then  
                next_cpu_ack <= '1';
            end if;
         end if;
       when cpu_write_e =>
          -- wait until command execution starts
          if srdc_cmd_ready='0' then
-            next_state       <= dram_cpu_busy_e;
-            if cpu_early_ack_g then
+            --next_state       <= dram_cpu_busy_e;
+            --if cpu_early_ack_g then
                next_cpu_ack     <= '1';
-            end if;
-            --next_kernel_ack  <= '1';
+            --end if;
+            next_state       <= idle_e;
+            next_ram_en      <= '0'; -- !!! Terminate CS early
          end if;
       when dram_cpu_busy_e =>
          cpu_req_almost_done <= '1';

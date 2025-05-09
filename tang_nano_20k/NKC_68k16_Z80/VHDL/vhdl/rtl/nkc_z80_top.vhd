@@ -20,7 +20,8 @@ use work.DffGlobal.all;
 use work.gdp_global.all;
 
 entity nkc_gowin_top is
-  generic(sim_g      : boolean := false);
+  generic(sim_g      : boolean := false;
+          is_pcb     : boolean := false); -- set to true for "official" PCB, false for prototype
   port(reset_i       : in  std_ulogic:='0';
        refclk_i      : in  std_ulogic;
        --------------------------
@@ -121,8 +122,8 @@ end nkc_gowin_top;
 
 architecture rtl of nkc_gowin_top is
 
-  constant use_ser_key_c   : boolean := true;
-  constant use_ps2_key_c   : boolean := false;
+  constant use_ser_key_c   : boolean := false;
+  constant use_ps2_key_c   : boolean := true;
   constant use_ps2_mouse_c : boolean := false;
   constant use_ser1_c      : boolean := true;
   constant use_sound_c     : boolean := true;
@@ -153,8 +154,10 @@ architecture rtl of nkc_gowin_top is
 --  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
 --  constant DIP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"49"; -- r
   
-  signal pixel_clk         : std_ulogic;
+  signal clk_40            : std_ulogic;
+   signal pixel_clk,clk_80 : std_ulogic;
   signal reset_n           : std_ulogic:='0';
+  signal pll_80m_reset     : std_ulogic;
   signal GDP_DataOut       : std_ulogic_vector(7 downto 0);
   signal gdp_Rd,gdp_Wr     : std_ulogic;
   signal gdp_cs            : std_ulogic;
@@ -209,6 +212,7 @@ architecture rtl of nkc_gowin_top is
   signal TxD_s             : std_ulogic;
  
   signal pll_lock          : std_ulogic;
+  signal pll_80m_lock      : std_ulogic;
 --  signal vpll_lock         : std_ulogic;
   signal red               : std_ulogic_vector(2 downto 0);
   signal green             : std_ulogic_vector(2 downto 0);
@@ -254,7 +258,7 @@ begin
       if rising_edge(pixel_clk) then
         reset_n  <= tmp_v(1);
         tmp_v(1) := tmp_v(0);
-        tmp_v(0) := (not reset_i) and pll_lock;
+        tmp_v(0) := (not reset_i) and pll_80m_lock;
       end if;
     end process reset_sync;
   --end generate;
@@ -263,11 +267,21 @@ begin
 --    reset_n  <= not reset_i;
 --  end generate;
 
+   pll_80 : entity work.pll_80m
+      port map (
+         reset    => pll_80m_reset,
+         clkin    => clk_40,
+         clkout   => clk_80,
+         lock     => pll_80m_lock,
+         clkoutd  => pixel_clk
+      );
+   pll_80m_reset <= not pll_lock;
+
 
   video2hdmi: entity work.video2hdmi
     port map (
       clk            => refclk_i,
-      clk_40         => pixel_clk,
+      clk_40         => clk_40, --pixel_clk,
       pll_lock       => pll_lock, --vpll_lock,
       vreset         => vreset,
       vvmode         => vvmode,
@@ -375,8 +389,8 @@ begin
       reset_n_i   => reset_n,
       clk_i       => pixel_clk,
       clk_en_i    => '1',
-      sdctrl_clk_i=> pixel_clk, --sdctrl_clk,
-      sdram_clk_i => pixel_clk, --sdram_clk,
+      sdctrl_clk_i=> clk_80, --pixel_clk, --sdctrl_clk,
+      --sdram_clk_i => pixel_clk, --sdram_clk,
       Adr_i       => Addr(3 downto 0),
 --      CS_i        => gdp_cs,
       gdp_en_i    => gdp_en,
@@ -813,6 +827,7 @@ begin
             
    CPU: block  
       constant USE_FLOMON_c : boolean :=true;
+      constant USE_ZEAT_c   : boolean :=true;
       constant IO_WAITSTATES_c : natural := 4;
       signal logic1         : std_ulogic;
       signal logic0         : std_ulogic;
@@ -828,6 +843,7 @@ begin
       signal rom_dout       : std_logic_vector(7 downto 0);
       signal rom0_dout      : std_logic_vector(7 downto 0);
       signal rom1_dout      : std_logic_vector(7 downto 0);
+      signal rom2_dout      : std_logic_vector(7 downto 0);
       --signal rom2_dout      : std_logic_vector(7 downto 0);
 
       signal nRD_d          : std_ulogic;
@@ -970,21 +986,8 @@ begin
    
    banken <= bank_reg(7) or Cpu_A(15);
 
-    test_rom_inst: if sim_g generate
---        test_rom: entity work.test
---          port map (
---             clock   => pixel_clk,
---             address => eab(7 downto 1),
---             q       => rom_dout
---          );
-         test_rom: entity work.test_rom
-            port map (
-               CLK  => pixel_clk,
-               ADDR => Cpu_A(9 downto 0),
-               DATA => rom_dout
-            );
-      end generate;
-      gp_rom_inst: if not sim_g and not USE_FLOMON_c generate
+      gp_rom_inst: if not USE_FLOMON_c generate 
+          -- GP2019 ROM A+B
           rom0: entity work.gp_rom0
             port map (
                Clk => pixel_clk,
@@ -1005,24 +1008,56 @@ begin
 --            );
             
          with to_integer(unsigned(Cpu_A(14 downto 13))) select
-            rom_dout <= rom0_dout when 0,
-                        rom1_dout when 1,
---                        rom2_dout when 2,
+            rom_dout <= rom0_dout when 0, -- 0x0000 - 0x1FFF
+                        rom1_dout when 1, -- 0x2000 - 0x3FFF
+                        rom2_dout when 2, -- 0x4000 - 0x5FFF
                         (others => '1') when others;
       end generate;
       
-      flomon_rom_inst: if not sim_g and USE_FLOMON_c generate
-         rom0: entity work.flomon_rom
-            port map (
-               Clk => pixel_clk,
-               A   => Cpu_A(12 downto 0),
-               D   => rom0_dout
-            );
-         rom1_dout <= (others =>'1');
+      flomon_rom_inst: if USE_FLOMON_c generate
+         test_rom_inst: if sim_g generate
+            test_rom: entity work.test_rom
+               port map (
+                  CLK  => pixel_clk,
+                  ADDR => Cpu_A(9 downto 0),
+                  DATA => rom0_dout
+               );
+         end generate;
+         flomon_rom_inst: if not sim_g generate
+            rom0: entity work.flomon_rom
+               port map (
+                  Clk => pixel_clk,
+                  A   => Cpu_A(12 downto 0),
+                  D   => rom0_dout
+               );
+         end generate;
+
          with to_integer(unsigned(Cpu_A(14 downto 13))) select
-            rom_dout <= rom0_dout when 0,
+            rom_dout <= rom0_dout when 0, -- 0x0000 - 0x1FFF
+                        rom1_dout when 1, -- 0x2000 - 0x3FFF
+                        rom2_dout when 2, -- 0x4000 - 0x5FFF
                         (others => '1') when others;
+                        
+         zeat_rom_inst: if USE_ZEAT_c generate
+            rom1: entity work.zeat_a_rom
+               port map (
+                  Clk => pixel_clk,
+                  A   => Cpu_A(12 downto 0),
+                  D   => rom1_dout
+               );
+            rom2: entity work.zeat_b_rom
+               port map (
+                  Clk => pixel_clk,
+                  A   => Cpu_A(12 downto 0),
+                  D   => rom2_dout
+               );
+         end generate;
+         no_zeat_rom: if not USE_ZEAT_c generate
+            rom1_dout <= (others =>'1');
+            rom2_dout <= (others =>'1');
+         end generate;
       end generate;
+      
    process(Cpu_A,gp_ram_en,bank_reg)
    begin
       cpu_addr               <= (others => '0');
@@ -1033,6 +1068,16 @@ begin
          cpu_addr(18 downto 15) <= bank_reg(3 downto 0);
       end if;
    end process;
+      --A15 14 13
+      -- 0 0 0  -> 0x0000 - 0x1FFF
+      -- 0 0 1  -> 0x2000 - 0x3FFF
+      -- 0 1 0  -> 0x4000 - 0x5FFF
+      -- 0 1 1  -> 0x6000 - 0x7FFF
+      -- 1 0 0
+      -- 1 0 1
+      -- 1 1 0
+      -- 1 1 1
+      
       
       DI_CPU <= rom_dout                                 when rom_en='1' else
                 std_logic_vector(cpu_datao(7 downto 0))  when cpu_req1='1' and Cpu_A(0) ='0' else
@@ -1088,7 +1133,11 @@ begin
                nkc_nRD_o     <= '0';
             end if;
             nkc_nWR_o     <= '1';
-            driver_DIR    <= not ext_driver_en;
+            if is_pcb then
+               driver_DIR    <= ext_driver_en; -- 245 DIR = 1 (A->B) for an ext write
+            else
+               driver_DIR    <= not ext_driver_en; -- 245 DIR = 0 (B->A) for an ext write for Prototype
+            end if;
             if (not nWR and EXT_IORQ)='1' then
                nkc_nWR_o     <= '0';
                -- set 245 to output (B->A) for an external IO-Write
@@ -1103,7 +1152,8 @@ begin
       driver_nEN_o <= not reset_n; 
       -- set 245 to output (B->A) for an external IO-Write
       driver_DIR_o <= driver_DIR;
-      driver_DIR1_o<= '0';
+      driver_DIR1_o<= '1' when is_pcb else -- set driver to drive towards bus for "official" PCB
+                      '0'; 
    end block;
 
 end rtl;

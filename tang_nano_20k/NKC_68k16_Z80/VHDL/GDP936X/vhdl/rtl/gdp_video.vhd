@@ -5,11 +5,9 @@
 -- Description :
 --------------------------------------------------------------------------------
 -- Author       : Andreas Voggeneder
--- Organisation : FH-Hagenberg
--- Department   : Hardware/Software Systems Engineering
--- Language     : VHDL'87
+-- Language     : VHDL'93
 --------------------------------------------------------------------------------
--- Copyright (c) 2007 by Andreas Voggeneder
+-- Copyright (c) 2007-2025 by Andreas Voggeneder
 --------------------------------------------------------------------------------
 
 library IEEE;

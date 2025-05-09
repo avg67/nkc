@@ -114,7 +114,8 @@ reg [31:0] sd_data_reg;
 //assign sd_data = (cs && we) ? { din, din } : 32'bzzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz;
 assign sd_data = (!sd_cs && we_i) ? { sd_data_reg } : 32'bzzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz_zzzz;
 
-assign sd_dqm = (!cs_i || !we_i)?4'b0000:~ds_i;
+//assign sd_dqm = (!cs_i || !we_i)?4'b0000:~ds_i;
+assign sd_dqm = ~ds_i;
 reg csD;   
 reg debug1;
 reg dout_valid_reg;

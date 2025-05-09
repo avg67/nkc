@@ -5,9 +5,7 @@
 -- Description :
 --------------------------------------------------------------------------------
 -- Author       : Andreas Voggeneder
--- Organisation : FH-Hagenberg
--- Department   : Hardware/Software Systems Engineering
--- Language     : VHDL'87
+-- Language     : VHDL'93
 --------------------------------------------------------------------------------
 -- Copyright (c) 2024 by Andreas Voggeneder
 --------------------------------------------------------------------------------
@@ -380,6 +378,9 @@ begin
                   (others => '1'); -- after 1 ns;
   
   GDP: entity work.gdp_top
+    generic map (
+      cpu_vram_early_ack_g => true
+    )
     port map (
       reset_n_i   => reset_n,
       clk_i       => pixel_clk,

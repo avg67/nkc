@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Project     : Single Chip NDR Computer
--- Module      : GDP 936X Display processor - kernel
--- File        : GDP_kernel.vhd
+-- Module      : Flo2 Top
+-- File        : flo2_top.vhd
 -- Description :
 --------------------------------------------------------------------------------
 -- Author       : Andreas Voggeneder
