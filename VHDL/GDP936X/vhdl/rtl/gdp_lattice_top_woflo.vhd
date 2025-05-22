@@ -462,16 +462,19 @@ begin
     reset_n  <= reset_n_i;
   end generate;
   
-  GDP_EN_SYNC : InputSync
-     generic map (
-       ResetValue_g => '1'
-     )
-     port map (
-         Input => glob_gdp_en_i,
-         clk   => clk_i,
-         clr_n => reset_n,
-         q     => glob_gdp_en
-     );
+--  GDP_EN_SYNC : InputSync
+--     generic map (
+--       ResetValue_g => '1'
+--     )
+ --    port map (
+ --        Input => glob_gdp_en_i,
+ --        clk   => clk_i,
+ --        clr_n => reset_n,
+ --        q     => glob_gdp_en
+ --    );
+ 
+ glob_gdp_en <= '1';
+	 
 --  ISIORQ : InputSync
 --  generic map (
 --    ResetValue_g => '1'
