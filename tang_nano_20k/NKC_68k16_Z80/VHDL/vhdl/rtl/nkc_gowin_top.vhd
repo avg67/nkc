@@ -19,7 +19,7 @@ use work.gdp_global.all;
 
 entity nkc_gowin_top is
   generic(sim_g      : boolean := false;
-          is_pcb     : boolean := false); -- set to true for "official" PCB, false for prototype
+          is_pcb     : boolean := true); -- set to true for "official" PCB, false for prototype
   port(reset_i       : in  std_ulogic:='0';
        refclk_i      : in  std_ulogic;
        --------------------------
@@ -191,6 +191,7 @@ architecture rtl of nkc_gowin_top is
   
   signal spi_cs            : std_ulogic;
   signal spi_data          : std_ulogic_vector(7 downto 0);
+  signal spi_busy          : std_ulogic;
   signal vdip_cs           : std_ulogic;
   signal vdip_data         : std_ulogic_vector(7 downto 0);
   signal gpio_cs           : std_ulogic;
@@ -662,6 +663,9 @@ begin
               '0';
     
     SPI : entity work.SPI_Interface
+      generic map(
+        use_busy_g => true
+      )  
       port map (
         reset_n_i   => reset_n,
         clk_i       => pixel_clk,
@@ -674,8 +678,11 @@ begin
         DataIn_i    => data_in,
         Rd_i        => gdp_Rd,
         Wr_i        => gdp_Wr,
+        busy_o      => spi_busy,
         DataOut_o   => spi_data
       );
+      --spi_busy <= '0';
+      
       SD_SCK_o   <= SD_SCK_s;
       SD1_SCK_o  <= SD_SCK_s;
       SD_nCS_o   <= SD_nCS_s(1 downto 0);
@@ -696,6 +703,7 @@ begin
     SD_SCK_o       <= '0';
     SD_nCS_o       <= (others => '1'); --(others => '1');
     SD_MOSI_o      <= SD_MISO_i;
+    spi_busy       <= '0';
     --ETH_SCK_o      <= SD_SCK_s;
     --ETH_nCS_o      <= '1';
     --ETH_MOSI_o     <= ETH_MISO_i;
@@ -806,6 +814,8 @@ begin
       signal VPAn           : std_ulogic;
       signal nRD_d          : std_ulogic;
       signal nWR_d          : std_ulogic;
+      signal io_busy        : std_ulogic;
+      signal io_busy_d      : std_ulogic;
       signal always_boot    : std_ulogic;
       signal rom_en         : std_ulogic;
       signal gp_ram_en      : std_ulogic;
@@ -842,6 +852,7 @@ begin
             ext_io_dtack <= '0';
             EXT_IORQ_d   <= '0';
             ext_data_reg <= (others => '0');
+            io_busy_d    <= '0';
          elsif rising_edge(pixel_clk) then
             clkDivisor <= clkDivisor + 1;
             if pwrup_dly/=0 then
@@ -850,10 +861,18 @@ begin
             else
                pwrUp <= '0';
             end if;
-            nWR_d    <= nWR;
-            nRD_d    <= nRD;
+            io_busy_d <= io_busy;
+            if io_busy = '0' then
+               nWR_d    <= nWR;
+               nRD_d    <= nRD;
+            end if;
             gdp_Rd   <= not nRD and nRD_d and not UDSn;
             gdp_Wr   <= not nWR and nWR_d and not UDSn;
+            if (not io_busy and io_busy_d)='1' then
+               gdp_Rd   <= '0';
+               gdp_Wr   <= '0';
+            end if;
+
             if rom_en='1' then
                always_boot  <= '0';
             end if;
@@ -924,9 +943,11 @@ begin
       VPAn   <= '0' when fc="111" and ASn='0' else
                 '1';
       --DTACKn <= '1' when bus_watch/=7 and cpu_req1='1' and cpu_busy/='0' else
-      DTACKn <= '1'          when cpu_req1='1' and cpu_busy/='0' else
+      DTACKn <= '1'          when io_busy='1' or (cpu_req1='1' and cpu_busy/='0') else
                 ext_io_dtack when EXT_IORQ='1' else
                 '0';
+      io_busy <= spi_busy when spi_cs='1' else
+                 '0';
     test_rom_inst: if sim_g generate
         test_rom: entity work.test
           port map (

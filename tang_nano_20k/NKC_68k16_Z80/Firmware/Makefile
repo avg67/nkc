@@ -15,7 +15,8 @@ SDBOOTSTRAP=sdbootstrap.elf
 SDBOOTSTRAPVHD=test_ROM.vhd
 
 #ROMGENDIR = ../../romgen
-ROMGENDIR = ../romgen
+#ROMGENDIR = ../romgen
+ROMGENDIR = /c/working/_Tang_nano/gdp_fpga/romgen
 ROMGEN = $(ROMGENDIR)/romgen
 
 CFLAGS=-m$(ARCH) -O6
