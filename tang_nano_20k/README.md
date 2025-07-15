@@ -23,18 +23,21 @@
 - only_timer.fs
    - Nur Timer
 - NKC_Z80.fs
-      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Keyboard und PS/2-Maus, Sound, SDIO SD-Card Interface, 
+      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Keyboard und PS/2-Maus, Sound, SDIO SD-Card Interface,
       sowie externen I/O-Bus
 - NKC_Z80_ser_key_ext_bus.fs
-      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, Sound, SDIO SD-Card Interface, 
+      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, Sound, SDIO SD-Card Interface,
       Key via (virt.) RS232 über Tang-Nano mit 9600 Baud
       sowie externen I/O-Bus
 - NKC_68k_PS2_KEYB_PCB.fs
      NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
-     sowie externen I/O-BUS (3 WS) für PCB von USE
+     sowie externen I/O-BUS (3 WS) für PCB von UWE
+- NKC_Z80_PS2_KEYB_PCB.fs
+     NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, Ser
+     sowie externen I/O-BUS für PCB von UWE
 
 *****************************
-## CPU-Zugriff auf GDP-Video-RAM: 
+## CPU-Zugriff auf GDP-Video-RAM:
 
 Beim NKC-SOC (mit integrierter CPU) ist der volle GDP-Videoram in den CPU-Adressraum gemappt.
 1MB RAM, GP7.10R6 intern @ 0x1D0000, 64kB GP-Ram @ 0x1E0000, Video-RAM in CPU-Adressraum @ 0x800000 (256kB per page)

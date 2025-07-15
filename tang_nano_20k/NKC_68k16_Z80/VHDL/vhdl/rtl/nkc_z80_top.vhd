@@ -21,7 +21,7 @@ use work.gdp_global.all;
 
 entity nkc_gowin_top is
   generic(sim_g      : boolean := false;
-          is_pcb     : boolean := false); -- set to true for "official" PCB, false for prototype
+          is_pcb     : boolean := true); -- set to true for "official" PCB, false for prototype
   port(reset_i       : in  std_ulogic:='0';
        refclk_i      : in  std_ulogic;
        --------------------------
