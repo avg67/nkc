@@ -6,6 +6,7 @@
     <Device name="GW2AR-18C" pn="GW2AR-LV18QN88C8/I7">gw2ar18c-000</Device>
     <FileList>
         <File path="../../../vhdl/rtl/FPGA/gowin_rpll/gowin_rpll_40.v" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/FPGA/gowin_rpll_80/pll_80m.v" type="file.verilog" enable="1"/>
         <File path="../../../vhdl/rtl/FPGA/sdram.v" type="file.verilog" enable="1"/>
         <File path="../../../vhdl/rtl/hdmi/gowin_clkdiv/gowin_clkdiv.v" type="file.verilog" enable="1"/>
         <File path="../../../vhdl/rtl/hdmi/gowin_rpll_200/gowin_rpll/pll_200m.v" type="file.verilog" enable="1"/>
@@ -21,6 +22,7 @@
         <File path="../../../vhdl/rtl/hdmi/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="../../../vhdl/rtl/hdmi/video2hdmi.sv" type="file.verilog" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/Dffdecl-p.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../GDP936X/vhdl/rtl/FPGA/dual_video_fifo/dual_video_fifo.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/FPGA/fifo_sc_hs/video_fifo.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/InputSync-a.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/InputSync-e.vhd" type="file.vhdl" enable="1"/>
@@ -51,6 +53,10 @@
         <File path="../../../vhdl/rtl/sound/wf2149ip_top_soc.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/sound/wf2149ip_wave.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../../Z80/software/flomon/flomon_rom.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../../Z80/software/flomon/zeat_a_rom.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../../Z80/software/flomon/zeat_b_rom.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../../Z80/software/gp_edas/gp_rom_0.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../../Z80/software/gp_edas/gp_rom_1.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../../Z80/T80/T80.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../../Z80/T80/T80_ALU.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../../Z80/T80/T80_MCode.vhd" type="file.vhdl" enable="1"/>

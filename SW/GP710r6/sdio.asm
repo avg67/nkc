@@ -266,7 +266,7 @@ sdinitex:
  rts
 
 
-sd1init:                        * Initialisieren der SD-Card
+sd1init:                        * Initialisieren der SD-Card an GDP-FPGA
  movem.l d3/a0/a2, -(a7)
                                         * min. 74 Clocks an SD
  moveq #16, d3                          * Anzahl 136 Clocks
