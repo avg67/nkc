@@ -23,20 +23,20 @@
 - only_timer.fs
    - Nur Timer
 - NKC_Z80.fs
-      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Keyboard und PS/2-Maus, Sound, SDIO SD-Card Interface,
-      sowie externen I/O-Bus
+   - Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, PS/2-Keyboard und PS/2-Maus, Sound, SDIO SD-Card Interface,
+     sowie externen I/O-Bus
 - NKC_Z80_ser_key_ext_bus.fs
-      Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, Sound, SDIO SD-Card Interface,
-      Key via (virt.) RS232 über Tang-Nano mit 9600 Baud
-      sowie externen I/O-Bus
+   - Z80 System mit 8MHz Z80 CPU, 1MB RAM, GDP64HS, Timer, Sound, SDIO SD-Card Interface,
+     Key via (virt.) RS232 über Tang-Nano mit 9600 Baud
+     sowie externen I/O-Bus
 - NKC_68k_PS2_KEYB_PCB.fs
-     NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+   - NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
      sowie externen I/O-BUS (3 WS) für PCB von UWE
 - NKC_Z80_PS2_KEYB_PCB.fs
-     NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, Ser
+   - NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, Ser
      sowie externen I/O-BUS für PCB von UWE
 - GDP64HS_FPGA_PCB.fs
-     Bus-Slave mit GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+   - Bus-Slave mit GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
      für PCB von UWE
 
 *****************************
