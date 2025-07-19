@@ -35,6 +35,9 @@
 - NKC_Z80_PS2_KEYB_PCB.fs
      NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, Ser
      sowie externen I/O-BUS für PCB von UWE
+- GDP64HS_FPGA_PCB.fs
+     Bus-Slave mit GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+     für PCB von UWE
 
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM:
