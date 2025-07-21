@@ -15,8 +15,11 @@ vlog -work work ../../vhdl/rtl/hdmi/hdmi/audio_clock_regeneration_packet_sim.sv 
                 ../../vhdl/rtl/hdmi/hdmi/tmds_channel.sv \
                 ../../vhdl/rtl/hdmi/video2hdmi.sv \
                 ../../vhdl/rtl/hdmi/gowin_rpll_200/gowin_rpll/pll_200m.v \
-                ../../vhdl/rtl/hdmi/gowin_clkdiv/gowin_clkdiv.v
+                ../../vhdl/rtl/hdmi/gowin_clkdiv/gowin_clkdiv.v \
+                ../../vhdl/rtl/FPGA/gowin_rpll/gowin_rpll_40.v \
+                ../../vhdl/rtl/FPGA/gowin_rpll_80/pll_80m.v
 
+vcom -2008  ../vhdl/tb/gdp_bitmap-p.vhd
 #vcom -93 -check_synthesis ../vhdl/rtl/Dffdecl-p.vhd
 vcom -93                  ../vhdl/rtl/Dffdecl-p.vhd \
                           ../vhdl/rtl/InputSync-e.vhd \
@@ -28,10 +31,13 @@ vcom -93                  ../vhdl/rtl/Dffdecl-p.vhd \
                           ../vhdl/rtl/gdp_font.vhd \
                           ../vhdl/rtl/gdp_font_ram.vhd \
                           ../vhdl/rtl/gdp_character.vhd \
+                          ../vhdl/tb/gdp_screen_saver.vhd \
                           ../vhdl/rtl/gdp_vram.vhd \
                           ../vhdl/rtl/gdp_kernel.vhd \
                           ../vhdl/rtl/gdp_clut.vhd \
+                          ../vhdl/rtl/gdp_clut_256.vhd \
                           ../vhdl/rtl/FPGA/fifo_sc_hs/video_fifo.vho \
+                          ../vhdl/rtl/FPGA/dual_video_fifo/dual_video_fifo.vho \
                           ../vhdl/rtl/gdp_video.vhd \
                           ../vhdl/rtl/gdp_top.vhd \
                           ../../vhdl/rtl/PS2_Interface.vhd \
@@ -52,13 +58,12 @@ vcom -93                  ../vhdl/rtl/Dffdecl-p.vhd \
                           ../../vhdl/rtl/sound/dac.vhd \
                           ../../vhdl/rtl/sound/wf2149ip_top_soc.vhd \
                           ../vhdl/rtl/gdp_gowin_top.vhd
-vcom -93  ../vhdl/tb/gdp_bitmap-p.vhd
 #vcom -93  ../vhdl/tb/sram.vhd
 vcom -93  ../vhdl/tb/sram_256x16/package_timing.vhd
 vcom -93  ../vhdl/tb/sram_256x16/package_utility.vhd
 vcom -93  ../vhdl/tb/sram_256x16/mobl_256Kx16.vhd
 #vcom -93  ../vhdl/tb/gdp_kernel_tb.vhd
-vcom -93  ../vhdl/tb/gdp_tb.vhd
+vcom -2008  ../vhdl/tb/gdp_tb.vhd
 
 
 vsim -t ps -L gw2a -voptargs=+acc gdp_tb gw2a.GSR
@@ -83,6 +88,7 @@ add wave -noupdate -divider
 #add wave -group {Ser1} -noupdate -radix hex /dut/impl_ser1/ser/*
 #add wave -group {TB_Receiver} -noupdate -radix hex /rx/*
 add wave -noupdate -divider GDP
+add wave -group {Screen_dumper} -noupdate -radix hex /dut/gdp/video/gdp_screen_dumper_inst/*
 add wave -group {Video} -noupdate -radix hex /dut/gdp/video/*
 add wave -group {video2hdmi} -noupdate -radix hex /dut/video2hdmi/*
 add wave -group {CLUT} -noupdate -radix hex /dut/gdp/video/use_clut/clut_inst/*

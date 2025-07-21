@@ -26,6 +26,7 @@ entity gdp_top is
   port(reset_n_i     : in  std_ulogic;
        clk_i         : in  std_ulogic;
        clk_en_i      : in  std_ulogic;
+       clk_2x_i      : in  std_ulogic; -- 2x clock for SDR
        --------------------------
        -- internal data bus (Register)
        --------------------------
@@ -122,6 +123,7 @@ begin
     reset_n_i  => reset_n_i,
     clk_i      => clk_i,
     clk_en_i   => clk_en_i,
+    clk_2x_i   => clk_2x_i,
     -----------------------------
     -- interface to VRAM
     -----------------------------
@@ -239,6 +241,7 @@ begin
     port map(
       clk_i           => clk_i,
       clk_en_i        => clk_en_i,
+      clk_2x_i        => clk_2x_i,
       reset_n_i       => reset_n_i,
       kernel_clk_en_i => '1',
       kernel_req_i    => kernel_req,

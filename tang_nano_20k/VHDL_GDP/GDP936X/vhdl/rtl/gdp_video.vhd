@@ -24,6 +24,7 @@ entity gdp_video is
   port(reset_n_i  : in  std_ulogic;
        clk_en_i   : in  std_ulogic;
        clk_i      : in  std_ulogic;
+       clk_2x_i   : in  std_ulogic; -- SDR clock
        -----------------------------
        -- interface to VRAM
        -----------------------------
@@ -95,6 +96,7 @@ architecture rtl of gdp_video is
   signal rd_data,next_rd_data: std_ulogic_vector(31 downto 0);
   signal set_rd_data         : std_ulogic; 
   signal color_mode_reg      : std_ulogic; 
+  signal scroll_reg          : std_ulogic_vector(scroll_i'range);
 
   signal rd_state,next_rd_state         : rd_state_t;
   signal next_rd_addr                   : std_ulogic_vector(rd_addr_o'range);
@@ -104,6 +106,9 @@ architecture rtl of gdp_video is
   signal frame_start                    : std_ulogic;
   signal vreset,vreset_done             : std_ulogic;
   signal rgb_pixel                      : std_ulogic_vector(8 downto 0);
+  signal Hsync_s                        : std_ulogic;
+  signal Vsync_s                        : std_ulogic;
+  signal vreset_s                       : std_ulogic;
   signal clut_q                         : std_ulogic_vector(8 downto 0);
   --
   signal mem_rd_state,next_mem_rd_state : mem_rd_state_t;
@@ -129,20 +134,38 @@ begin
 -- pragma translate_on
    reset <= not reset_n_i;
 
-   vid_fifo_inst: entity work.video_fifo
-      port map (
-         Clk           => clk_i,
-         Reset         => reset,
-         Data          => std_logic_vector(rd_data_i),
-         WrEn          => rd_data_valid_i,
-         RdEn          => fifo_rden,
+--   vid_fifo_inst: entity work.video_fifo
+--      port map (
+--         Clk           => clk_i,
+--         Reset         => reset,
+--         Data          => std_logic_vector(rd_data_i),
+--         WrEn          => rd_data_valid_i,
+--         RdEn          => fifo_rden,
+--
+--         AlmostEmptyTh => "10000",
+--         Almost_Empty  => fifo_ae,
+--         Q             => fifo_dout,
+--         Empty         => fifo_empty,
+--         Full          => fifo_full
+--      );
 
-         AlmostEmptyTh => "10000",
-         Almost_Empty  => fifo_ae,
-         Q             => fifo_dout,
-         Empty         => fifo_empty,
-         Full          => fifo_full
-      );
+vid_fifo_inst: entity work.dual_video_fifo
+   port map (
+      WrReset       => reset,
+      WrClk         => clk_2x_i,
+      WrEn          => rd_data_valid_i,
+      Data          => std_logic_vector(rd_data_i),
+      
+      RdReset       => reset,
+      RdClk         => clk_i,
+      RdEn          => fifo_rden,
+      AlmostEmptyTh => "10000",
+      Almost_Empty  => fifo_ae,
+      Q             => fifo_dout,
+      Empty         => fifo_empty,
+      Full          => fifo_full
+   );
+
 
    fifo_ur_o <= fifo_empty and fifo_rden;
 
@@ -202,6 +225,7 @@ begin
       run            <= '0';
       delay          <= 100;
       color_mode_reg <= '0';
+      scroll_reg     <= (others => '0');
 --      line_start  <= '0'; 
     elsif rising_edge(clk_i) then
       if clk_en_i = '1' then
@@ -262,6 +286,7 @@ begin
                VSYNC          <= '0';                       -- nach VSyncPhase VSync löschen und frame_start setzen              
                frame_start    <= '1';
                color_mode_reg <= color_mode_i;
+               scroll_reg     <= scroll_i;
              elsif Line = to_unsigned(VMAX_c-1, Stages_c) then
                Line <= (others => '0');                  -- Am Bildende Line wieder auf 0
              end if;
@@ -294,7 +319,8 @@ begin
          re_detected := true;
          re := now;
       elsif falling_edge(rd_data_valid_i) then
-         assert re_detected=false or (now - re) >=200ns report "Invalid fifo write detected" severity error;
+         --assert re_detected=false or (now = re) or (now - re) >=200ns report "Invalid fifo write detected" severity error;
+         assert re_detected=false or (now = re) or (now - re) >=100ns report "Invalid fifo write detected" severity error;
          re_detected := false;
       end if;
    end process;
@@ -513,21 +539,21 @@ begin
               "00000001";
   end generate;
            
-  process(rd_address, scroll_i, color_mode_reg)
+  process(rd_address, scroll_reg, color_mode_reg)
     variable tmp_v : unsigned(rd_address'range);
   begin
     if color_support_c then
-      tmp_v := rd_address + (unsigned(scroll_i) & "00000000");
+      tmp_v := rd_address + (unsigned(scroll_reg) & "00000000");
       if color_mode_reg='0' then
          tmp_v(rd_address'high downto 15):=(others => '0');
       end if;
     else
-      tmp_v :=  "0000" & rd_address(12 downto 0) + (unsigned(scroll_i) & "00000");
+      tmp_v :=  "0000" & rd_address(12 downto 0) + (unsigned(scroll_reg) & "00000");
     end if;
     next_rd_addr <= std_ulogic_vector(tmp_v);
   end process;
   
-  rd_req_o     <= next_rd_req;
+  rd_req_o   <= next_rd_req;
   rd_addr_o  <= next_rd_addr;
   
    --process(clk_i)
@@ -611,9 +637,9 @@ begin
                else
                   rgb_pixel <= (others => '0');
                end if;
-               Hsync_o  <= HSYNC;
-               Vsync_o  <= VSYNC;
-               vreset_o <= vreset;
+               Hsync_s  <= HSYNC;
+               Vsync_s  <= VSYNC;
+               vreset_s <= vreset;
             end if;
          end if;
       end process;
@@ -634,7 +660,29 @@ begin
   pixel_red_o    <= rgb_pixel(8 downto 6);
   pixel_green_o  <= rgb_pixel(5 downto 3);
   pixel_blue_o   <= rgb_pixel(2 downto 0);
+  Hsync_o        <= Hsync_s;
+  Vsync_o        <= Vsync_s;
+  vreset_o       <= vreset_s;
 
+
+-- pragma translate_off
+   gdp_screen_dumper_inst: entity work.gdp_screen_dumper
+      port map (
+         reset_n_i     => reset_n_i,
+         clk_en_i      => clk_en_i,
+         clk_i         => clk_i,
+         pixel_red_i   => rgb_pixel(8 downto 6),
+         pixel_green_i => rgb_pixel(5 downto 3),
+         pixel_blue_i  => rgb_pixel(2 downto 0),
+         Hsync_i       => Hsync_s,
+         Vsync_i       => Vsync_s,
+         vid_en_i      => VidEn,
+         line_i        => Line,
+         column_i      => q
+      );
+
+
+-- pragma translate_on
 
   --with rd_state select
     --monitoring_o(1 downto 0) <= "00" when idle_e,

@@ -529,7 +529,7 @@ begin  -- beh
     m68k_nDS <= '1';
 
     reset_n_i  <= '0', '1' after 150 ns;
-    wait for 100 us;
+    wait for 150 us;
     --wait for 10 ms;
     wait until CPU_Clk'event and CPU_Clk='1';
     

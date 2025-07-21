@@ -298,7 +298,7 @@ package body gdp_bitmap is
     variable r,g,b : std_logic_vector(7 downto 0);
     variable tmp1  : std_logic_vector(8 downto 0);
     variable ch    : character;
-    variable by    : std_logic_vector(7 downto 0);
+    variable by    : std_logic_vector(byte'range);
   begin
     if color=color_4bit then
       by:= byte;
@@ -306,7 +306,7 @@ package body gdp_bitmap is
         r := (others => '0');
         g := (others => '0');
         b := (others => '0');
-        tmp1 := lookup(by(7 downto 4));
+        tmp1 := by; --lookup(by(7 downto 4));
         r(7 downto 5) := tmp1(8 downto 6);
         g(7 downto 5) := tmp1(5 downto 3);
         b(7 downto 5) := tmp1(2 downto 0);
@@ -324,7 +324,8 @@ package body gdp_bitmap is
       r := (others => '0');
       g := (others => '0');
       b := (others => '0');
-      tmp1 := lookup8bit(by(7 downto 0));
+      --tmp1 := lookup8bit(by(7 downto 0));
+      tmp1 := by;
       r(7 downto 5) := tmp1(8 downto 6);
       g(7 downto 5) := tmp1(5 downto 3);
       b(7 downto 5) := tmp1(2 downto 0);

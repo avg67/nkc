@@ -1,15 +1,15 @@
 --------------------------------------------------------------------------------
 -- Project     : Single Chip NDR Computer
--- Module      : GDP 936X Display processor - Toplevel for Lattice FPGA
--- File        : GDP_kernel.vhd
+-- Module      : GDP 936X Display processor - Toplevel for Tang Nano 20k FPGA
+-- File        : GDP_gowin_top.vhd
 -- Description :
 --------------------------------------------------------------------------------
 -- Author       : Andreas Voggeneder
 -- Organisation : FH-Hagenberg
 -- Department   : Hardware/Software Systems Engineering
--- Language     : VHDL'87
+-- Language     : VHDL'93
 --------------------------------------------------------------------------------
--- Copyright (c) 2007 by Andreas Voggeneder
+-- Copyright (c) 2007,2025 by Andreas Voggeneder
 --------------------------------------------------------------------------------
 library IEEE;
 
@@ -20,7 +20,8 @@ use work.DffGlobal.all;
 use work.gdp_global.all;
 
 entity gdp_gowin_top is
-  generic(sim_g      : boolean := false);
+  generic(sim_g      : boolean := false;
+          is_pcb     : boolean := true); -- set to true for "official" PCB, false for prototype
   port(reset_i       : in  std_ulogic:='0';
        reset_n_i     : in  std_ulogic;
        refclk_i      : in  std_ulogic;
@@ -35,6 +36,7 @@ entity gdp_gowin_top is
        nkc_nIORQ_i   : in std_ulogic;
        driver_nEN_o  : out std_ulogic;
        driver_DIR_o  : out std_ulogic;
+       driver_DIR1_o : out std_ulogic;
        nIRQ_o        : out std_logic;
 --	   
 --       --------------------------
@@ -91,19 +93,6 @@ entity gdp_gowin_top is
        SD_nCS_o  : out std_ulogic_vector(0 downto 0);
        SD_MOSI_o : out std_ulogic;
        SD_MISO_i : in  std_ulogic;
---       --
---       --ETH_SCK_o  : out std_ulogic;
---       --ETH_nCS_o  : out std_ulogic;
---       --ETH_MOSI_o : out std_ulogic;
---       --ETH_MISO_i : in  std_ulogic;
---       --------------------------
---       -- VDIP-SPI-Signals
---       --------------------------
-----       VDIP_SCK_o  : out std_ulogic;
-----       VDIP_CS_o   : out std_ulogic;
-----       VDIP_MOSI_o : out std_ulogic;
-----       VDIP_MISO_i : in  std_ulogic;      
---       --------------------------
 --       -- GPIO-Signals
 --       --------------------------
 --       --GPIO_io   : inout std_logic_vector(7 downto 0);
@@ -134,13 +123,12 @@ architecture rtl of gdp_gowin_top is
 
  
   constant use_ser_key_c   : boolean := false;
-  constant use_ps2_key_c   : boolean := false;
-  constant use_ps2_mouse_c : boolean := false;
-  constant use_ser1_c      : boolean := false;
-  constant use_sound_c     : boolean := false;
-  constant use_spi_c       : boolean := false;
+  constant use_ps2_key_c   : boolean := true;
+  constant use_ps2_mouse_c : boolean := true;
+  constant use_ser1_c      : boolean := true;
+  constant use_sound_c     : boolean := true;
+  constant use_spi_c       : boolean := true;
   constant use_timer_c     : boolean := true;
-  constant use_vdip_c      : boolean := false;
   constant use_gpio_c      : boolean := false;
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
 --  constant dipswitches1_c : std_logic_vector(7 downto 0) := X"01";
@@ -163,8 +151,11 @@ architecture rtl of gdp_gowin_top is
 --  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
 --  constant DIP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"49"; -- r
   
-  signal pixel_clk         : std_ulogic;
+  signal clk_40            : std_ulogic;
+  signal pixel_clk,clk_80  : std_ulogic;
+  signal pixel_clk_temp       : std_ulogic;
   signal reset_n           : std_ulogic:='0';
+  signal pll_80m_reset     : std_ulogic;
   --signal GDP_SRAM_ADDR     : std_ulogic_vector(15 downto 0);
   --signal GDP_SRAM_datao    : std_ulogic_vector(7 downto 0);
   signal GDP_DataOut       : std_ulogic_vector(7 downto 0);
@@ -222,8 +213,6 @@ architecture rtl of gdp_gowin_top is
   
   signal spi_cs            : std_ulogic;
   signal spi_data          : std_ulogic_vector(7 downto 0);
-  signal vdip_cs           : std_ulogic;
-  signal vdip_data         : std_ulogic_vector(7 downto 0);
   signal gpio_cs           : std_ulogic;
   signal gpio_data         : std_ulogic_vector(7 downto 0);
   
@@ -239,6 +228,7 @@ architecture rtl of gdp_gowin_top is
   signal TxD_s             : std_ulogic;
   
   signal pll_lock          : std_ulogic;
+  signal pll_80m_lock      : std_ulogic;
   signal red               : std_ulogic_vector(2 downto 0);
   signal green             : std_ulogic_vector(2 downto 0);
   signal blue              : std_ulogic_vector(2 downto 0);
@@ -272,7 +262,7 @@ begin
       if rising_edge(pixel_clk) then
         reset_n  <= tmp_v(1);
         tmp_v(1) := tmp_v(0);
-        tmp_v(0) := (reset_n_i and not reset_i) and pll_lock;
+        tmp_v(0) := (reset_n_i and not reset_i) and pll_80m_lock;
       end if;
     end process reset_sync;
   end generate;
@@ -281,10 +271,22 @@ begin
     reset_n  <= reset_n_i;
   end generate;
 
+   pll_80 : entity work.pll_80m
+      port map (
+         reset    => pll_80m_reset,
+         clkin    => clk_40,
+         clkout   => clk_80,
+         lock     => pll_80m_lock,
+         clkoutd  => pixel_clk
+      );
+   pll_80m_reset <= not pll_lock;
+   --pixel_clk     <= pixel_clk_temp;
+
+
   video2hdmi: entity work.video2hdmi
     port map (
       clk            => refclk_i,
-      clk_40         => pixel_clk,
+      clk_40         => clk_40, --pixel_clk,
       pll_lock       => pll_lock,
       vreset         => vreset,
       vvmode         => vvmode,
@@ -345,11 +347,21 @@ begin
                   '1';
 
   fpga_en      <= gdp_cs or key_cs or dip_cs or mouse_cs or ser_cs or 
-                  snd_cs or spi_cs or t1_cs or vdip_cs or gpio_cs;
+                  snd_cs or spi_cs or t1_cs or gpio_cs;
   driver_nEN_o <= not reset_n; --not(output_en and (not nkc_nWR_i or not nkc_nRD_i)); 
+  
+  prototype: if not is_pcb generate
+     driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
+                     '1';
+     driver_DIR1_o <= '1';
+  end generate;
+  pcb: if is_pcb generate
+     driver_DIR_o <= '1' when (fpga_en and not nkc_nRD_i)='1' else
+                     '0';
+     driver_DIR1_o <= '0';
+  end generate;
 
-  driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
-                  '1';
+
   
   process(pixel_clk,reset_n)   
   begin
@@ -369,7 +381,6 @@ begin
 	                std_logic_vector(snd_data)    when (output_en and snd_cs   and not nkc_nRD_i)='1' else
 	                std_logic_vector(spi_data)    when (output_en and spi_cs   and not nkc_nRD_i)='1' else
 	                std_logic_vector(t1_data)     when (output_en and t1_cs    and not nkc_nRD_i)='1' else
-	                std_logic_vector(vdip_data)   when (output_en and vdip_cs  and not nkc_nRD_i)='1' else
 	                std_logic_vector(gpio_data)   when (output_en and gpio_cs  and not nkc_nRD_i)='1' else
                   (others => 'Z') after 1 ns;
   
@@ -377,6 +388,7 @@ begin
     port map (
       reset_n_i   => reset_n,
       clk_i       => pixel_clk,
+      clk_2x_i    => clk_80,
       clk_en_i    => '1',
       Adr_i       => Addr(3 downto 0),
 --      CS_i        => gdp_cs,
@@ -694,34 +706,6 @@ begin
     t1_irq       <= '0';
   end generate;
   
---  impl_VDIP: if use_vdip_c generate 
-----    vdip_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=VDIP_BASE_ADDR_c(7 downto 2) else -- 0x20 - 0x23
---    vdip_cs <= IORQ when Addr(7 downto 2)=VDIP_BASE_ADDR_c(7 downto 2) else -- 0x20 - 0x23
---                '0';
---    
---  VDIP : SPI_VDIP
---      port map (
---        reset_n_i   => reset_n,
---        clk_i       => pixel_clk,
---        VDIP_SCK_o  => VDIP_SCK_o,
---        VDIP_CS_o   => VDIP_CS_o,
---        VDIP_MOSI_o => VDIP_MOSI_o,
---        VDIP_MISO_i => VDIP_MISO_i,
---        Adr_i       => Addr(1 downto 0),
---        en_i        => vdip_cs,
---        DataIn_i    => data_in,
---        Rd_i        => gdp_Rd,
---        Wr_i        => gdp_Wr,
---        DataOut_o   => vdip_data
---      );
---  end generate;
-  no_vdip: if not use_vdip_c generate
-    vdip_data       <= (others =>'0');
-    vdip_cs         <= '0';
---    VDIP_SCK_o      <= '0';
---    VDIP_CS_o       <= '0';
---    VDIP_MOSI_o     <= VDIP_MISO_i;
-  end generate;
   
 --  impl_GPIO: if use_gpio_c generate 
 --  

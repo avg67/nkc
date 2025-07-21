@@ -24,6 +24,7 @@ entity gdp_vram is
   port (
     clk_i             : in  std_ulogic;
     clk_en_i          : in  std_ulogic;
+    clk_2x_i          : in  std_ulogic;
     reset_n_i         : in  std_ulogic;
     -- kernel port (read & write)
     kernel_clk_en_i   : in  std_ulogic;
@@ -58,79 +59,72 @@ entity gdp_vram is
 end;
 
 architecture rtl of gdp_vram is
-
+  constant early_request_c                  : boolean := true;
   constant Refresh_time_c                   : natural := 600; -- 4096 times every 64mS -> every 15 us
   type state_t is(init_e,idle_e,kernel_write_e,kernel_read_e,dram_busy_e,vid_read_e,vid_busy_e, refresh_e);
-  signal wr_data                            : std_ulogic_vector(7 downto 0);
-  --signal rd_data, next_rd_data              : std_ulogic_vector(31 downto 0);
-  --signal set_rd_data                        : std_ulogic;
-  signal kernel_data, next_kernel_data      : std_ulogic_vector(7 downto 0);
-  signal set_kernel_data                    : std_ulogic;
-  signal state,next_state                   : state_t;
-  signal ram_address, next_ram_address      : std_ulogic_vector(20 downto 0);
-  signal set_ram_address                    : std_ulogic;
-  signal kernel_req_pend                    : std_ulogic;
-  signal next_kernel_ack                    : std_ulogic;
-  signal rd_pend                            : std_ulogic;
-  signal next_rd_ack                        : std_ulogic;
-  signal ram_wren, next_ram_wren            : std_ulogic;
-  signal ram_en, next_ram_en                : std_ulogic;
-  signal ram_refresh, next_ram_refresh      : std_logic;
-  signal refresh_timer                      : natural range 0 to Refresh_time_c;
-  signal do_refresh, refresh_done           : std_ulogic;
-  --signal ram_bhe, next_ram_bhe              : std_ulogic;
-  --signal ram_ble, next_ram_ble              : std_ulogic;
-  signal next_sdrc_dqm,sdrc_dqm             : std_ulogic_vector(3 downto 0);
-  signal power_down                         : std_logic;
-  --signal sdrc_wr_n                          : std_logic;
-  --signal sdrc_rd_n                          : std_logic;
-  signal sdrc_addr                          : std_logic_vector(20 downto 0);
-  --signal next_sdrc_data_len,sdrc_data_len   : std_logic_vector(7 downto 0);
-  signal sdrc_i_data                        : std_ulogic_vector(31 downto 0);
-  signal sdrc_o_data                        : std_logic_vector(31 downto 0);
-  signal next_sdrc_read_burst, sdrc_read_burst   : std_logic;
-  signal sdrc_init_done                     : std_logic;
-  --signal sdrc_busy_n                        : std_logic;
-  signal srdc_cmd_ready                     : std_logic;
-  signal sdrc_rd_valid                      : std_logic;
-  signal rd_data_valid                      : std_logic;
-  --signal next_wr_data, wr_data              : std_logic_vector(31 downto 0);
-  --signal sdrc_wrd_ack                       : std_logic;
-  --signal cmd_busy                           : std_logic;
+  signal wr_data                               : std_ulogic_vector(7 downto 0);
+  signal kernel_data, next_kernel_data         : std_ulogic_vector(7 downto 0);
+  signal set_kernel_data                       : std_ulogic;
+  signal state,next_state                      : state_t;
+  signal ram_address, next_ram_address         : std_ulogic_vector(20 downto 0);
+  signal set_ram_address                       : std_ulogic;
+  signal kernel_req_pend                       : std_ulogic;
+  signal next_kernel_ack                       : std_ulogic;
+  signal rd_pend                               : std_ulogic;
+  signal next_rd_ack                           : std_ulogic;
+  signal ram_wren, next_ram_wren               : std_ulogic;
+  signal ram_en, next_ram_en                   : std_ulogic;
+  signal ram_refresh, next_ram_refresh         : std_logic;
+  signal refresh_timer                         : natural range 0 to Refresh_time_c;
+  signal do_refresh, refresh_done              : std_ulogic;
+  signal next_sdrc_dqm,sdrc_dqm                : std_ulogic_vector(3 downto 0);
+  signal power_down                            : std_logic;
+  signal sdrc_addr                             : std_logic_vector(20 downto 0);
+  signal sdrc_i_data                           : std_ulogic_vector(31 downto 0);
+  signal sdrc_o_data                           : std_logic_vector(31 downto 0);
+  signal next_sdrc_read_burst, sdrc_read_burst : std_logic;
+  signal sdrc_init_done                        : std_logic;
+  signal srdc_cmd_ready                        : std_logic;
+  signal sdrc_rd_valid                         : std_logic; -- fast clock
+  signal sdrc_rd_valid_tgl,sdrc_rd_valid_tgl_d : std_logic; -- fast clock
+  signal sdram_rd_data_valid                   : std_logic;
+  signal rd_data_valid                         : std_logic;
+
 begin
 
 
     SDRAM_inst: entity work.sdram
       port map (
-         sd_clk     => sdram_clk,
-         sd_cke     => sdram_cke,
-         sd_data    => sdram_dq,
-                    
-         sd_addr    => sdram_addr,
-         sd_dqm     => sdram_dqm,
-         sd_ba      => sdram_ba,
-         sd_cs      => sdram_cs_n,
-         sd_we      => sdram_wen_n,
-         sd_ras     => sdram_ras_n,
-         sd_cas     => sdram_cas_n,
-                    
-         clk        => clk_i,
-         reset_n    => reset_n_i,
-                    
-         ready      => sdrc_init_done,
-         refresh    => ram_refresh,
-         din        => sdrc_i_data,
-         dout       => sdrc_o_data,
-         dout_valid => sdrc_rd_valid,
-         addr       => sdrc_addr,
-         ds         => sdrc_dqm,
-         cs         => ram_en,
-         we         => ram_wren,
-         cmd_ready  => srdc_cmd_ready,
-         read_burst => sdrc_read_burst
+         sd_clk           => sdram_clk,
+         sd_cke           => sdram_cke,
+         sd_data          => sdram_dq,
+                          
+         sd_addr          => sdram_addr,
+         sd_dqm           => sdram_dqm,
+         sd_ba            => sdram_ba,
+         sd_cs            => sdram_cs_n,
+         sd_we            => sdram_wen_n,
+         sd_ras           => sdram_ras_n,
+         sd_cas           => sdram_cas_n,
+                          
+         clk_i            => clk_2x_i,
+         reset_n_i        => reset_n_i,
+                          
+         ready_o          => sdrc_init_done,
+         refresh_i        => ram_refresh,
+         din              => sdrc_i_data,
+         dout             => sdrc_o_data,
+         dout_valid_o     => sdrc_rd_valid, -- 80 MHz 
+         dout_valid_tgl_o => sdrc_rd_valid_tgl,
+         addr_i           => sdrc_addr,
+         ds_i             => sdrc_dqm,
+         cs_i             => ram_en,
+         we_i             => ram_wren,
+         cmd_ready_o      => srdc_cmd_ready,
+         read_burst_i     => sdrc_read_burst
       );
 
-
+   sdram_rd_data_valid <= sdrc_rd_valid_tgl xor sdrc_rd_valid_tgl_d;
 
     power_down  <= '0';
     sdrc_addr   <=  std_logic_vector(ram_address);
@@ -140,7 +134,8 @@ begin
   -- DP-RAM Controller FSM for ext. SRAM
   process(state,ram_address, kernel_addr_i,kernel_wr_i,rd_addr_i,wr_data,ram_wren, ram_en, ram_refresh,
           kernel_req_i,kernel_req_pend,rd_req_i,rd_pend,kernel_data,kernel_clk_en_i,do_refresh,
-          sdrc_o_data,sdrc_dqm,srdc_cmd_ready,sdrc_init_done,sdrc_read_burst,sdrc_rd_valid)
+          sdrc_o_data,sdrc_dqm,srdc_cmd_ready,sdrc_init_done,sdrc_read_burst,sdrc_rd_valid,sdram_rd_data_valid)
+    
     procedure do_kernel_acc_p is
     begin
       set_ram_address      <= '1';
@@ -185,6 +180,7 @@ begin
       --  next_kernel_ack  <= '1';
       --end if;
     end procedure;
+    
     procedure do_vid_rd_p is
     begin
       set_ram_address  <= '1';
@@ -254,73 +250,70 @@ begin
          end if;
 
       when vid_read_e =>
-        if srdc_cmd_ready='0' then
-          next_state   <= vid_busy_e;
-          --set_rd_data  <= '1';
-          --next_rd_data <= std_ulogic_vector(sdrc_o_data);
-        end if;
+         if srdc_cmd_ready='0' then
+            next_state   <= vid_busy_e;
+            next_ram_en  <= '0'; -- !!! Terminate CS early
+         end if;
         
       when vid_busy_e =>
         rd_data_valid <= sdrc_rd_valid;
-        if srdc_cmd_ready='1' then
-          next_state   <= idle_e;
-          next_ram_en  <= '0';
-          next_rd_ack  <= '1';
-          --if (rd_req_i or rd_pend)='1' then
-          --  do_vid_rd_p;
-          --els
-          --if ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
-          --  do_kernel_acc_p;
-          --end if;
+         if srdc_cmd_ready='1' then
+            next_state   <= idle_e;
+            next_ram_en  <= '0';
+            next_rd_ack  <= '1';
+            --if (rd_req_i or rd_pend)='1' then
+            --  do_vid_rd_p;
+            --els
+            if early_request_c then
+               if do_refresh ='1' then
+                  do_refresh_p;
+               elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
+                  do_kernel_acc_p;
+               end if;
+            end if;
         end if;
       
       
       when dram_busy_e =>
-         set_kernel_data  <= sdrc_rd_valid and not ram_wren;
+         set_kernel_data  <= sdram_rd_data_valid and not ram_wren;
          case kernel_addr_i(1 downto 0) is
-         when "00" =>
-            next_kernel_data <= std_ulogic_vector(sdrc_o_data(31 downto 24));
-         when "01" =>
-            next_kernel_data <= std_ulogic_vector(sdrc_o_data(23 downto 16));
-         when "10" =>
-            next_kernel_data <= std_ulogic_vector(sdrc_o_data(15 downto 8));
-         when others =>
-            next_kernel_data <= std_ulogic_vector(sdrc_o_data(7 downto 0));
+            when "00" =>
+               next_kernel_data <= std_ulogic_vector(sdrc_o_data(31 downto 24));
+            when "01" =>
+               next_kernel_data <= std_ulogic_vector(sdrc_o_data(23 downto 16));
+            when "10" =>
+               next_kernel_data <= std_ulogic_vector(sdrc_o_data(15 downto 8));
+            when others =>
+               next_kernel_data <= std_ulogic_vector(sdrc_o_data(7 downto 0));
          end case;
          -- wait until command is finished
          if srdc_cmd_ready='1' then
-             next_state  <= idle_e;
-             next_ram_en <= '0';
-             next_kernel_ack  <= '1';
+            next_state  <= idle_e;
+            next_ram_en <= '0';
+            next_kernel_ack  <= '1';
              
-             --if (rd_req_i or rd_pend)='1' then
-             --  do_vid_rd_p;
-             ----elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
-             ----  do_kernel_acc_p;
-             --end if;
+            if early_request_c then
+               if (rd_req_i or rd_pend)='1' then
+                 do_vid_rd_p;
+               elsif do_refresh ='1' then
+                 do_refresh_p;
+                --elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
+                --  do_kernel_acc_p;
+               end if;
+            end if;
          end if;
       when kernel_read_e =>
         if srdc_cmd_ready='0' then
            next_state   <= dram_busy_e;
-
- --          set_kernel_data  <= '1';
- --         case kernel_addr_i(1 downto 0) is
- --           when "00" =>
- --              next_kernel_data <= std_ulogic_vector(sdrc_o_data(7 downto 0));
- --           when "01" =>
- --              next_kernel_data <= std_ulogic_vector(sdrc_o_data(15 downto 8));
- --           when "10" =>
- --              next_kernel_data <= std_ulogic_vector(sdrc_o_data(23 downto 16));
- --           when others =>
- --              next_kernel_data <= std_ulogic_vector(sdrc_o_data(31 downto 24));
- --         end case;
-           
+           next_ram_en  <= '0'; -- !!! Terminate CS early
         end if;
       when kernel_write_e =>
          -- wait until command execution starts
          if srdc_cmd_ready='0' then
-            next_state       <= dram_busy_e;
-            --next_kernel_ack  <= '1';
+            --next_state       <= dram_busy_e;
+            next_state       <= idle_e;
+            next_ram_en      <= '0'; -- !!! Terminate CS early
+            next_kernel_ack  <= '1';   -- !!! early kernel ack
          end if;
       when refresh_e =>
          refresh_done <= '1';
@@ -347,12 +340,11 @@ begin
       rd_pend     <= '0';
       kernel_ack_o<= '0';
       rd_ack_o    <= '0';
-      --ram_bhe     <= '0';
-      --ram_ble     <= '0';
       sdrc_dqm      <= (others => '0');
       sdrc_read_burst <= '0';
       refresh_timer <= 0;
       do_refresh    <= '0';
+      sdrc_rd_valid_tgl_d <= '0';
       --cmd_busy      <= '0';
       --sdrc_data_len <= (others => '0');
 
@@ -362,20 +354,15 @@ begin
          if set_ram_address  = '1' then
           ram_address <= next_ram_address;
          end if;
-         --if set_rd_data = '1' then
-         --  rd_data     <= next_rd_data;
-         --end if;
          if set_kernel_data = '1' then
           kernel_data <= next_kernel_data;
          end if;
          ram_wren    <= next_ram_wren;
          ram_en      <= next_ram_en;
          ram_refresh <= next_ram_refresh;
-         --ram_bhe     <= next_ram_bhe;
-         --ram_ble     <= next_ram_ble;
          sdrc_dqm    <= next_sdrc_dqm;
-         --sdrc_data_len <= next_sdrc_data_len;
          sdrc_read_burst <= next_sdrc_read_burst;
+         sdrc_rd_valid_tgl_d <= sdrc_rd_valid_tgl;
 
          kernel_ack_o<= next_kernel_ack;
          rd_ack_o    <= next_rd_ack;

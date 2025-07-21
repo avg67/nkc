@@ -238,6 +238,8 @@ begin
 --      next_last_wr         <= inactivated_c;
       dx_v                 := std_ulogic_vector(abs(signed(dx_i)));
       dy_v                 := std_ulogic_vector(abs(signed(dy_i)));
+      slopex_v             := (others => '0');
+      slopey_v             := (others => '0');
       
       case state is
         -----------------------------------------------------------------------
