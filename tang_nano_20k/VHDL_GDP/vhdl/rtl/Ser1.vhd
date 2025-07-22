@@ -321,6 +321,8 @@ begin
     set_tx_sr            <= '0';
     next_tx_sr           <= (others => '-');
     set_tx_irq           <= '0';
+    data_v               := (others => '0');
+    tmp_v                := (others => '1');
 
     max_bit_cnt_v := max_bit_cnt+1;
     if (Control_reg(7) or Command_reg(5)) = '1' then
