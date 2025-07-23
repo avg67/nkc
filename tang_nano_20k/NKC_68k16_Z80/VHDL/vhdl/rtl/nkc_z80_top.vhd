@@ -1121,8 +1121,10 @@ begin
       
       nkc_nreset_o <= reset_n;
 
-      nkc_DB       <= DO_CPU when driver_DIR='0' else
+      nkc_DB       <= DO_CPU when not is_pcb and driver_DIR='0' else
+                      DO_CPU when     is_pcb and driver_DIR='1' else
                       (others => 'Z');
+
       process(pixel_clk)
       begin
          if rising_edge(pixel_clk) then

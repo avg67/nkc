@@ -1012,7 +1012,8 @@ begin
       
       nkc_nreset_o <= reset_n;
       --nkc_DB       <= std_logic_vector(oEdb(15 downto 8)) when EXT_IORQ = '1' and nWR='0' else
-      nkc_DB       <= std_logic_vector(oEdb(15 downto 8)) when driver_DIR='0' else
+      nkc_DB       <= std_logic_vector(oEdb(15 downto 8)) when not is_pcb and driver_DIR='0' else
+                      std_logic_vector(oEdb(15 downto 8)) when     is_pcb and driver_DIR='1' else
                       (others => 'Z');
       process(pixel_clk)
       begin
