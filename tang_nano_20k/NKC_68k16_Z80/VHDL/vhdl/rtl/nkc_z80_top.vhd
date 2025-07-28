@@ -827,7 +827,11 @@ begin
             
    CPU: block  
       constant USE_FLOMON_c : boolean :=true;
-      constant USE_ZEAT_c   : boolean :=true;
+      constant USE_ZEAT_c   : boolean :=true; 
+      constant USE_BASIC_c  : boolean :=false; -- Test feature: ROM's in Bank 14 - use with care!
+      constant USE_EZASS_c  : boolean :=false; -- Test feature: ROM's in Bank 14 - use with care!
+      constant USE_GOSI_c   : boolean :=false; -- Test feature: ROM's in Bank 14 - use with care!
+      constant USE_GRUND_c  : boolean :=false; -- Test feature: ROM's in Bank 14 - use with care!
       constant IO_WAITSTATES_c : natural := 4;
       signal logic1         : std_ulogic;
       signal logic0         : std_ulogic;
@@ -841,14 +845,20 @@ begin
       signal Rd_n,Wr_n      : std_logic;
       signal wait_n         : std_logic;
       signal rom_dout       : std_logic_vector(7 downto 0);
+      signal rom_b14_dout   : std_logic_vector(7 downto 0);
       signal rom0_dout      : std_logic_vector(7 downto 0);
       signal rom1_dout      : std_logic_vector(7 downto 0);
       signal rom2_dout      : std_logic_vector(7 downto 0);
+      signal rom_basic_dout : std_logic_vector(7 downto 0);
+      signal rom_ezass_dout : std_logic_vector(7 downto 0);
+      signal rom_gosi_dout  : std_logic_vector(7 downto 0);
+      signal rom_gp_dout    : std_logic_vector(7 downto 0);
       --signal rom2_dout      : std_logic_vector(7 downto 0);
 
       signal nRD_d          : std_ulogic;
       signal nWR_d          : std_ulogic;
       signal rom_en         : std_ulogic;
+      signal rom_b14_en     : std_ulogic;
       signal gp_ram_en      : std_ulogic;
       -- bank/boot specific signals
       signal bank_reg     : std_ulogic_vector(7 downto 0);
@@ -1012,6 +1022,7 @@ begin
                         rom1_dout when 1, -- 0x2000 - 0x3FFF
                         rom2_dout when 2, -- 0x4000 - 0x5FFF
                         (others => '1') when others;
+         rom_b14_en <= '0';
       end generate;
       
       flomon_rom_inst: if USE_FLOMON_c generate
@@ -1033,9 +1044,10 @@ begin
          end generate;
 
          with to_integer(unsigned(Cpu_A(14 downto 13))) select
-            rom_dout <= rom0_dout when 0, -- 0x0000 - 0x1FFF
-                        rom1_dout when 1, -- 0x2000 - 0x3FFF
-                        rom2_dout when 2, -- 0x4000 - 0x5FFF
+            -- ROMs in all banks with Banken ='0'
+            rom_dout <= rom0_dout when 0, -- 0x0000 - 0x1FFF Flomon
+                        rom1_dout when 1, -- 0x2000 - 0x3FFF Zeat_A
+                        rom2_dout when 2, -- 0x4000 - 0x5FFF Zeat_B
                         (others => '1') when others;
                         
          zeat_rom_inst: if USE_ZEAT_c generate
@@ -1055,6 +1067,66 @@ begin
          no_zeat_rom: if not USE_ZEAT_c generate
             rom1_dout <= (others =>'1');
             rom2_dout <= (others =>'1');
+         end generate;
+         
+         with to_integer(unsigned(Cpu_A(14 downto 13))) select
+            -- ROMs on Bank 14 with Banken ='1'
+            rom_b14_dout <= rom_gp_dout    when 0, -- 0xe0000 - 0xe1FFF GP
+                            rom_gosi_dout  when 1, -- 0xe2000 - 0xe3FFF GOSI
+                            rom_basic_dout when 2, -- 0xe4000 - 0xe5FFF Basic
+                            rom_ezass_dout when 3, -- 0xe6000 - 0xe7FFF EZASS
+                            (others => '1') when others;
+         
+         grund_rom_inst: if USE_GRUND_c generate
+            rom1: entity work.grund_rom
+               port map (
+                  Clk => pixel_clk,
+                  A   => Cpu_A(12 downto 0),
+                  D   => rom_gp_dout
+               );
+         end generate;
+         no_grund_rom: if not USE_GRUND_c generate
+            rom_gp_dout <= (others =>'1');
+         end generate;
+         basic_rom_inst: if USE_BASIC_c generate
+            rom1: entity work.basic_rom
+               port map (
+                  Clk => pixel_clk,
+                  A   => Cpu_A(12 downto 0),
+                  D   => rom_basic_dout
+               );
+         end generate;
+         no_basic_rom: if not USE_BASIC_c generate
+            rom_basic_dout <= (others =>'1');
+         end generate;
+         ezass_rom_inst: if USE_EZASS_c generate
+            rom1: entity work.ezass_rom
+               port map (
+                  Clk => pixel_clk,
+                  A   => Cpu_A(12 downto 0),
+                  D   => rom_ezass_dout
+               );
+         end generate;
+         no_ezass_rom: if not USE_EZASS_c generate
+            rom_ezass_dout <= (others =>'1');
+         end generate;
+         gosi_rom_inst: if USE_GOSI_c generate
+            rom1: entity work.gosi_rom
+               port map (
+                  Clk => pixel_clk,
+                  A   => Cpu_A(12 downto 0),
+                  D   => rom_gosi_dout
+               );
+         end generate;
+         no_gosi_rom: if not USE_GOSI_c generate
+            rom_gosi_dout <= (others =>'1');
+         end generate;
+         use_roms_in_b14: if USE_GRUND_c or USE_BASIC_c or USE_EZASS_c or USE_GOSI_c generate
+            rom_b14_en <= MREQ when Cpu_A(15) ='0' and bank_reg(3 downto 0)=X"E" and banken='1' else
+                          '0';
+         end generate;
+         no_roms_in_b14: if not USE_GRUND_c and not USE_BASIC_c and not USE_EZASS_c and not USE_GOSI_c generate
+            rom_b14_en <= '0';
          end generate;
       end generate;
       
@@ -1080,6 +1152,7 @@ begin
       
       
       DI_CPU <= rom_dout                                 when rom_en='1' else
+                rom_b14_dout                             when rom_b14_en='1' else
                 std_logic_vector(cpu_datao(7 downto 0))  when cpu_req1='1' and Cpu_A(0) ='0' else
                 std_logic_vector(cpu_datao(15 downto 8)) when cpu_req1='1' and Cpu_A(0) ='1' else
                 std_logic_vector(bank_reg)               when bank_reg_en='1' else
@@ -1100,7 +1173,7 @@ begin
       gp_ram_en <= MREQ when (Cpu_A(15 downto 13)="011") and banken='0' else
                    '0';
       -- 1MB of SDRAM (0 - 0xf_ffff) (BANKEN=1) and 8kB at 0x6000 - 0x7FFF (BANKEN=0)
-      cpu_req1 <= MREQ when banken='1' or gp_ram_en='1' else   -- 64kB
+      cpu_req1 <= MREQ when rom_b14_en='0' and (banken='1' or gp_ram_en='1') else   -- 64kB
                   '0';
       cpu_req     <= cpu_req1 and not cpu_req_d;
       cpu_wr      <= MREQ and not nWR;

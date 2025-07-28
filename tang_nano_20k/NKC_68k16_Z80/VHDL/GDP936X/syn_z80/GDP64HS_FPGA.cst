@@ -10,7 +10,7 @@ IO_PORT "tmds_d_p[2]" PULL_MODE=NONE DRIVE=8;
 
 
 IO_LOC "refclk_i" 4;
-IO_PORT "refclk_i" PULL_MODE=UP;
+IO_PORT "refclk_i" IO_TYPE=LVCMOS33 PULL_MODE=UP;
 IO_LOC "reset_i" 87;
 IO_PORT "reset_i" IO_TYPE=LVCMOS33 PULL_MODE=DOWN;
 

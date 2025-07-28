@@ -34,7 +34,10 @@
      sowie externen I/O-BUS (3 WS) für PCB von UWE
 - NKC_Z80_PS2_KEYB_PCB.fs
    - NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, Ser
-     sowie externen I/O-BUS für PCB von UWE
+     FLOMON20170501, ZEAT Roms sowie externen I/O-BUS für PCB von UWE
+- NKC_Z80_PS2_KEYB_ADD_ROMS_PCB.fs
+   - NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, Ser
+     FLOMON20170501, ZEAT, GP, GOSI, BASIC, EZASS Roms sowie externen I/O-BUS für PCB von UWE
 - GDP64HS_FPGA_PCB.fs
    - Bus-Slave mit GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
      für PCB von UWE
