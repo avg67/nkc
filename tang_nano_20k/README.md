@@ -41,6 +41,9 @@
 - GDP64HS_FPGA_PCB.fs
    - Bus-Slave mit GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
      für PCB von UWE
+- GDP64HS_FPGA_NUR_GDP_PCB.fs
+   - Bus-Slave nur mit GDP64HS
+     für PCB von UWE
 
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM:
