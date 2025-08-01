@@ -121,7 +121,7 @@ end gdp_gowin_top;
 
 architecture rtl of gdp_gowin_top is
 
- 
+  constant use_gdp_c       : boolean := true;
   constant use_ser_key_c   : boolean := false;
   constant use_ps2_key_c   : boolean := true;
   constant use_ps2_mouse_c : boolean := true;
@@ -156,24 +156,8 @@ architecture rtl of gdp_gowin_top is
   signal pixel_clk_temp       : std_ulogic;
   signal reset_n           : std_ulogic:='0';
   signal pll_80m_reset     : std_ulogic;
-  --signal GDP_SRAM_ADDR     : std_ulogic_vector(15 downto 0);
-  --signal GDP_SRAM_datao    : std_ulogic_vector(7 downto 0);
   signal GDP_DataOut       : std_ulogic_vector(7 downto 0);
-  --signal GDP_SRAM_datai    : std_ulogic_vector(7 downto 0);
-  --signal GDP_SRAM_ena      : std_ulogic_vector(1 downto 0);
-  --signal GDP_SRAM_we       : std_ulogic;
---  signal VGA_pixel         : std_ulogic;
-  --signal kernel_req         : std_ulogic;
-  --signal kernel_wr          : std_ulogic;
-  --signal kernel_addr        : std_ulogic_vector(17 downto 0);
-  --signal kernel_data_is     : std_ulogic_vector(7 downto 0);
-  --signal kernel_data_os     : std_ulogic_vector(7 downto 0);
-  --signal kernel_busy        : std_ulogic;
-  --signal rd_req             : std_ulogic;
-  --signal rd_addr            : std_ulogic_vector(15 downto 0);
-  --signal rd_data_is         : std_ulogic_vector(31 downto 0);
-  --signal rd_busy            : std_ulogic;
-  --signal rd_ack             : std_ulogic;
+
 
   signal gdp_Rd,gdp_Wr     : std_ulogic;
   signal gdp_cs            : std_ulogic;
@@ -186,7 +170,7 @@ architecture rtl of gdp_gowin_top is
   signal nkc_nRD_s, nkc_nWR_s : std_ulogic;
   signal nWr,nRd           : std_ulogic;
   signal IORQ              : std_ulogic;
-  signal glob_gdp_en       : std_ulogic;
+  --signal glob_gdp_en       : std_ulogic;
   signal Addr              : std_ulogic_vector(7 downto 0);
   signal data_in           : std_ulogic_vector(7 downto 0);
   signal output_en,fpga_en : std_ulogic;
@@ -240,18 +224,10 @@ architecture rtl of gdp_gowin_top is
   signal audio1            : std_logic_vector(15 downto 0);
 begin
 
-  dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
---           dipswitches1_c;
+  dipsw <= dipswitches_c;
 
-  gdp_base <= GDP_BASE_ADDR_c; -- when addr_sel_i = '0' else
---              GDP_BASE_ADDR1_c;
-  sfr_base <= SFR_BASE_ADDR_c; -- when addr_sel_i = '0' else
---              SFR_BASE_ADDR1_c;
---  key_base <= KEY_BASE_ADDR_c when addr_sel_i = '1' else
---              KEY_BASE_ADDR1_c;
---  dip_base <= DIP_BASE_ADDR_c when addr_sel_i = '1' else
---              DIP_BASE_ADDR1_c;
-
+  gdp_base <= GDP_BASE_ADDR_c; 
+  sfr_base <= SFR_BASE_ADDR_c;
   key_base <= KEY_BASE_ADDR_c;
   dip_base <= DIP_BASE_ADDR_c;
 
@@ -280,7 +256,6 @@ begin
          clkoutd  => pixel_clk
       );
    pll_80m_reset <= not pll_lock;
-   --pixel_clk     <= pixel_clk_temp;
 
 
   video2hdmi: entity work.video2hdmi
@@ -320,7 +295,7 @@ begin
 --         clr_n => reset_n,
 --         q     => glob_gdp_en
 --     );
-  glob_gdp_en <= '1';
+--  glob_gdp_en <= '1';
   
   bi_inst:entity work.gdp_bi
     port map(
@@ -408,19 +383,6 @@ begin
       --Vsync_o     => Vsync_o,
       vreset_o    => vreset,
 
---      kernel_req_o  => kernel_req,
---      kernel_wr_o   => kernel_wr,
---      kernel_addr_o => kernel_addr,
---      kernel_data_i => kernel_data_is,
---      kernel_data_o => kernel_data_os,
---      kernel_busy_i => kernel_busy,
---      --kernel_ack_i  => kernel_ack_i,
---      --
---      rd_req_o      => rd_req,
---      rd_addr_o     => rd_addr,
---      rd_data_i     => rd_data_is,
---      rd_busy_i     => rd_busy,
---      rd_ack_i      => rd_ack, 
       sdram_clk       => O_sdram_clk,
       sdram_cke       => O_sdram_cke,
       sdram_cs_n      => O_sdram_cs_n,
@@ -437,10 +399,11 @@ begin
   --Pixel_o <= or_reduce(red&green&blue);
   O_sdram_addr <= sdram_addr(O_sdram_addr'range);
 
-  gdp_cs <= (IORQ and glob_gdp_en) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
-                       (Addr(7 downto 1) = sfr_base(7 downto 1)) or
-                       (Addr(7 downto 1) = COL_BASE_c(7 downto 1) and color_support_c) or -- SFRs
-                       (Addr(7 downto 2) = CLUT_BASE_c(7 downto 2) and color_support_c) else
+  --gdp_cs <= (IORQ and glob_gdp_en) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
+  gdp_cs <= (IORQ) when  use_gdp_c and (Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
+                                       (Addr(7 downto 1) = sfr_base(7 downto 1)) or
+                                       (Addr(7 downto 1) = COL_BASE_c(7 downto 1) and color_support_c) or -- SFRs
+                                       (Addr(7 downto 2) = CLUT_BASE_c(7 downto 2) and color_support_c)) else
             '0';
   
   gdp_en <= gdp_cs when Addr(7 downto 4) = gdp_base(7 downto 4) else
