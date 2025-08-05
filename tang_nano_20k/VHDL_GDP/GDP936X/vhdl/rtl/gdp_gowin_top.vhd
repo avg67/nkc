@@ -90,9 +90,13 @@ entity gdp_gowin_top is
 --       -- SPI-Signals
 --       --------------------------
        SD_SCK_o  : out std_ulogic;
-       SD_nCS_o  : out std_ulogic_vector(0 downto 0);
+       SD_nCS_o  : out std_ulogic_vector(1 downto 0);
        SD_MOSI_o : out std_ulogic;
        SD_MISO_i : in  std_ulogic;
+       --
+       SD1_SCK_o  : out std_ulogic;
+       SD1_MOSI_o : out std_ulogic;
+       SD1_MISO_i : in  std_ulogic := '1';
 --       -- GPIO-Signals
 --       --------------------------
 --       --GPIO_io   : inout std_logic_vector(7 downto 0);
@@ -127,7 +131,8 @@ architecture rtl of gdp_gowin_top is
   constant use_ps2_mouse_c : boolean := true;
   constant use_ser1_c      : boolean := true;
   constant use_sound_c     : boolean := true;
-  constant use_spi_c       : boolean := true;
+  constant use_spi_c       : boolean := true;   -- use for 68k SDCard-interface
+  constant use_sdio_c      : boolean := false;  -- use for Z80 SDCard-interface. Don't enable both!
   constant use_timer_c     : boolean := true;
   constant use_gpio_c      : boolean := false;
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";     -- DIPSWITCHES for 68k
@@ -144,12 +149,8 @@ architecture rtl of gdp_gowin_top is
   constant SOUND_BASE_ADDR_c  : std_ulogic_vector(7 downto 0) := X"50"; -- r/w  
   constant SPI_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"00"; -- r/w 
   constant T1_BASE_ADDR_c     : std_ulogic_vector(7 downto 0) := X"F4"; -- r/w 
-  constant VDIP_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"20"; -- r/w 
+  constant SDIO_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"20"; -- r/w 
   constant GPIO_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"04"; -- r/w 
---  constant GDP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"50"; -- r/w
---  constant SFR_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"40"; -- w
---  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
---  constant DIP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"49"; -- r
   
   signal clk_40            : std_ulogic;
   signal pixel_clk,clk_80  : std_ulogic;
@@ -399,7 +400,6 @@ begin
   --Pixel_o <= or_reduce(red&green&blue);
   O_sdram_addr <= sdram_addr(O_sdram_addr'range);
 
-  --gdp_cs <= (IORQ and glob_gdp_en) when  Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
   gdp_cs <= (IORQ) when  use_gdp_c and (Addr(7 downto 4) = gdp_base(7 downto 4)  or  -- GDP
                                        (Addr(7 downto 1) = sfr_base(7 downto 1)) or
                                        (Addr(7 downto 1) = COL_BASE_c(7 downto 1) and color_support_c) or -- SFRs
@@ -623,27 +623,65 @@ begin
         Wr_i        => gdp_Wr,
         DataOut_o   => spi_data
       );
-      SD_SCK_o <= SD_SCK_s;
-      SD_nCS_o <= SD_nCS_s(0 downto 0);
-      SD_MOSI_o <= SD_MOSI_s;
-      --SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
-      --             SD_MISO_i;
-      SD_MISO_s <= SD_MISO_i;
-      -- duplicate SPI pins to decouple SD-cards and Ethernet controller electrically
-      --ETH_SCK_o  <= SD_SCK_s;
-      --ETH_nCS_o  <= SD_nCS_s(2);
-      --ETH_MOSI_o <= SD_MOSI_s;
+      SD_SCK_o   <= SD_SCK_s;
+      SD1_SCK_o  <= SD_SCK_s;
+      SD_nCS_o   <= SD_nCS_s(1 downto 0);
+      SD_MOSI_o  <= SD_MOSI_s;
+      SD1_MOSI_o <= SD_MOSI_s;
+      SD_MISO_s  <= SD1_MISO_i when SD_nCS_s(1)='0' else
+                    SD_MISO_i;
+
   end generate;
-  no_spi: if not use_spi_c generate
+--  no_spi: if not use_spi_c generate
+--    spi_data       <= (others =>'0');
+--    spi_cs         <= '0';
+--    SD_SCK_o       <= '0';
+--    SD_nCS_o       <= (others => '1'); --(others => '1');
+--    SD_MOSI_o      <= SD_MISO_i;
+--    --ETH_SCK_o      <= SD_SCK_s;
+--    --ETH_nCS_o      <= '1';
+--    --ETH_MOSI_o     <= ETH_MISO_i;
+--  end generate;
+  impl_SDIO: if use_sdio_c generate 
+    spi_cs <= IORQ when Addr(7 downto 1)=SDIO_BASE_ADDR_c(7 downto 1) else -- 0x20 - 0x21
+              '0';
+    
+    SDIO : entity work.SDIO_Interface
+      port map (
+        reset_n_i   => reset_n,
+        clk_i       => pixel_clk,
+        SD_SCK_o    => SD_SCK_s,
+        SD_nCS_o(1 downto 0)   => SD_nCS_s(1 downto 0),
+        SD_MOSI_o   => SD_MOSI_s,
+        SD_MISO_i   => SD_MISO_s,
+        Adr_i       => Addr(0 downto 0),
+        en_i        => spi_cs,
+        DataIn_i    => data_in,
+        Rd_i        => gdp_Rd,
+        Wr_i        => gdp_Wr,
+        DataOut_o   => spi_data
+      );
+      SD_SCK_o   <= SD_SCK_s;
+      SD1_SCK_o  <= SD_SCK_s;
+      SD_nCS_o   <= SD_nCS_s(1 downto 0);
+      SD_MOSI_o  <= SD_MOSI_s;
+      SD1_MOSI_o <= SD_MOSI_s;
+      SD_MISO_s  <= SD1_MISO_i when SD_nCS_s(1)='0' else
+                    SD_MISO_i;
+
+  end generate;
+  no_spi_no_sdio: if not use_spi_c and not use_sdio_c generate
     spi_data       <= (others =>'0');
     spi_cs         <= '0';
     SD_SCK_o       <= '0';
     SD_nCS_o       <= (others => '1'); --(others => '1');
     SD_MOSI_o      <= SD_MISO_i;
+    SD1_MOSI_o     <= SD1_MISO_i;
     --ETH_SCK_o      <= SD_SCK_s;
     --ETH_nCS_o      <= '1';
     --ETH_MOSI_o     <= ETH_MISO_i;
   end generate;
+
   
   impl_T1: if use_timer_c generate 
 --    t1_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=T1_BASE_ADDR_c(7 downto 2) else -- 0x00 - 0x01

@@ -78,6 +78,7 @@ architecture rtl of SPI_Interface is
   signal initial                 : std_ulogic;
   
 begin
+
 -- Divider:
 -- 0: /2
 -- 1: /4

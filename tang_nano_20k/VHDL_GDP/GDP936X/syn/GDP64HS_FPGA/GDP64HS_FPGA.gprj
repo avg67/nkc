@@ -42,6 +42,7 @@
         <File path="../../../vhdl/rtl/PS2_Decoder.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/PS2_Interface.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/SPI_Interface.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../vhdl/rtl/SDIO_Interface.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/Ser1.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/Timer.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/sound/dac.vhd" type="file.vhdl" enable="1"/>

@@ -47,6 +47,7 @@ vcom -93                  ../vhdl/rtl/Dffdecl-p.vhd \
                           ../../vhdl/rtl/PS2Mouse.vhd \
                           ../../vhdl/rtl/Ser1.vhd \
                           ../../vhdl/rtl/SPI_Interface.vhd \
+                          ../../vhdl/rtl/SDIO_Interface.vhd \
                           ../../vhdl/rtl/SPI_Vdip.vhd \
                           ../../vhdl/rtl/Timer.vhd \
                           ../../vhdl/rtl/GPIO_Interface.vhd \
