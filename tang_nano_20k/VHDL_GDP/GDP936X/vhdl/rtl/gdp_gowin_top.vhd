@@ -131,7 +131,7 @@ architecture rtl of gdp_gowin_top is
   constant use_timer_c     : boolean := true;
   constant use_gpio_c      : boolean := false;
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";     -- DIPSWITCHES for 68k
---  constant dipswitches1_c : std_logic_vector(7 downto 0) := X"01";      -- DIPSWITCHES for Z80
+  --constant dipswitches_c   : std_logic_vector(7 downto 0) := X"01";     -- DIPSWITCHES for Z80
   
   constant GDP_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"70"; -- r/w
   constant SFR_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"60"; -- w  
