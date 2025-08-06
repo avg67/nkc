@@ -16,6 +16,10 @@
 - GDP64HS_FPGA_NUR_GDP_PCB.fs
    - Bus-Slave nur mit GDP64HS
      für PCB von UWE
+-  NKC_68k_FAST_PS2_KEYB_PCB.fs
+   - NKC preliminary SOC mit 40MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+     sowie externen I/O-BUS (3 WS) für PCB von UWE
+     Achtung: Ext. Bus noch nicht 100% stabil (FLO2 läuft bei mir damit nicht stabil, alles andere schon)!
 
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM:
