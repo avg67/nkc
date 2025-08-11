@@ -248,7 +248,7 @@ begin
    --              kernel_addr1(17 downto 0) when color_support_c and color_mode ='1' else
    --              "00"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
    kernel_addr <= page_reg(4 downto 3) & kernel_addr1(17 downto 0) when color_support_c else
-                  "00"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
+                  "0000"&page_reg(4 downto 3) & kernel_addr1(13 downto 0);
   
   vram : entity work.gdp_vram
     generic map (

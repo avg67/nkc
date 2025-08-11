@@ -530,8 +530,8 @@ begin
         if vram_busy = '0' then
           calc_addr_p;
           --if color_mode ='0' or rmw_mode_i = '1' then
-          if rmw_mode_i = '1' then
-            -- XOR mode -> read pixel first
+          if not color_support_c or rmw_mode_i = '1' then
+            -- XOR mode or b/w -> read pixel first
              kernel_req <= '1';
              kernel_wr  <= '0';
              next_state <= modify_write_e;
@@ -615,7 +615,7 @@ begin
         if vram_busy = '0' then
            next_state <= modify_write_e;
            calc_addr_p;
-           if rmw_mode_i = '1' then
+           if rmw_mode_i = '1' or not color_support_c then
              -- xor mode active -> read is needed
              kernel_req <= '1';
              kernel_wr  <= '0';
@@ -691,7 +691,7 @@ begin
             next_clrscr_busy <= '0';
           else
             if not color_support_c then
-              kernel_addr <= "00" & std_ulogic_vector(unsigned(cached_kernel_addr(13 downto 0)) +4);
+              kernel_addr <= "0000" & std_ulogic_vector(unsigned(cached_kernel_addr(13 downto 0)) +4);
             else
               kernel_addr <= std_ulogic_vector(unsigned(cached_kernel_addr) +4);
             end if;

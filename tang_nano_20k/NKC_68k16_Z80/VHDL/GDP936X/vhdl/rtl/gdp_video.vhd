@@ -77,6 +77,7 @@ architecture rtl of gdp_video is
   constant VSYNC_c           : natural := 4;
   constant VMAX_c            : natural := VFRONT_PORCH_c+VSYNC_c+VBACK_PORCH_c+600; -- 1 + 4 + 23 + 600 = 628
   constant LINE_MAX_c        : natural := (512/4) - RD_BURST_SIZE_c;
+  constant LINE_MAX_MONO_c   : natural := (512/32)- RD_BURST_SIZE_c;
   
   type rd_state_t is(idle_e, wait_ack_e, s1_e, s1a_e, s2_e);
   type mem_rd_state_t is(mem_idle_e, mem_dly_e, mem_s1_e, mem_wait_ack_e);
@@ -119,6 +120,7 @@ architecture rtl of gdp_video is
   signal fifo_empty  : std_ulogic;
   signal fifo_full   : std_ulogic;
   signal fifo_dout   : std_logic_vector(31 downto 0);
+  signal fifo_ae_th  : std_logic_vector(4 downto 0);
 -- pragma translate_off
   signal debug1      : std_ulogic;
   signal debug2      : unsigned(6 downto 0);                -- Column
@@ -157,13 +159,15 @@ vid_fifo_inst: entity work.dual_video_fifo
       RdReset       => reset,
       RdClk         => clk_i,
       RdEn          => fifo_rden,
-      AlmostEmptyTh => "10000",
+      AlmostEmptyTh => fifo_ae_th,
       Almost_Empty  => fifo_ae,
       Q             => fifo_dout,
       Empty         => fifo_empty,
       Full          => fifo_full
    );
 
+   fifo_ae_th <= "10000" when color_support_c else
+                 "00010";
    fifo_ur_o <= fifo_empty and fifo_rden;
 
   -- http://info.electronicwerkstatt.de/bereiche/monitortechnik/vga/Standard-Timing/
@@ -324,7 +328,7 @@ vid_fifo_inst: entity work.dual_video_fifo
 -- pragma translate_on
 
   MEM_RD_FSM_COMB: process(mem_rd_state, enable_i, frame_start, Line, color_mode_reg,
-                           HSYNC,VSYNC,q,fifo_ae,rd_busy_i,rd_address,VidEn)
+                           HSYNC,VSYNC,q,fifo_ae,rd_busy_i,rd_address,valid_line)
   begin 
     next_mem_rd_state <= mem_rd_state;
     next_rd_address   <= rd_address;
@@ -349,29 +353,53 @@ vid_fifo_inst: entity work.dual_video_fifo
         end if;
         
       when mem_dly_e =>
+         if color_support_c or valid_line='1' then
         next_rd_req       <= '1';
         next_mem_rd_state <= mem_wait_ack_e;
+         end if;
         
       when mem_wait_ack_e =>
          if rd_busy_i='0' then
             next_mem_rd_state    <= mem_s1_e;
-            if unsigned(rd_address(6 downto 0)) = LINE_MAX_c then
-               next_rd_address(6 downto 0) <= "0000000";
-               if color_mode_reg = '1' or Line(0) = '1' then
-                  next_rd_address(rd_address'high downto 7) <= rd_address(rd_address'high downto 7) - 1;
+            if color_support_c then
+               if unsigned(rd_address(6 downto 0)) = LINE_MAX_c then
+                  next_rd_address(6 downto 0) <= "0000000";
+                  if color_mode_reg = '1' or Line(0) = '1' then
+                     next_rd_address(rd_address'high downto 7) <= rd_address(rd_address'high downto 7) - 1;
 -- pragma translate_off
-                  debug4 <= (others => '0');
-                  debug4(rd_address'high downto 7) <= rd_address(rd_address'high downto 7) - 1;
+                     debug4 <= (others => '0');
+                     debug4(rd_address'high downto 7) <= rd_address(rd_address'high downto 7) - 1;
 -- pragma translate_on
-                  if unsigned(rd_address(rd_address'high downto 7)) = 0 then
-                     next_mem_rd_state    <= mem_idle_e;
+                     if unsigned(rd_address(rd_address'high downto 7)) = 0 then
+                        next_mem_rd_state    <= mem_idle_e;
+                     end if;
                   end if;
-               end if;
 -- pragma translate_off
-               debug1 <= '1';
+                  debug1 <= '1';
 -- pragma translate_on
+               else
+                  next_rd_address(6 downto 0) <= rd_address(6 downto 0) + RD_BURST_SIZE_c;
+               end if;
             else
-               next_rd_address(6 downto 0) <= rd_address(6 downto 0) + RD_BURST_SIZE_c;
+               -- 512 pixel pro line = 16 words
+               if unsigned(rd_address(3 downto 0)) = LINE_MAX_MONO_c then
+                  next_rd_address(3 downto 0) <= "0000";
+                  if Line(0) = '1' then
+                     next_rd_address(rd_address'high downto 4) <= rd_address(rd_address'high downto 4) - 1;
+   -- pragma translate_off
+                     debug4 <= (others => '0');
+                     debug4(rd_address'high downto 4) <= rd_address(rd_address'high downto 4) - 1;
+   -- pragma translate_on
+                     if unsigned(rd_address(rd_address'high downto 4)) = 0 then
+                        next_mem_rd_state    <= mem_idle_e;
+                     end if;
+                  end if;
+   -- pragma translate_off
+                  debug1 <= '1';
+   -- pragma translate_on
+               else
+                  next_rd_address(3 downto 0) <= rd_address(3 downto 0) + RD_BURST_SIZE_c;
+               end if;
             end if;
          end if;
             
@@ -545,7 +573,7 @@ vid_fifo_inst: entity work.dual_video_fifo
          tmp_v(rd_address'high downto 15):=(others => '0');
       end if;
     else
-      tmp_v :=  "0000" & rd_address(12 downto 0) + (unsigned(scroll_reg) & "00000");
+      tmp_v :=  "000" & rd_address(12 downto 0) + (unsigned(scroll_reg) & "00000");
     end if;
     next_rd_addr <= std_ulogic_vector(tmp_v);
   end process;
@@ -599,18 +627,20 @@ vid_fifo_inst: entity work.dual_video_fifo
     begin
       if rising_edge(clk_i) then
         if clk_en_i = '1' then
-          if VidEn='1' then
-            if color_mode_reg = '0' then
+          if (VidEn and enable_i)='1' then
+            if color_support_c and color_mode_reg = '0' then
                rgb_pixel <= lookup(Pixel(3 downto 0));
-            else
+            elsif color_support_c then
                rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 3) & Pixel(3) & Pixel(2 downto 0);
+            elsif not color_support_c then
+               rgb_pixel <= (others => Pixel(0));
             end if;
           else
             rgb_pixel <= (others => '0');
           end if;
-          Hsync_o  <= HSYNC;
-          Vsync_o  <= VSYNC;
-          vreset_o <= vreset;
+          Hsync_s  <= HSYNC;
+          Vsync_s  <= VSYNC;
+          vreset_s <= vreset;
         end if;
       end if;
     end process;
