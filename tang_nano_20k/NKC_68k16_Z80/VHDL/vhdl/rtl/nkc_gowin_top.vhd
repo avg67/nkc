@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- Project     : Single Chip NDR Computer
--- Module      : NKC - Toplevel for Gowin FPGA
+-- Module      : NKC 68k SOC - Toplevel for Gowin FPGA
 -- File        : nkc_gowin_top.vhd
 -- Description :
 --------------------------------------------------------------------------------
@@ -131,6 +131,7 @@ architecture rtl of nkc_gowin_top is
   constant use_gpio_c      : boolean := false;
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
 --  constant dipswitches1_c : std_logic_vector(7 downto 0) := X"01";
+  constant Reset_Cycles_c  : natural := 400000; -- 10ms @40MHz
   
   constant GDP_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"70"; -- r/w
   constant SFR_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"60"; -- w  
@@ -153,6 +154,7 @@ architecture rtl of nkc_gowin_top is
   signal clk_40            : std_ulogic;
    signal pixel_clk,clk_80 : std_ulogic;
   signal reset_n           : std_ulogic:='0';
+  signal reset_n_int       : std_ulogic:='0';
   signal pll_80m_reset     : std_ulogic;
   signal GDP_DataOut       : std_ulogic_vector(7 downto 0);
   signal gdp_Rd,gdp_Wr     : std_ulogic;
@@ -231,6 +233,10 @@ architecture rtl of nkc_gowin_top is
   signal cpu_busy          : std_ulogic;
   signal cpu_ack           : std_ulogic;
   signal nIRQ              : std_ulogic;
+  signal CPU_Reset_stb     : std_ulogic;
+  signal CPU_Reset_count   : natural range 0 to Reset_Cycles_c-1:=0;
+  signal internal_reset    : std_ulogic:='0';
+
 begin
 
   dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
@@ -248,21 +254,33 @@ begin
   key_base <= KEY_BASE_ADDR_c;
   dip_base <= DIP_BASE_ADDR_c;
 
---  sync_reset: if not sim_g generate
-    reset_sync: process(pixel_clk)
+
+   reset_sync: process(pixel_clk)
       variable tmp_v : std_ulogic_vector(1 downto 0):= "00";
     begin
       if rising_edge(pixel_clk) then
-        reset_n  <= tmp_v(1);
-        tmp_v(1) := tmp_v(0);
-        tmp_v(0) := (not reset_i) and pll_80m_lock;
+        reset_n_int  <= tmp_v(1);
+        tmp_v(1)     := tmp_v(0);
+        tmp_v(0)     := (not reset_i) and pll_80m_lock;
       end if;
-    end process reset_sync;
-  --end generate;
-  
---  nosync_reset: if sim_g generate
---    reset_n  <= not reset_i;
---  end generate;
+   end process reset_sync;
+    
+   reset_n <= reset_n_int when internal_reset='0' else
+              '0';
+              
+   process(pixel_clk)
+   begin
+      if rising_edge(pixel_clk) then
+         internal_reset <= '0';
+         if CPU_Reset_count/=0 then
+            internal_reset <= '1';
+            CPU_Reset_count <= CPU_Reset_count - 1;
+         end if;
+         if CPU_Reset_stb='1' then
+            CPU_Reset_count <= Reset_Cycles_c - 1;
+         end if;
+      end if;
+   end process;
 
    pll_80 : entity work.pll_80m
       port map (
@@ -517,15 +535,16 @@ begin
   impl_key2: if  not use_ser_key_c and use_ps2_key_c generate
     kbd: entity work.PS2Keyboard
       port map (
-        reset_n_i => reset_n,
-        clk_i     => pixel_clk,
-        Ps2Clk_io => Ps2Clk_io,
-        Ps2Dat_io => Ps2Dat_io,
-        KeyCS_i   => key_cs,
-        DipCS_i   => dip_cs,
-        Rd_i      => gdp_Rd,
-        DataOut_o => key_data,
-        monitoring_o=> open --debug_o
+        reset_n_i       => reset_n,
+        clk_i           => pixel_clk,
+        Ps2Clk_io       => Ps2Clk_io,
+        Ps2Dat_io       => Ps2Dat_io,
+        KeyCS_i         => key_cs,
+        DipCS_i         => dip_cs,
+        Rd_i            => gdp_Rd,
+        DataOut_o       => key_data,
+        CPU_Reset_stb_o => CPU_Reset_stb,
+        monitoring_o    => open --debug_o
      );
    end generate;
   no_key1: if not use_ps2_key_c generate
@@ -1011,7 +1030,6 @@ begin
       
       
       nkc_nreset_o <= reset_n;
-      --nkc_DB       <= std_logic_vector(oEdb(15 downto 8)) when EXT_IORQ = '1' and nWR='0' else
       nkc_DB       <= std_logic_vector(oEdb(15 downto 8)) when not is_pcb and driver_DIR='0' else
                       std_logic_vector(oEdb(15 downto 8)) when     is_pcb and driver_DIR='1' else
                       (others => 'Z');
