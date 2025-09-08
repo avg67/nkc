@@ -21,7 +21,7 @@ void SetAY_Register(const AYregisterSet * const p_reg){
   setSoundRegister(CHANNEL_B_FINE,p_reg->channelBfine);
   setSoundRegister(CHANNEL_A_COARSE,p_reg->channelAcoarse);
   setSoundRegister(CHANNEL_A_FINE,p_reg->channelAfine);
-#endif  
+#endif
   uint8_t const * p_mem = (uint8_t*const)&p_reg->envelopeShape;
   uint16_t i=ENVELOPE_SHAPE;
   do {
@@ -32,7 +32,7 @@ void SetAY_Register(const AYregisterSet * const p_reg){
 }
 
 void silence(void) {
-  
+
   //AYregisterSet s = {0x00, 0x00, 0x00, 0x00, 0x00 ,0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   static const AYregisterSet s = { .channelAfine=0,
                       .channelAcoarse =0,
@@ -49,25 +49,16 @@ void silence(void) {
                       .envelopeCoarse=0,
                       .envelopeShape=0};
   SetAY_Register(&s);
-  
+
 }
 
 void initSound(void) {
-  
+
   //init AY-3-891x
   silence();
 }
 
-/*
-void playDrop(void) {
-  setSoundRegister(ENVELOPE_SHAPE,4);     // R15 Set Envelop , one periode
-  setSoundRegister(ENVELOPE_COARSE,20);   // R14 Set Envelope Periode
-  setSoundRegister(AMP_CHANNEL_C,16);     // R12 Set Amplitude Range under direct control of Envelope Generator
-  setSoundRegister(AMP_CHANNEL_B,16);     // R11 Set Amplitude Range under direct control of Envelope Generator
-  setSoundRegister(AMP_CHANNEL_A,16);     // R10 Set Amplitude Range under direct control of Envelope Generator
-  setSoundRegister(MIXER_CONTROL,7);      // R7 Enable Noise for Ch A-C
-  setSoundRegister(NOISE_PERIOD,1);       // R6 Set Noise Periode to mid value
-}*/
+
 
 
 

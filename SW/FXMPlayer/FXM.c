@@ -8,13 +8,8 @@
 static const uint8_t *ram;
 static uint16_t ram_addr;
 
-//#define pgm_read_byte(a) *((uint8_t*)a)
-//#define pgm_read_word(a) (pgm_read_byte(a) | (pgm_read_byte(a+1)<<8))
-//#define pgm_read_word(a) *((uint16_t*)a)
-
 static inline __attribute__((always_inline))  uint8_t peek(uint16_t addr)
 {
-    //return pgm_read_byte(ram + addr - ram_addr);
     return *((uint8_t*)(ram + addr - ram_addr));
 }
 
@@ -75,24 +70,18 @@ void fxm_init(const uint8_t *fxm)
   ram = fxm + 6;
   //ram_addr = pgm_read_byte(fxm + 4) + (pgm_read_byte(fxm + 5) << 8);
   ram_addr = fxm[4] + (fxm[5] << 8);
-  
+
   for (int i = 0 ; i < 3 ; ++i)
   {
     channels[i].note_skip_counter = 1;
     channels[i].mixer = 8;
     channels[i].id = i;
   }
-  //channels[0].address_in_pattern = pgm_read_byte(fxm + 6) + (pgm_read_byte(fxm + 7) << 8);
-  channels[0].address_in_pattern = fxm[6] + (fxm[7] << 8);
-  //channels[1].address_in_pattern = pgm_read_byte(fxm + 8) + (pgm_read_byte(fxm + 9) << 8);
-  channels[1].address_in_pattern = fxm[8] + (fxm[9] << 8);
-  //channels[2].address_in_pattern = pgm_read_byte(fxm + 10) + (pgm_read_byte(fxm + 11) << 8);
-  channels[2].address_in_pattern = fxm[10] + (fxm[11] << 8);
+   channels[0].address_in_pattern = fxm[6] + (fxm[7] << 8);
+   channels[1].address_in_pattern = fxm[8] + (fxm[9] << 8);
+   channels[2].address_in_pattern = fxm[10] + (fxm[11] << 8);
 
 
-  // init hardware YM
-  //set_ym_clock();
-  //set_bus_ctl();
   initSound();
 }
 
@@ -279,7 +268,7 @@ decode_sample:
 ret:
   write_ay_reg(NOISE_PERIOD, noise);
   ch->b2e = 0;
-  
+
   write_ay_reg(ch->id + AMP_CHANNEL_A, ch->tone ? (ch->volume & 0xf)/2u : 0);
   write_ay_reg(2 * ch->id, ch->tone); // CHANNEL_AB_FINE
   write_ay_reg(2 * ch->id + 1, ch->tone >> 8);  //CHANNEL_AB_COARSE
