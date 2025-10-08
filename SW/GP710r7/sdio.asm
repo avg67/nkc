@@ -1,9 +1,9 @@
 *******************************************************************************
 *                          680xx Grundprogramm sdio                           *
-*                             2009 Jens Mewes, 2025 AVG                       *
-*                               V 7.10 Rev 6                                  *
-*                                06.07.2025                                   *
-*                             SD-Card-Routinen, patched                       *
+*                             2009 Jens Mewes                                 *
+*                               V 7.10 Rev 5                                  *
+*                                06.05.2009                                   *
+*                             SD-Card-Routinen                                *
 *******************************************************************************
 
 SDCTL equ $82
@@ -123,9 +123,13 @@ sd1tst01:
  lea sd2geo(a5), a6
 sd1tst02:
  movea.l a6, a1                         * Adresse der Ausgabedaten sichern
+ moveq #10,d1                           * AV patched
+sd1_rtr:
  bsr sd1init
  tst.b d0
+ dbpl d1,sd1_rtr
  bmi sd1tster                           * Fehler SD-Card nicht gefunden
+
  lea idebuff(a5), a0
  lea spicmd9(pc), a2                    * CSD Kommando
  move #16, d0                           * 16 Byte
@@ -266,8 +270,8 @@ sdinitex:
  rts
 
 
-sd1init:                        * Initialisieren der SD-Card an GDP-FPGA
- movem.l d3/a0/a2, -(a7)
+sd1init:                        * Initialisieren der SD-Card
+ movem.l d1/d3/a0/a2, -(a7)     * AV patched
                                         * min. 74 Clocks an SD
  moveq #16, d3                          * Anzahl 136 Clocks
  bclr.b d5, d2                          * CS auf high
@@ -301,7 +305,7 @@ sd1init6:
 sd1initx:
  bclr.b d5, d2                          * SD Disablen
  move.b d2, spictrl.w
- movem.l (a7)+, d3/a0/a2
+ movem.l (a7)+, d1/d3/a0/a2             * AV patched
  rts
 
 sddiski:                       * interne SD IO-Routine
