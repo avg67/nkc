@@ -33,7 +33,8 @@ entity PS2_Decoder is
     -- Decoded ASCII
     --------------------------
     NkcCode_o        : out std_ulogic_vector(6 downto 0);
-    NkcCode_stb_o    : out std_ulogic
+    NkcCode_stb_o    : out std_ulogic;
+    CPU_Reset_stb_o  : out std_ulogic
   );
 end PS2_Decoder;
 
@@ -121,7 +122,7 @@ type ScanCode_ARRAY_t is array(0 to 558) of std_ulogic_vector(7 downto 0);
 --  -50-,  -51-,  -52-,  -53-,  -54-,  -55-,  -56-,  -57-,  -58-,  -59-,  -5A-,  -5B-,  -5C-,  -5D-,  -5E-,  -5F-
     X"00", X"00", X"5B", X"00", X"5D", X"60", X"00", X"00", X"00", X"00", X"0D", X"2A", X"00", X"27", X"00", X"00",
 --  -60-,  -61-,  -62-,  -63-,  -64-,  -65-,  -66-,  -67-,  -68-,
-    X"00", X"3E", X"00", X"00", X"00", X"00", X"7F", X"00", X"00",
+    X"00", X"3E", X"00", X"00", X"00", X"00", X"7F", X"00", X"00", -- (66) 0x7F -> Backspace; (76) 0x1B -> ESC
 
 --static const PBYTE ScanCodesNumeric [] =
 -- + Offset 0xD1 (104+105)
@@ -129,7 +130,7 @@ type ScanCode_ARRAY_t is array(0 to 558) of std_ulogic_vector(7 downto 0);
     X"00", X"87", X"00", X"13", X"86", X"00", X"00", X"00",
 --  -70-,  -71-,  -72-,  -73-,  -74-,  -75-,  -76-,  -77-,  -78-,  -79-,  -7A-,  -7B-,  -7C-,  -7D-,  -7E-,  -7F-
 --  -70-,  -71-,  -72-,  -73-,  -74-,  -75-,  -ESC-,  -77-,  -78-,  -79-,  -7A-,  -7B-,  -7C-,  -7D-,  -7E-,  -7F-
-    X"88", X"89", X"83", X"00", X"81", X"82", X"1B", X"00", X"00", X"2B", X"85", X"2D",  X"2A", X"84", X"00", X"00",
+    X"88", X"89", X"83", X"00", X"81", X"82", X"1B", X"00", X"00", X"2B", X"85", X"2D",  X"2A", X"84", X"00", X"00", -- 71 -> DEL (0x89)
 
 
 --static const PBYTE ScanCodesNumericNum [] =
@@ -215,7 +216,7 @@ type ScanCode_ARRAY_t is array(0 to 558) of std_ulogic_vector(7 downto 0);
 --                                                                         'µ' 	                '{'   '['      
     X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"B5", X"00", X"00", X"7B", X"5E", X"00",
 --  -40-,  -41-,  -42-,  -43-,  -44-,  -45-,  -46-,  -47-,  -48-,  -49-,  -4A-,  -4B-,  -4C-,  -4D-,  -4E-,  -4F-
---                                      '}'    ']'	                                                    \												                            
+--                                      '}'    ']'	                                                    \
     X"00", X"00", X"00", X"00", X"00", X"7D", X"7E", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"97", X"00",
 --  -50-,  -51-,  -52-,  -53-,  -54-,  -55-,  -56-,  -57-,  -58-,  -59-,  -5A-,  -5B-,  -5C-,  -5D-,  -5E-,  -5F-
 --                                                                                '~'
@@ -228,18 +229,18 @@ type ScanCode_ARRAY_t is array(0 to 558) of std_ulogic_vector(7 downto 0);
 --  -00-   -01-,  -02-,  -03-,  -04-,  -05-,  -06-,  -07-,  -08-,  -09-,  -0A-,  -0B-,  -0C-,  -0D-,  -0E-,  -0F-
     X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00",
 --  -10-,  -11-,  -12-,  -13-,  -14-,  -15-,  -16-,  -17-,  -18-,  -19-,  -1A-,  -1B-,  -1C-,  -1D-,  -1E-,  -1F-
---                                      
+--
     X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00",
 --  -20-,  -21-,  -22-,  -23-,  -24-,  -25-,  -26-,  -27-,  -28-,  -29-,  -2A-,  -2B-,  -2C-,  -2D-,  -2E-,  -2F-
     X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00",
 --  -30-,  -31-,  -32-,  -33-,  -34-,  -35-,  -36-,  -37-,  -38-,  -39-,  -3A-,  -3B-,  -3C-,  -3D-,  -3E-,  -3F-
---                                                                        	                
+--
     X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00",
 --  -40-,  -41-,  -42-,  -43-,  -44-,  -45-,  -46-,  -47-,  -48-,  -49-,  -4A-,  -4B-,  -4C-,  -4D-,  -4E-,  -4F-
---                                                                                   												                             
+--
     X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00",
 --  -50-,  -51-,  -52-,  -53-,  -54-,  -55-,  -56-,  -57-,  -58-,  -59-,  -5A-,  -5B-,  -5C-,  -5D-,  -5E-,  -5F-
---                                                                                
+--
     X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00", X"00",
 --  -60-,  -61-,  -62-,  -63-,  -64-,  -65-,  -66-,  -67-,
 --     
@@ -331,7 +332,7 @@ begin
             next_evaluate <= '0';
             if (unsigned(LookupData) >= X"60" and unsigned(LookupData) <= X"7F" ) then
     --           NKCcode &= 0x1F;                 // Create CTRL-Codes
-              nkcCode_v  := "000"&LookupData(4 downto 0);
+              nkcCode_v  := "000"&LookupData(4 downto 0); -- e.g. 0x68 (H) -> 08 (CTRL-H)
             elsif (unsigned(LookupData) < X"80" ) then         
               nkcCode_v   := (others => '0');    
               set_NKCcode <= '0';
@@ -339,7 +340,12 @@ begin
           end if;
           
           if unsigned(nkcCode_v) < X"80"  then
-            if unsigned(nkcCode_v) /= 0 then
+            if  (KeyStates and CTRL_STATE_MASK_c) /= X"00" and
+                (KeyStates and ALT_STATE_MASK_c)   = X"00" and 
+                 nkcCode_v = X"1B" then
+               -- Ctrl+ESC detected
+               cpu_reset_stb <= '1';
+            elsif unsigned(nkcCode_v) /= 0 then
               next_NKCcode  <= nkcCode_v(next_NKCcode'range);
               set_NKCcode   <= '1';
             end if;     
@@ -349,7 +355,6 @@ begin
               nkcCode_v = X"89" then
               -- Ctrl+Alt+Del detected
               cpu_reset_stb <= '1';
-              
             else
     
               nkcCode_v := nkcCode_v(6 downto 0) & "0";
@@ -495,7 +500,7 @@ begin
                     next_evaluate      <= '0';
                     next_fetch_state   <= NKCCode_e;
 --TH-START
-       			elsif (KeyStates and RALT_STATE_MASK_c)/=X"00" then      
+                  elsif (KeyStates and RALT_STATE_MASK_c)/=X"00" then      
                     next_LookupAddress <= to_unsigned(ScanCodesRAlt_c,9)+unsigned(ScanCode_v);
                     LookupEn           <= '1';
                     next_evaluate      <= '0';
@@ -550,6 +555,7 @@ begin
 -- pragma translate_off
       Leds_stb_o    <= '0';
 -- pragma translate_on
+      CPU_Reset_stb_o <= '0';
     elsif rising_edge(Clk_i) then
       fetch_state <= next_fetch_state;
       evaluate    <= next_evaluate; 
@@ -576,6 +582,7 @@ begin
       if LookupEn = '1' then
         LookupAddress <= next_LookupAddress;
       end if;
+      CPU_Reset_stb_o <= cpu_reset_stb;
     end if;
   end process seq;
   

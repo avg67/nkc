@@ -18,6 +18,13 @@ vlog -work work ../../vhdl/rtl/hdmi/hdmi/audio_clock_regeneration_packet_sim.sv 
                 ../../vhdl/rtl/hdmi/gowin_clkdiv/gowin_clkdiv.v \
                 ../../vhdl/rtl/FPGA/gowin_rpll/gowin_rpll_40.v \
                 ../../vhdl/rtl/FPGA/gowin_rpll_80/pll_80m.v
+vlog -work work ../../vhdl/rtl/sound/jt49_cen.v         \
+                ../../vhdl/rtl/sound/jt49_div.v         \
+                ../../vhdl/rtl/sound/jt49_eg.v         \
+                ../../vhdl/rtl/sound/jt49_exp.v        \
+                ../../vhdl/rtl/sound/jt49_noise.v      \
+                ../../vhdl/rtl/sound/jt49.v            \
+                ../../vhdl/rtl/sound/jt49_bus.v
 
 vcom -2008  ../vhdl/tb/gdp_bitmap-p.vhd
 #vcom -93 -check_synthesis ../vhdl/rtl/Dffdecl-p.vhd
@@ -102,7 +109,9 @@ add wave -group {sdram_ctrl} -noupdate -radix hex /dut/gdp/vram/sdram_inst/*
 add wave -group {GDP_Top} -noupdate -radix hex /dut/gdp/*
 add wave -noupdate -divider Sound
 add wave -group {Sound} -noupdate -radix hex /dut/impl_sound/sound_inst/*
-add wave -group {Sound_Wave} -noupdate -radix hex /dut/impl_sound/sound_inst/i_psg_wave/*
+#add wave -group {Sound_Wave} -noupdate -radix hex /dut/impl_sound/sound_inst/i_psg_wave/*
+add wave -group {Sound_jt49} -noupdate -radix hex /dut/impl_sound/sound_inst/u_jt49/*
+add wave -group {DAC} -noupdate -radix hex /dut/impl_sound/dac_inst/*
 add wave -noupdate -divider
 add wave -group {Timer1} -noupdate -radix hex /dut/impl_t1/t1/*
 

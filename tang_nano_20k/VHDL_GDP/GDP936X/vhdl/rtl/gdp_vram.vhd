@@ -287,7 +287,7 @@ begin
                next_kernel_data <= std_ulogic_vector(sdrc_o_data(7 downto 0));
          end case;
          -- wait until command is finished
-         if srdc_cmd_ready='1' then
+         if (sdram_rd_data_valid and srdc_cmd_ready)='1' then
             next_state  <= idle_e;
             next_ram_en <= '0';
             next_kernel_ack  <= '1';

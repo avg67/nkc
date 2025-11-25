@@ -44,6 +44,8 @@ entity PS2Keyboard is
     DipCS_i   : in  std_ulogic;
     Rd_i      : in  std_ulogic;
     DataOut_o : out std_ulogic_vector(7 downto 0);
+    --
+    CPU_Reset_stb_o  : out std_ulogic;
     --------------------------
     -- Monitoring (Debug) signals
     --------------------------
@@ -94,7 +96,8 @@ architecture rtl of PS2Keyboard is
       -- Decoded ASCII
       --------------------------
       NkcCode_o        : out std_ulogic_vector(6 downto 0);
-      NkcCode_stb_o    : out std_ulogic
+      NkcCode_stb_o    : out std_ulogic;
+      CPU_Reset_stb_o  : out std_ulogic
     );
   end component;
  
@@ -363,7 +366,8 @@ begin
       Leds_o           => Leds,
       Leds_stb_o       => Leds_stb,
       NkcCode_o        => NkcCode,
-      NkcCode_stb_o    => NkcCode_stb
+      NkcCode_stb_o    => NkcCode_stb,
+      CPU_Reset_stb_o  => CPU_Reset_stb_o
     );
     
   PS2FiFo : entity work.ps2_fifo

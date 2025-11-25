@@ -47,14 +47,31 @@ architecture rtl of dac is
          SigmaAdder_s,
          SigmaLatch_q,
          DeltaB_s      : unsigned(msbi_g+2 downto 0);
-
+  signal dac_val : std_ulogic_vector(dac_i'range);
 begin
+
+  process(dac_i)
+  begin
+   for i in dac_i'range loop
+    
+-- pragma translate_off    
+    if dac_i(i)='0' or dac_i(i)='1' then
+-- pragma translate_on
+      dac_val(i) <= dac_i(i);
+-- pragma translate_off
+    else
+      dac_val(i) <= '0';
+    end if;
+-- pragma translate_on
+
+   end loop;
+  end process;
 
   DeltaB_s(msbi_g+2 downto msbi_g+1) <= SigmaLatch_q(msbi_g+2) &
                                         SigmaLatch_q(msbi_g+2);
   DeltaB_s(msbi_g   downto        0) <= (others => '0');
 
-  DeltaAdder_s <= unsigned('0' & '0' & dac_i) + DeltaB_s;
+  DeltaAdder_s <= unsigned('0' & '0' & dac_val) + DeltaB_s;
 
   SigmaAdder_s <= DeltaAdder_s + SigmaLatch_q;
 
