@@ -150,6 +150,9 @@ architecture rtl of nkc_gowin_top is
 --  constant SFR_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"40"; -- w
 --  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
 --  constant DIP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"49"; -- r
+  constant Sound_offset_c  : natural := 512;
+  signal logic_0_vec       : std_ulogic_vector(7 downto 0);
+  signal logic_1           : std_ulogic;
   
   signal clk_40            : std_ulogic;
    signal pixel_clk,clk_80 : std_ulogic;
@@ -236,9 +239,13 @@ architecture rtl of nkc_gowin_top is
   signal CPU_Reset_stb     : std_ulogic;
   signal CPU_Reset_count   : natural range 0 to Reset_Cycles_c-1:=0;
   signal internal_reset    : std_ulogic:='0';
+  signal ym_audio_out_l_signed   : signed(9 downto 0);
+  signal ym_audio_out_r_signed   : signed(9 downto 0);
+  signal audio_mix_l,audio_mix_r : signed(14 downto 0);
 
 begin
-
+  logic_1     <= '1';
+  logic_0_vec <= (others =>'0');
   dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
 --           dipswitches1_c;
 
@@ -316,8 +323,14 @@ begin
 
    vvmode <= "00";
    vwide  <= '0';
-   audio0 <= std_logic_vector(SND_s) & "000000";
-   audio1 <= std_logic_vector(SND_s) & "000000";
+   --audio0 <= std_logic_vector(SND_s) & "000000";
+   --audio1 <= std_logic_vector(SND_s) & "000000";
+   ym_audio_out_l_signed <= signed(unsigned(SND_s) - Sound_offset_c);
+   ym_audio_out_r_signed <= signed(unsigned(SND_s) - Sound_offset_c);
+   audio_mix_l <= ym_audio_out_l_signed(9) & ym_audio_out_l_signed & ym_audio_out_l_signed(9 downto 6);
+   audio_mix_r <= ym_audio_out_r_signed(9) & ym_audio_out_r_signed & ym_audio_out_r_signed(9 downto 6);
+   audio0 <= std_logic_vector(resize(audio_mix_l,audio0'length));
+   audio1 <= std_logic_vector(resize(audio_mix_r,audio1'length));
 
 --   rpll2_reset <= not vpll_lock;
 --
@@ -635,31 +648,60 @@ begin
       end if;
     end process;
     
-    Sound_inst : entity work.WF2149IP_TOP_SOC
+--    Sound_inst : entity work.WF2149IP_TOP_SOC
+--      port map (
+--        SYS_CLK   => pixel_clk,
+--        RESETn    => reset_n,
+--        WAV_CLK   => wav_en,
+--        SELn      => '1',
+--        BDIR      => snd_bdir,
+--        BC2       => '1',
+--        BC1       => snd_bc1,
+--        A9n       => '0',
+--        A8        => '1',
+--        DA_IN     => data_in,
+--        DA_OUT    => snd_data,
+--        DA_EN     => open,
+--        IO_A_IN   => X"00",
+--        IO_A_OUT  => open,
+--        IO_A_EN   => open,
+--        IO_B_IN   => X"00",
+--        IO_B_OUT  => open,
+--        IO_B_EN   => open,
+--  --      OUT_A     => open,
+--  --      OUT_B     => open,
+--  --      OUT_C     => open
+--        SND_OUT    => SND_s,
+--        PWM_OUT    => PWM_OUT_s
+--      );
+  Sound_inst : entity work.jt49_bus
       port map (
-        SYS_CLK   => pixel_clk,
-        RESETn    => reset_n,
-        WAV_CLK   => wav_en,
-        SELn      => '1',
+        clk    => pixel_clk,
+        rst_n  => reset_n,
+        clk_en => wav_en,
+        sel    => logic_1,
         BDIR      => snd_bdir,
-        BC2       => '1',
         BC1       => snd_bc1,
-        A9n       => '0',
-        A8        => '1',
-        DA_IN     => data_in,
-        DA_OUT    => snd_data,
-        DA_EN     => open,
-        IO_A_IN   => X"00",
-        IO_A_OUT  => open,
-        IO_A_EN   => open,
-        IO_B_IN   => X"00",
-        IO_B_OUT  => open,
-        IO_B_EN   => open,
-  --      OUT_A     => open,
-  --      OUT_B     => open,
-  --      OUT_C     => open
-        SND_OUT    => SND_s,
-        PWM_OUT    => PWM_OUT_s
+        din    => data_in,
+        dout   => snd_data,
+        IOA_in => logic_0_vec,
+        IOA_out=> open,
+        IOA_oe => open,
+        IOB_in => logic_0_vec,
+        IOB_out=> open,
+        IOB_oe => open,
+        sound  => SND_s
+        --PWM_OUT    => PWM_OUT_s
+      );
+   dac_inst : entity work.dac
+      generic map(
+        msbi_g => 7
+      )
+      port  map(
+        clk_i   => pixel_clk,
+        res_n_i => reset_n,
+        dac_i   => std_ulogic_vector(ym_audio_out_l_signed(ym_audio_out_l_signed'high downto ym_audio_out_l_signed'high-7)),
+        dac_o   => PWM_OUT_s
       );
   end generate;
   no_sound: if not use_sound_c generate

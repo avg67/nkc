@@ -26,6 +26,13 @@
         <File path="../../../vhdl/rtl/hdmi/hdmi/source_product_description_info_frame.sv" type="file.verilog" enable="1"/>
         <File path="../../../vhdl/rtl/hdmi/hdmi/tmds_channel.sv" type="file.verilog" enable="1"/>
         <File path="../../../vhdl/rtl/hdmi/video2hdmi.sv" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/jt49.v" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/jt49_bus.v" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/jt49_cen.v" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/jt49_div.v" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/jt49_eg.v" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/jt49_exp.v" type="file.verilog" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/jt49_noise.v" type="file.verilog" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/Dffdecl-p.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/FPGA/dual_video_fifo/dual_video_fifo.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/FPGA/fifo_sc_hs/video_fifo.vhd" type="file.vhdl" enable="0"/>
@@ -53,9 +60,9 @@
         <File path="../../../vhdl/rtl/Timer.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/nkc_gowin_top.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/sound/dac.vhd" type="file.vhdl" enable="1"/>
-        <File path="../../../vhdl/rtl/sound/wf2149ip_pkg.vhd" type="file.vhdl" enable="1"/>
-        <File path="../../../vhdl/rtl/sound/wf2149ip_top_soc.vhd" type="file.vhdl" enable="1"/>
-        <File path="../../../vhdl/rtl/sound/wf2149ip_wave.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../vhdl/rtl/sound/wf2149ip_pkg.vhd" type="file.vhdl" enable="0"/>
+        <File path="../../../vhdl/rtl/sound/wf2149ip_top_soc.vhd" type="file.vhdl" enable="0"/>
+        <File path="../../../vhdl/rtl/sound/wf2149ip_wave.vhd" type="file.vhdl" enable="0"/>
         <File path="../../../GDP936X/syn/68K_SOC.cst" type="file.cst" enable="1"/>
         <File path="../../../GDP936X/syn/68K_SOC.sdc" type="file.sdc" enable="1"/>
         <File path="src/68K_SOC.rao" type="file.gao" enable="0"/>
