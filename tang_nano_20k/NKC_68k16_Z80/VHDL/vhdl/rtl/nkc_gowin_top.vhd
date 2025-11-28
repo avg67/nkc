@@ -700,7 +700,8 @@ begin
       port  map(
         clk_i   => pixel_clk,
         res_n_i => reset_n,
-        dac_i   => std_ulogic_vector(ym_audio_out_l_signed(ym_audio_out_l_signed'high downto ym_audio_out_l_signed'high-7)),
+        --dac_i   => std_ulogic_vector(ym_audio_out_l_signed(ym_audio_out_l_signed'high downto ym_audio_out_l_signed'high-7)),
+        dac_i   => SND_s(SND_s'high downto SND_s'high-7),
         dac_o   => PWM_OUT_s
       );
   end generate;
