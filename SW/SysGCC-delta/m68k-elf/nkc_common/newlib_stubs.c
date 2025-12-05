@@ -173,9 +173,9 @@ int _initcon(dev_nr)
 int _getcon(char dev_nr, char* cp)
 {
 
-    if(!gp_csts())
-        return NO_CHAR;
-    else
+//    if(!gp_csts())
+//        return NO_CHAR;
+//    else
     {
         char ch = gp_ci();
         if(ch==BACKSPACE) { // convert backspace into CTRL-H
@@ -771,5 +771,6 @@ clock_t _clock(void (*clock_fu)(void))
         ENABLE_CPU_INTERRUPTS;
     }
     return _clock_value;
+
 
 }
