@@ -1005,7 +1005,7 @@ static inline __attribute__((always_inline)) void gp_co(char x)
     "trap #1"                "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                /* outputs */    \
-    : "g"(x)          /* inputs */    \
+    : "d"(x)          /* inputs */    \
     : "%d0", "%d7"    /* clobbered regs */ \
     );
 }
@@ -1111,7 +1111,7 @@ static inline __attribute__((always_inline)) void gp_setcolor(const uint8_t fg_c
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    :  "g"(_SETCOLOR), "g"(fg_color),"g"(bg_color)    /* inputs */    \
+    :  "g"(_SETCOLOR), "d"(fg_color),"d"(bg_color)    /* inputs */    \
     : "%d0", "d1", "%d7"    /* clobbered regs */ \
     );
 }
@@ -1126,7 +1126,7 @@ static inline __attribute__((always_inline)) void gp_newpage(const uint8_t wr_pa
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    : "g"(_NEWPAGE), "g"(wr_page),"g"(rd_page)    /* inputs */    \
+    : "g"(_NEWPAGE), "d"(wr_page),"d"(rd_page)    /* inputs */    \
     : "%d0", "d1", "%d7"    /* clobbered regs */ \
     );
 }
@@ -1140,7 +1140,7 @@ static inline __attribute__((always_inline)) void gp_settrans(const bool trans) 
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    :  "g"(_SETTRANS), "g"((trans)?1u:0u)    /* inputs */    \
+    :  "g"(_SETTRANS), "d"((trans)?1u:0u)    /* inputs */    \
     : "%d0", "%d7"    /* clobbered regs */ \
     );
 }
@@ -1154,7 +1154,7 @@ static inline __attribute__((always_inline)) void gp_setxor(const bool x) {
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    :  "g"(_SETXOR), "g"((x)?1u:0u)    /* inputs */    \
+    :  "g"(_SETXOR), "d"((x)?1u:0u)    /* inputs */    \
     : "%d0", "%d7"    /* clobbered regs */ \
     );
 }
@@ -1259,7 +1259,7 @@ static inline __attribute__((always_inline)) void gp_setflip(const uint8_t two_p
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    : "g"(_SETFLIP),"g"(two_page),"g"(four_page)   /* inputs */    \
+    : "g"(_SETFLIP),"d"(two_page),"d"(four_page)   /* inputs */    \
     : "%d0","%d1","%d7"             /* clobbered regs */ \
     );
 }
@@ -1302,7 +1302,7 @@ static inline __attribute__((always_inline)) void gp_writexy(uint16_t x, uint16_
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    : "g"(_WRITE),"g"(x), "g"(y), "g"(p_str), "g"(size)    /* inputs */    \
+    : "g"(_WRITE),"g"(x), "g"(y), "g"(p_str), "d"(size)    /* inputs */    \
     : "%d0","%d1","%d2","%d7","%a0"    /* clobbered regs */ \
     );
 }
@@ -1317,8 +1317,8 @@ static inline __attribute__((always_inline)) void gp_setcurxy(const uint8_t x,co
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                   /* outputs */    \
-    : "g"(_SETCURXY), "g"(x),"g"(y)    /* inputs */    \
-    : "%d1", "d2", "%d7"    /* clobbered regs */ \
+    : "g"(_SETCURXY), "d"(x),"d"(y)    /* inputs */    \
+    : "%d1", "%d2", "%d7"    /* clobbered regs */ \
     );
 }
 
@@ -1354,7 +1354,7 @@ static inline __attribute__((always_inline)) uint8_t gp_get_mouse(int16_t* const
     "moveb %%d0,%2"              "\n\t" \
     "movew %%d1,%0"              "\n\t" \
     "movew %%d2,%1"              "\n\t" \
-    : "=g"(*p_x),"=g"(*p_y),"=g"(keys)     /* outputs */    \
+    : "=g"(*p_x),"=g"(*p_y),"=d"(keys)     /* outputs */    \
     : "g"(_HARDCOPY)               /* inputs */    \
     : "%d1", "%d2", "%d7"          /* clobbered regs */ \
   );
@@ -1423,7 +1423,7 @@ static inline __attribute__((always_inline)) int16_t gp_cos(int16_t angle) {
    return result;
 }
 
-#ifdef USE_JADOS
+//#ifdef USE_JADOS
 
 static inline __attribute__((always_inline)) uint32_t jd_getversi(void) {
   //uint32_t jados_version = 0;
@@ -1458,7 +1458,7 @@ static inline __attribute__((always_inline)) uint8_t jd_directory(char * const p
     "movem.l (%%sp)+, %%d4/%%a5-%%a6" "\n\t" \
     /*"move.b %%d0,%0" */            "\n\t" \
     : "=r"(ret)        /* outputs */    \
-    : "g"(__directory),"g"(p_buf),"g"(p_pattern),"g"(attrib),"g"(columns),"g"(size)    /* inputs */    \
+    : "g"(__directory),"g"(p_buf),"g"(p_pattern),"d"(attrib),"g"(columns),"g"(size)    /* inputs */    \
     : "d1","d2","d3","d7","a0","a1"             /* clobbered regs */ \
     );
     return ret;
@@ -1708,7 +1708,7 @@ static inline __attribute__((always_inline)) uint8_t jd_diskinfo(const uint8_t d
     "trap #6"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     : "=r"(ret)                   /* outputs */    \
-    : "g"(__diskinfo),"g"(disk)   /* inputs */    \
+    : "g"(__diskinfo),"d"(disk)   /* inputs */    \
     : "d4","d7","a0"              /* clobbered regs */ \
     );
     *pp_info = (jddisk_info_t * const)ptr;
@@ -1894,7 +1894,7 @@ static inline __attribute__((always_inline)) uint8_t jd_chmode(jdfcb_t * const p
     "trap #6"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     : "=r"(ret)                                /* outputs */    \
-    : "g"(__chmod),"g"(p_FCB),"g"(attrib)   /* inputs */    \
+    : "g"(__chmod),"g"(p_FCB),"d"(attrib)   /* inputs */    \
     : "d1","d7","a1"                      /* clobbered regs */ \
     );
     return ret;
@@ -1931,7 +1931,7 @@ static inline __attribute__((always_inline)) void jd_setovwrt(void)
 
 
 
-#endif
+//#endif
 
 
 
