@@ -1044,13 +1044,13 @@ static inline __attribute__((always_inline)) void gp_getuhr(volatile ndrtimebuf 
 static inline __attribute__((always_inline)) void gp_cmd(const uint8_t cmd) {
   asm volatile(
     "# asm"                      "\n\t" \
-    "movew %0,%%d0"              "\n\t" \
+    "moveb %0,%%d0"              "\n\t" \
     "moveq %1,%%d7"              "\n\t" \
     "movem.l %%a5-%%a6,-(%%sp)"  "\n\t" \
     "trap #1"                    "\n\t" \
     "movem.l (%%sp)+, %%a5-%%a6" "\n\t" \
     :                        /* outputs */    \
-    : "g"(cmd), "g"(_CMD)    /* inputs */    \
+    : "d"(cmd), "g"(_CMD)    /* inputs */    \
     : "%d7"                  /* clobbered regs */ \
     );
 }
@@ -1936,4 +1936,5 @@ static inline __attribute__((always_inline)) void jd_setovwrt(void)
 
 
 #endif
+
 
