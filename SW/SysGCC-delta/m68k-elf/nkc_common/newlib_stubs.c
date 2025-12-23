@@ -127,8 +127,8 @@ volatile char gp_ci(void)
 
 
 
-DEVICE _device_ary = {"tty0", 0, DTYP_NO, 0, _getcon, _putcon, _ctlcon, _initcon, _opencon, _closecon, 0};
-DEVICE _dev1       = {"tty1", 0, DTYP_ASYNC, 0, _getser, _putser, _ctlser, _initser, _openser, _closeser, 0};
+DEVICE _device_ary = {"tty0", 0, DTYP_NO, 0, _getcon, _putcon, _ctlcon, _initcon, _opencon, _closecon, 0};      // Konsole (GDP, Key)
+DEVICE _dev1       = {"tty1", 0, DTYP_ASYNC, 0, _getser, _putser, _ctlser, _initser, _openser, _closeser, 0};   // Ser (RS232)
 
 void _init_dev(){
     _device_ary.next = &_dev1;
