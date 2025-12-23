@@ -52,6 +52,7 @@ entity gdp_top is
        cpu_data_o        : out std_ulogic_vector(15 downto 0);
        cpu_busy_o        : out std_ulogic;
        cpu_ack_o         : out std_ulogic;
+       cpu_ack_tgl_o     : out std_ulogic;
        --------------------------
        -- Video out
        --------------------------
@@ -277,6 +278,7 @@ begin
       cpu_data_o      => cpu_data_o,
       cpu_busy_o      => cpu_busy_o,
       cpu_ack_o       => cpu_ack_o,
+      cpu_ack_tgl_o   => cpu_ack_tgl_o,
       rd_req_i        => vid_rd_req,
       rd_addr_i       => vid_rd_addr,
       rd_data_o       => vid_rd_data,

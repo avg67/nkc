@@ -49,6 +49,7 @@ entity gdp_vram is
     cpu_data_o        : out std_ulogic_vector(15 downto 0);
     cpu_busy_o        : out std_ulogic;
     cpu_ack_o         : out std_ulogic;
+    cpu_ack_tgl_o     : out std_ulogic;
 
     -- video port (only read)
     rd_req_i          : in  std_ulogic;
@@ -72,13 +73,16 @@ entity gdp_vram is
 end;
 
 architecture rtl of gdp_vram is
-  constant early_request_c                  : boolean := true;
+  constant early_request_c                  : boolean := true; -- vram is faster if set to true, has some negative timing impact
+  constant round_robin_c                    : boolean := true; -- Kernel and CPU has same prio if true
+  constant comb_cpu_data_read_c             : boolean := false; -- use with care, CPU access is one cycle faster if true but 80MHz path to CPU
   constant Refresh_time_c                   : natural := 600; -- 4096 times every 64ms -> every 15 us
   type state_t is(init_e,idle_e,kernel_write_e,kernel_read_e,dram_busy_e,vid_read_e,vid_busy_e, refresh_e, cpu_write_e,cpu_read_e, dram_cpu_busy_e);
   signal wr_data                            : std_ulogic_vector(7 downto 0);
   signal kernel_data, next_kernel_data      : std_ulogic_vector(7 downto 0);
   signal set_kernel_data                    : std_ulogic;
   signal cpu_data, next_cpu_data            : std_ulogic_vector(31 downto 0);
+  signal cpu_data_valid                     : std_ulogic;
   --signal stored_cpu_data                    : std_ulogic_vector(31 downto 0);
   --signal set_cpu_data,next_set_cpu_data     : std_ulogic;
   signal set_store_data, store_data         : std_ulogic;
@@ -89,6 +93,8 @@ architecture rtl of gdp_vram is
   signal next_kernel_ack                    : std_ulogic;
   signal cpu_req_pend                       : std_ulogic;
   signal next_cpu_ack                       : std_ulogic;
+  signal cpu_ack_tgl                        : std_ulogic;
+  signal next_prio,prio                     : std_ulogic;
   signal rd_pend                            : std_ulogic;
   signal next_rd_ack                        : std_ulogic;
   signal ram_wren, next_ram_wren            : std_ulogic;
@@ -111,7 +117,7 @@ architecture rtl of gdp_vram is
   signal cpu_prio, next_cpu_prio            : std_ulogic;
   signal is_cpu_acc, next_is_cpu_acc        : std_ulogic;
   signal next_cpu_req                       : std_ulogic;
-  signal next_cache_hit, cache_hit          : std_ulogic;
+  signal next_cache_hit                     : std_ulogic;
   signal cpu_req_almost_done                : std_ulogic;
 begin
 
@@ -159,7 +165,7 @@ begin
   process(state,ram_address, kernel_addr_i,kernel_wr_i,rd_addr_i,wr_data,ram_wren, ram_en, ram_refresh,
           kernel_req_i,kernel_req_pend,rd_req_i,rd_pend,kernel_data,kernel_clk_en_i,do_refresh,
           sdrc_o_data,sdrc_dqm,srdc_cmd_ready,sdrc_init_done,sdrc_read_burst,sdrc_rd_valid,sdram_rd_data_valid,
-          next_cpu_req,cpu_req_pend,cpu_wr_i,cpu_addr_i,cpu_data_bv_i,cpu_prio,is_cpu_acc
+          next_cpu_req,cpu_req_pend,cpu_wr_i,cpu_addr_i,cpu_data_bv_i,cpu_prio,is_cpu_acc, prio
          )
     variable cpu_req_v, kernel_req_v : std_ulogic;
     procedure do_kernel_acc_p is
@@ -259,8 +265,13 @@ begin
     refresh_done         <= '0';
     next_is_cpu_acc      <= is_cpu_acc;
     cpu_req_almost_done  <= '0';
-    cpu_req_v    := next_cpu_req or cpu_req_pend;
-    kernel_req_v := (kernel_clk_en_i and kernel_req_i) or kernel_req_pend;
+    cpu_req_v            := next_cpu_req or cpu_req_pend;
+    kernel_req_v         := (kernel_clk_en_i and kernel_req_i) or kernel_req_pend;
+    if round_robin_c then
+      next_prio            <= prio;
+    end if;
+    -- cpu if only cpu or if cpu and prio
+    -- kernel if only kernel or if kernel and not prio
 
     case state is
       when init_e => 
@@ -276,10 +287,18 @@ begin
                do_vid_rd_p;
             elsif do_refresh ='1' then
                do_refresh_p;
-            elsif cpu_req_v='1' then
-              do_cpu_acc_p;
-            elsif kernel_req_v='1' then
-              do_kernel_acc_p;
+            elsif (not round_robin_c and cpu_req_v='1') or 
+                  (round_robin_c and ((cpu_req_v and not  kernel_req_v) or (cpu_req_v and prio))='1') then -- todo: round robin arbitration needed here between CPU and Kernel
+               if round_robin_c and kernel_req_v='1' then
+                 next_prio <= not prio;
+               end if;
+               do_cpu_acc_p;
+            elsif (not round_robin_c and kernel_req_v='1') or 
+                  (round_robin_c and ((kernel_req_v and not cpu_req_v) or (kernel_req_v and not prio))='1') then
+               if round_robin_c and cpu_req_v='1' then
+                 next_prio <= not prio;
+               end if;
+               do_kernel_acc_p;
             end if;
          end if;
 
@@ -298,10 +317,18 @@ begin
             if early_request_c then
                if do_refresh ='1' then
                   do_refresh_p;
-               elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
-                  do_kernel_acc_p;
-               elsif cpu_req_v='1' then
+               elsif (not round_robin_c and cpu_req_v='1') or 
+                     (round_robin_c and ((cpu_req_v and not  kernel_req_v) or (cpu_req_v and prio))='1') then -- todo: round robin arbitration needed here between CPU and Kernel
+                  if round_robin_c and kernel_req_v='1' then
+                    next_prio <= not prio;
+                  end if;
                   do_cpu_acc_p;
+               elsif (not round_robin_c and kernel_req_v='1') or 
+                     (round_robin_c and ((kernel_req_v and not cpu_req_v) or (kernel_req_v and not prio))='1') then
+                  if round_robin_c and cpu_req_v='1' then
+                    next_prio <= not prio;
+                  end if;
+                  do_kernel_acc_p;
                end if;
             end if;
               
@@ -321,7 +348,7 @@ begin
                next_kernel_data <= std_ulogic_vector(sdrc_o_data(7 downto 0));
          end case;
          -- wait until command is finished
-         if srdc_cmd_ready='1' then
+         if (sdram_rd_data_valid and srdc_cmd_ready)='1' then
             next_state  <= idle_e;
             next_ram_en <= '0';
             next_kernel_ack  <= '1';
@@ -331,8 +358,6 @@ begin
                  do_vid_rd_p;
                elsif do_refresh ='1' then
                  do_refresh_p;
-                --elsif ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend)='1' then
-                --  do_kernel_acc_p;
                elsif cpu_req_v='1' then
                   do_cpu_acc_p;
                end if;
@@ -346,7 +371,6 @@ begin
       when kernel_write_e =>
          -- wait until command execution starts
          if srdc_cmd_ready='0' then
-            --next_state       <= dram_busy_e;
 	    next_state       <= idle_e;
             next_ram_en      <= '0'; -- !!! Terminate CS early
             next_kernel_ack  <= '1';   -- !!! early kernel ack
@@ -362,20 +386,14 @@ begin
       when cpu_write_e =>
          -- wait until command execution starts
          if srdc_cmd_ready='0' then
-            --next_state       <= dram_cpu_busy_e;
-            --if cpu_early_ack_g then
-               next_cpu_ack     <= '1';
-            --end if;
+            next_cpu_ack     <= '1';
             next_state       <= idle_e;
             next_ram_en      <= '0'; -- !!! Terminate CS early
          end if;
       when dram_cpu_busy_e =>
          cpu_req_almost_done <= '1';
-         --set_cpu_data  <= sdrc_rd_valid and not ram_wren;
          set_store_data <=  not ram_wren;
-         --next_cpu_data      <= std_ulogic_vector(sdrc_o_data);
-         -- wait until command is finished
-         if srdc_cmd_ready='1' then
+         if srdc_cmd_ready='1' and (comb_cpu_data_read_c or sdram_rd_data_valid='1') then
             next_state   <= idle_e;
             next_ram_en  <= '0';
             if not cpu_early_ack_g then
@@ -397,29 +415,34 @@ begin
   process(clk_i,reset_n_i)
   begin
     if reset_n_i = ResetActive_c then
-      state       <= init_e;
-      ram_address <= (others => '0');
-      wr_data     <= (others => '0');
-      --rd_data     <= (others => '0');
-      kernel_data <= (others => '0');
-      cpu_data    <= (others => '0');
-      ram_wren    <= '0';
-      ram_en      <= '0';
-      ram_refresh <= '0';
+      state           <= init_e;
+      ram_address     <= (others => '0');
+      wr_data         <= (others => '0');
+      --rd_data         <= (others => '0');
+      kernel_data     <= (others => '0');
+      cpu_data        <= (others => '0');
+      ram_wren        <= '0';
+      ram_en          <= '0';
+      ram_refresh     <= '0';
       kernel_req_pend <= '0';
       cpu_req_pend    <= '0';
-      rd_pend     <= '0';
-      kernel_ack_o<= '0';
-      cpu_ack_o   <= '0';
-      rd_ack_o    <= '0';
-      sdrc_dqm      <= (others => '0');
+      rd_pend         <= '0';
+      kernel_ack_o    <= '0';
+      cpu_ack_o       <= '0';
+      cpu_ack_tgl     <= '0';
+      rd_ack_o        <= '0';
+      sdrc_dqm        <= (others => '0');
       sdrc_read_burst <= '0';
-      refresh_timer <= 0;
-      do_refresh    <= '0';
-      cpu_prio      <= '0';
-      is_cpu_acc    <= '0';
-      store_data    <= '0';
+      refresh_timer   <= 0;
+      do_refresh      <= '0';
+      cpu_prio        <= '0';
+      is_cpu_acc      <= '0';
+      store_data      <= '0';
       sdrc_rd_valid_tgl_d <= '0';
+      cpu_data_valid  <= '0';
+      if round_robin_c then
+         prio            <= '0';
+      end if;
     elsif rising_edge(clk_i) then
       if clk_en_i = '1' then
          state       <= next_state;
@@ -433,26 +456,22 @@ begin
             store_data <= '1';
          end if;
          if ((set_store_data or store_data) and sdram_rd_data_valid)='1' then
-            store_data <= '0';
-            cpu_data   <= next_cpu_data;
-         --elsif next_cache_hit='1' then
-         --   cpu_data <= stored_cpu_data;
+            store_data     <= '0';
+            cpu_data       <= next_cpu_data;
          end if;
-         
-         --if set_cpu_data = '1' then
-         --  cpu_data <= next_cpu_data;
-         --elsif next_cache_hit='1' then
-         --  cpu_data <= stored_cpu_data;
-         --end if;
-         ram_wren    <= next_ram_wren;
-         ram_en      <= next_ram_en;
-         ram_refresh <= next_ram_refresh;
-         sdrc_dqm    <= next_sdrc_dqm;
+         cpu_data_valid  <= sdram_rd_data_valid;
+         ram_wren        <= next_ram_wren;
+         ram_en          <= next_ram_en;
+         ram_refresh     <= next_ram_refresh;
+         sdrc_dqm        <= next_sdrc_dqm;
          sdrc_read_burst <= next_sdrc_read_burst;
          sdrc_rd_valid_tgl_d <= sdrc_rd_valid_tgl;
 
          kernel_ack_o<= next_kernel_ack;
-         cpu_ack_o   <= next_cpu_ack;
+         cpu_ack_o   <= next_cpu_ack or next_cache_hit;
+         if (next_cpu_ack or next_cache_hit)='1' then
+            cpu_ack_tgl <= not cpu_ack_tgl;
+         end if;
          rd_ack_o    <= next_rd_ack;
 
          if (kernel_clk_en_i and kernel_req_i)='1' then
@@ -485,6 +504,9 @@ begin
          end if;
          cpu_prio   <= next_cpu_prio;
          is_cpu_acc <= next_is_cpu_acc;
+         if round_robin_c then
+            prio       <= next_prio;
+         end if;
       end if;
     end if;
   end process;
@@ -495,13 +517,13 @@ begin
   rd_data_o       <= std_ulogic_vector(sdrc_o_data);
   rd_data_valid_o <= rd_data_valid; 
   kernel_data_o   <= kernel_data;
+  cpu_ack_tgl_o   <= cpu_ack_tgl;
   
   
   CPU_RD: block
     type cpu_rd_state_t is (IDLE_e, RD_REQ_e);
     signal next_cpu_rd_state, cpu_rd_state             : cpu_rd_state_t;
     signal next_stored_cpu_address, stored_cpu_address : std_ulogic_vector(cpu_addr_i'high downto 1);
-    --signal next_stored_cpu_data                        : std_ulogic_vector(31 downto 0);
     signal next_cache_valid, cache_valid               : std_ulogic;
     signal cpu_data1                                   : std_ulogic_vector(cpu_data'range);
     
@@ -531,11 +553,13 @@ begin
       end case;
     end process;
     
---
-  --cpu_data1  <= check_x(std_ulogic_vector(sdrc_o_data)) when ((set_store_data or store_data) and sdrc_rd_valid)='1' else
-  cpu_data1  <= check_x(std_ulogic_vector(sdrc_o_data)) when ((set_store_data or store_data) and sdram_rd_data_valid)='1' else
-                check_x(cpu_data); 
---  cpu_data_o <= cpu_data1; --cpu_data1;
+   comb_data_path : if comb_cpu_data_read_c generate
+      cpu_data1  <= check_x(std_ulogic_vector(sdrc_o_data)) when ((set_store_data or store_data) and sdram_rd_data_valid)='1' else
+                    check_x(cpu_data); 
+   end generate;
+   sequ_data_path : if not comb_cpu_data_read_c generate
+      cpu_data1  <= check_x(cpu_data); 
+   end generate;
   
     process(cpu_rd_state, cpu_req_i, cpu_wr_i, cpu_addr_i, cpu_data1, cache_valid,
             stored_cpu_address, sdrc_o_data, set_store_data, store_data, sdram_rd_data_valid)
@@ -543,7 +567,6 @@ begin
       next_cpu_rd_state       <= cpu_rd_state;
       next_cpu_req            <= cpu_req_i;
       next_stored_cpu_address <= stored_cpu_address;
-      --next_stored_cpu_data    <= stored_cpu_data;
       next_cache_valid        <= cache_valid;
       next_cache_hit          <= '0';
 
@@ -552,13 +575,7 @@ begin
           if (cache_valid and cpu_req_i and not cpu_wr_i)='1' and stored_cpu_address = cpu_addr_i(cpu_addr_i'high downto 1) then
             -- it's a cache hit
             next_cpu_req   <= '0';
-            next_cache_hit <= '1';
---            case cpu_addr_i(0) is
---              when '0' =>
---                 next_cpu_rd_data <= std_ulogic_vector(stored_cpu_data(31 downto 16));
---              when others =>
---                 next_cpu_rd_data <= std_ulogic_vector(stored_cpu_data(15 downto 0));
---            end case;
+            next_cache_hit <= '1'; 
 
           elsif (cpu_req_i and not cpu_wr_i)='1' then
             next_cpu_rd_state <= RD_REQ_e;
@@ -567,11 +584,8 @@ begin
             next_cache_valid  <= '0';
           end if;
         when RD_REQ_e =>
-          --if set_cpu_data='1' then
-          --if ((set_store_data or store_data) and sdrc_rd_valid) = '1' then
           if ((set_store_data or store_data) and sdram_rd_data_valid) = '1' then
             next_stored_cpu_address <= cpu_addr_i(cpu_addr_i'high downto 1);
-            --next_stored_cpu_data    <= check_x(std_ulogic_vector(sdrc_o_data));
             next_cpu_rd_state       <= idle_e;
             next_cache_valid        <= '1';
           end if;
@@ -585,12 +599,10 @@ begin
       if reset_n_i = ResetActive_c then
         cpu_rd_state       <= IDLE_e;
         stored_cpu_address <= (others => '0');
-        --stored_cpu_data    <= (others => '0');
         cache_valid        <= '0';
       elsif rising_edge(clk_i) then
         cpu_rd_state       <= next_cpu_rd_state;
         stored_cpu_address <= next_stored_cpu_address;
-        --stored_cpu_data    <= next_stored_cpu_data;
         cache_valid        <= next_cache_valid;
       end if;
     end process;
