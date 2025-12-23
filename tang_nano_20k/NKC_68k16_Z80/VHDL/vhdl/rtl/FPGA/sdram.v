@@ -72,9 +72,10 @@ localparam MODE = { 1'b0, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, BUR
 
 // The state machine runs at 40Mhz synchronous to the sync signal.
 localparam STATE_IDLE      = 3'd0;   // first state in cycle
-localparam STATE_CMD_CONT  = STATE_IDLE + RASCAS_DELAY; // command can be continued -> 1
-localparam STATE_READ      = STATE_CMD_CONT + CAS_LATENCY + 3'd1;  // -> 4
-localparam STATE_LAST      = 3'd6;  // last state in cycle -> 
+localparam STATE_CMD_CONT  = STATE_IDLE + RASCAS_DELAY; // command can be continued -> 2
+localparam STATE_READ      = STATE_CMD_CONT + CAS_LATENCY + 3'd1;  // -> 5
+localparam STATE_END       = STATE_CMD_CONT + CAS_LATENCY; // + 3'd1;  // -> 5
+localparam STATE_INIT_LAST = 3'd6;  // last state in cycle during init  
    
 // ---------------------------------------------------------------------
 // --------------------------- startup/reset ---------------------------
@@ -123,9 +124,11 @@ reg dout_valid_tgl_reg;
 reg [1:0] busy_count;
 reg [3:0] burst_count;
 reg [1:0] cas_pipe;
+reg cmd_idle;
 
-assign is_idle          = (state == STATE_IDLE)?1'b1:1'b0;
-assign cmd_ready_o      = is_idle && ready_o && ((busy_count==0)?1'b1:1'b0);
+//assign is_idle          = (state == STATE_IDLE)?1'b1:1'b0;
+//assign cmd_ready_o      = is_idle && ready_o && ((busy_count==0)?1'b1:1'b0);
+assign cmd_ready_o      = cmd_idle;
 assign dout_valid_o     = dout_valid_reg;
 assign dout_valid_tgl_o = dout_valid_tgl_reg;
 
@@ -144,13 +147,15 @@ always @(posedge clk_i) begin
       dout_valid_tgl_reg <= 1'b0;
       sd_data_reg        <= 32'd0;
       busy_count         <= 2'b0;
+      cmd_idle           <= 1'b0;
    end else begin
       if(init_state != 0)
         state <= state + 3'd1;
       
-      if((state == STATE_LAST) && (init_state != 0))
+      if((state == STATE_INIT_LAST) && (init_state != 0)) begin
         init_state <= init_state - 5'd1;
       end
+   end
    
    if(init_state != 0) begin
       csD <= 1'b0;     
@@ -169,18 +174,28 @@ always @(posedge clk_i) begin
       end
    end else begin
       csD            <= cs_i;
-      cas_pipe[0]    <= sd_cas;
+      //cas_pipe[0]    <= sd_cas;
+      if (!sd_cas && !we_i) begin
+         cas_pipe[0]    <= 1'b0;
+      end else begin
+         cas_pipe[0]    <= 1'b1;
+      end
       cas_pipe[1]    <= cas_pipe[0];
       dout_valid_reg <= 1'b0;
       if(busy_count!=0) begin
          busy_count     <= busy_count -1;
-      end
+         if (busy_count==1) begin
+            cmd_idle <= 1'b1;
+         end
+         
+      end 
 
       
       // normal operation, start on ... 
       if(state == STATE_IDLE) begin
         // ... rising edge of cs
          if (cs_i && !csD) begin
+            cmd_idle <= 1'b0;
             if(!refresh_i) begin
                // RAS phase
                sd_cmd      <= CMD_ACTIVE;
@@ -213,14 +228,20 @@ always @(posedge clk_i) begin
             end
          end
 
-         if(state > STATE_CMD_CONT && state < STATE_READ)
+         if(state > STATE_CMD_CONT && state < STATE_READ) begin
             sd_cmd <= CMD_NOP;
+         end
+         
+         if (state >= STATE_END) begin
+            cmd_idle <= 1'b1;
+         end
       
          if(state == STATE_READ) begin
-            state <= 3'b0;
+            state    <= 3'b0;
          end
         // read phase
-        if (!cas_pipe[1] && !we_i) begin
+        //if (!cas_pipe[1] && !we_i) begin
+         if (!cas_pipe[1]) begin
          
                debug1             <= ~debug1;
                dout_valid_reg     <= 1'b1;
