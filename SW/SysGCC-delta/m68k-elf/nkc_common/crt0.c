@@ -166,11 +166,11 @@ void _start(int stackmagi, char **argv, char **envp)
  */
 	asm   volatile(
   "# asm"						                              "\n\t"  \
-	"lea	%0, %%a0"                                 "\n\t"  \
+	"moveal %0, %%a0"                                 "\n\t"  \
 	"cmpaw	#0,%%a0"                                  "\n\t"  \
 	"beqs	m4"                                       "\n\t"  \
 	"jsr     (%%a0)"                                  "\n\t"  \
-"m4: lea	%1, %%a0"                                 "\n\t"  \
+"m4: moveal	%1, %%a0"                                 "\n\t"  \
 	"cmpaw	#0,%%a0"                                  "\n\t"  \
 	"beqs	m5"                                       "\n\t"  \
 	"jsr     (%%a0)"                                  "\n\t"  \
@@ -182,7 +182,7 @@ void _start(int stackmagi, char **argv, char **envp)
 
 	asm   volatile(
   "# asm"						                              "\n\t"  \
-	"lea	%0, %%a0"                                 "\n\t"  \
+	"moveal	%0, %%a0"                                 "\n\t"  \
 	"cmpaw	#0,%%a0"                                  "\n\t"  \
 	"beqs	no_init"                                  "\n\t"  \
 	"jsr     (%%a0)"                                  "\n\t"  \
