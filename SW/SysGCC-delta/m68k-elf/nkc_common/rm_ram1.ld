@@ -6,7 +6,7 @@ OUTPUT_FORMAT(srec)
  */
 /*SEARCH_DIR(.)
 SEARCH_DIR(../libmrm)*/
-GROUP(-lnkc -lgcc -lc)
+GROUP(-lnkc -lgcc -lc -lm)
 __DYNAMIC  =  0;
 
 /*
@@ -50,7 +50,7 @@ PROVIDE (__stack = 0x80000-4);*/
 /*
  * Initalize some symbols to be zero so we can reference them in the
  * crt0 without core dumping. These functions are all optional, but
- * we do this so we can have our crt0 always use them if they exist. 
+ * we do this so we can have our crt0 always use them if they exist.
  * This is so BSPs work better when using the crt0 installed with gcc.
  * We have to initalize them twice, so we cover a.out (which prepends
  * an underscore) and coff object file formats.
@@ -66,9 +66,9 @@ SECTIONS
 {
   /DISCARD/ :
   {
-  
+
   	*/libgcc.a:unwind-dw2.o
-  
+
   }
   .text 0x400:
   {
