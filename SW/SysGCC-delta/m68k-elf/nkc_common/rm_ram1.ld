@@ -147,4 +147,12 @@ SECTIONS
   {
     *(.stabstr)
   }
+
+  .interrupt : {
+    . = ALIGN(0x4);
+    _int_handler_sta = . ;
+    *(.int)
+    _int_end = ALIGN(0x4) ;
+  } > ram
+
 }
