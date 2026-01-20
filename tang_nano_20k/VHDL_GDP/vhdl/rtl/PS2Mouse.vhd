@@ -1,8 +1,8 @@
 --------------------------------------------------------------------------------
 -- Project     : Single Chip NDR Computer
--- Module      : PS/2 Keyboard - LowLevel Transmission
--- File        : PS2Keyboard-a.vhd
--- Description : Architecture for attaching a PS/2 Keyboard to NKC.
+-- Module      : PS/2 Mouse - LowLevel Transmission
+-- File        : PS2Mouse.vhd
+-- Description : Architecture for attaching a PS/2 Mouse to NKC.
 --------------------------------------------------------------------------------
 -- Author       : Andreas Voggeneder
 -- Organisation : FH-Hagenberg
@@ -13,11 +13,11 @@
 --------------------------------------------------------------------------------
 
 
---Command transmission to the keyboard is initiated by bringing the keyboard CLOCK line LOW
+--Command transmission to the Mouse is initiated by bringing the Mouse CLOCK line LOW
 --for at least 60 uS. After the 60 uS delay, the DATA line should be brought LOW and the CLOCK 
 --line released (HIGH). Make sure to bring the DATA line LOW before releasing the CLOCK line. 
---Some time later (up to 10 milliseconds) the keyboard will start to generate clock signals. 
---At each HIGH to LOW clock transition the keyboard will clock in a new bit.
+--Some time later (up to 10 milliseconds) the Mouse will start to generate clock signals. 
+--At each HIGH to LOW clock transition the Mouse will clock in a new bit.
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -99,6 +99,7 @@ architecture rtl of PS2Mouse is
   constant DATA_REPORT_ENABLE_c   : std_ulogic_vector(7 downto 0) := X"F4";
   constant DATA_REPORT_DISABLE_c  : std_ulogic_vector(7 downto 0) := X"F5";
   constant SET_DEFAULT_CODE_c     : std_ulogic_vector(7 downto 0) := X"F6";
+  constant SET_SCALING21_c        : std_ulogic_vector(7 downto 0) := X"E7";
   
   constant RESOLUTION1cmm_c       : std_ulogic_vector(7 downto 0) := X"00";
   constant RESOLUTION2cmm_c       : std_ulogic_vector(7 downto 0) := X"01";
@@ -118,12 +119,13 @@ architecture rtl of PS2Mouse is
   constant ACK_CODE_c   : std_ulogic_vector(7 downto 0) := X"FA";
   constant RESET_CODE_c : std_ulogic_vector(7 downto 0) := X"FF";
   
-  type Mouse_Init_ARRAY_t is array(0 to 4) of std_ulogic_vector(7 downto 0);
+  type Mouse_Init_ARRAY_t is array(0 to 5) of std_ulogic_vector(7 downto 0);
   constant Mouse_Init_ARRAY_c : Mouse_Init_ARRAY_t := (
+    SET_SCALING21_c,
     SET_SAMPLE_RATE_c, 
-    SAMPLERATE_40sps_c,
+    SAMPLERATE_100sps_c,
     SET_RESOLUTION_c,
-    RESOLUTION2cmm_c,
+    RESOLUTION8cmm_c,
     DATA_REPORT_ENABLE_c
   );
   
