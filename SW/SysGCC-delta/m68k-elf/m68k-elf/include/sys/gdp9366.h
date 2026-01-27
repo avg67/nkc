@@ -22,8 +22,8 @@
 #define _(x) volatile unsigned char (x); unsigned char _pad_ ## x [GDP_PADDING]; // 16bit-bus (CPU==2)
 #endif
 // CMD-Register - Sign bits for Line command
-#define SX_BIT 2u
-#define SY_BIT 4u
+#define SX_BIT    2u
+#define SY_BIT    4u
 #define CHAR_SIZE 5u
 
 typedef struct gdp {
@@ -59,6 +59,7 @@ typedef struct {
     _(color_idx)
     _(color_h)
     _(color_l)
+    _(color_m)
 } GDP_Clut;
 
 #undef _
