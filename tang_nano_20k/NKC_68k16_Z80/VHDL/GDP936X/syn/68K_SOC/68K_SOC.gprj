@@ -41,7 +41,7 @@
         <File path="../../../GDP936X/vhdl/rtl/gdp_bi.vhd" type="file.vhdl" enable="0"/>
         <File path="../../../GDP936X/vhdl/rtl/gdp_bresenham.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/gdp_character.vhd" type="file.vhdl" enable="1"/>
-        <File path="../../../GDP936X/vhdl/rtl/gdp_clut_256.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../GDP936X/vhdl/rtl/gdp_clut_256_24.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/gdp_decoder.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/gdp_font_ram.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../GDP936X/vhdl/rtl/gdp_global-p.vhd" type="file.vhdl" enable="1"/>

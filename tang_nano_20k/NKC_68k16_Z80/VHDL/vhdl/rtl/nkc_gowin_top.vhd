@@ -19,6 +19,7 @@ use work.gdp_global.all;
 
 entity nkc_gowin_top is
   generic(sim_g      : boolean := false;
+          use_test_rom_g : boolean := false;
           is_pcb     : boolean := true); -- set to true for "official" PCB, false for prototype
   port(reset_i       : in  std_ulogic:='0';
        refclk_i      : in  std_ulogic;
@@ -216,9 +217,9 @@ architecture rtl of nkc_gowin_top is
   signal pll_lock          : std_ulogic;
   signal pll_80m_lock      : std_ulogic;
 --  signal vpll_lock         : std_ulogic;
-  signal red               : std_ulogic_vector(2 downto 0);
-  signal green             : std_ulogic_vector(2 downto 0);
-  signal blue              : std_ulogic_vector(2 downto 0);
+  signal red               : std_ulogic_vector(7 downto 0);
+  signal green             : std_ulogic_vector(7 downto 0);
+  signal blue              : std_ulogic_vector(7 downto 0);
   signal vreset            : std_ulogic;
   signal sdram_addr        : std_logic_vector(12 downto 0);
   signal vvmode            : std_logic_vector(1 downto 0);
@@ -1010,15 +1011,15 @@ begin
                 '0';
       io_busy <= spi_busy when spi_cs='1' else
                  '0';
-    test_rom_inst: if sim_g generate
+    test_rom_inst: if use_test_rom_g generate
         test_rom: entity work.test
           port map (
              clock   => pixel_clk,
-             address => eab(8 downto 1),
+             address => eab(9 downto 1),
              q       => rom_dout
           );
       end generate;
-      gp_rom_inst: if not sim_g generate
+      gp_rom_inst: if not use_test_rom_g generate
         gp_rom: entity work.gp710r5
           port map (
              clock   => pixel_clk,

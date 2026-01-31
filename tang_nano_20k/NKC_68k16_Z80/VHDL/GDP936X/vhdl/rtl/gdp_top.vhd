@@ -57,9 +57,9 @@ entity gdp_top is
        -- Video out
        --------------------------
 --       pixel_o    : out std_ulogic;
-       pixel_red_o   : out std_ulogic_vector(2 downto 0);
-       pixel_green_o : out std_ulogic_vector(2 downto 0);
-       pixel_blue_o  : out std_ulogic_vector(2 downto 0);
+       pixel_red_o   : out std_ulogic_vector(7 downto 0);
+       pixel_green_o : out std_ulogic_vector(7 downto 0);
+       pixel_blue_o  : out std_ulogic_vector(7 downto 0);
        Hsync_o       : out std_ulogic;
        Vsync_o       : out std_ulogic;
        vreset_o      : out std_ulogic;
@@ -88,6 +88,7 @@ end gdp_top;
 architecture rtl of gdp_top is
 
   signal monitoring      : std_ulogic_vector(nr_mon_sigs_c-1 downto 0);
+  signal DataOut_s       : std_ulogic_vector(7 downto 0);
   signal kernel_req      : std_ulogic;
   signal kernel_wr       : std_ulogic;
   signal kernel_clrscr   : std_ulogic;
@@ -115,12 +116,14 @@ architecture rtl of gdp_top is
   signal color_reg       : std_ulogic_vector(15 downto 0); --:= X"0000";
   signal color_mode      : std_ulogic;
   signal clut_addr       : std_ulogic_vector(7 downto 0); --:= X"00";
-  signal temp_reg        : std_ulogic:= '0';
-  signal clut_we         : std_ulogic;
-  signal clut_data       : std_ulogic_vector(8 downto 0);
-  signal pixel_red       : std_ulogic_vector(2 downto 0);
-  signal pixel_green     : std_ulogic_vector(2 downto 0);
-  signal pixel_blue      : std_ulogic_vector(2 downto 0);
+  signal temp_reg        : std_ulogic_vector(15 downto 0):= (others =>'0');
+  signal temp_med_written: std_ulogic;
+  signal clut_we,clut_re : std_ulogic;
+  signal clut_data       : std_ulogic_vector(23 downto 0);
+  signal clut_rd_data    : std_ulogic_vector(23 downto 0);
+  signal pixel_red       : std_ulogic_vector(7 downto 0);
+  signal pixel_green     : std_ulogic_vector(7 downto 0);
+  signal pixel_blue      : std_ulogic_vector(7 downto 0);
   ------------------------------------------------------------------------
   -- Hardware-Cursor (to VIDEO section)
   ------------------------------------------------------------------------
@@ -155,6 +158,7 @@ begin
     clut_we_i     => clut_we,
     clut_addr_i   => clut_addr,
     clut_data_i   => clut_data,
+    clut_data_o   => clut_rd_data,
     -----------------------------
 --    pixel_o    => pixel_o,
     pixel_red_o   => pixel_red,  
@@ -312,7 +316,8 @@ begin
         color_reg <= X"0001"; -- bg: black, fg: white
         if use_clut_c then
           clut_addr <= (others => '0');
-          temp_reg  <= '0';
+          temp_reg  <= (others => '0');
+          temp_med_written <= '0';
         end if;
       end if;
     elsif rising_edge(clk_i) then
@@ -356,61 +361,97 @@ begin
               clut_addr <= DataIn_i;
             when 1  =>
               -- 0xA5: Data high
-              temp_reg <= DataIn_i(0);
---            when 2  =>
---              -- 0xA6: Data low
---              temp_reg <= DataIn_i(0);
+              temp_reg(15 downto 8) <= DataIn_i;   
+              -- fixme: todo when Data med is not written -> compatiblity mode -> expand 9 bit palette to 24 bit
+            when 2 => 
+               temp_med_written <= '0';
+            when 3  =>
+              -- 0xA7: Data med
+              temp_reg(7 downto 0) <= DataIn_i;
+              temp_med_written     <= '1';
             when others => null;
           end case;
         end if;
-        if color_support_c and use_clut_c and clut_we='1' then
+        if color_support_c and use_clut_c and (clut_we or clut_re)='1' then
           clut_addr <= std_ulogic_vector(unsigned(clut_addr) + 1);
         end if;
       end if;
     end if;
   end process;
 
+   process(temp_med_written, temp_reg, DataIn_i)
+   begin
+      if use_clut_c and color_support_c then
+         clut_data <= temp_reg & DataIn_i;
+         if temp_med_written='0' then
+            clut_data <= (others =>'0');
+            clut_data(23 downto 21) <= temp_reg(8) & DataIn_i(7 downto 6); -- R
+            clut_data(15 downto 13) <= DataIn_i(5 downto 3); -- G
+            clut_data(7 downto 5)   <= DataIn_i(2 downto 0); -- B
+         end if;
+      else
+         clut_data <= (others => '0');
+      end if;
+   end process;
+
   clut_we <= (clut_en_i and Wr_i)  when color_support_c and use_clut_c and Adr_i(1 downto 0)="10" else
              '0';
-  clut_data <= temp_reg & DataIn_i when color_support_c and use_clut_c else
-               (others => '0');
+  clut_re <= (clut_en_i and Rd_i)  when color_support_c and use_clut_c and Adr_i(1 downto 0)="10" else
+             '0';
+  --clut_data <= temp_reg & DataIn_i when color_support_c and use_clut_c else
+  --             (others => '0');
    
   process(clk_i)
   begin
     if rising_edge(clk_i) then
       if clk_en_i = '1' then
         if (gdp_en_i and Rd_i) = '1' then
-          DataOut_o <= kernel_DataOut;
+          DataOut_s <= kernel_DataOut;
         elsif (sfr_en_i and Rd_i) = '1' then
-          DataOut_o <= dma_data;
+          DataOut_s <= dma_data;
         elsif color_support_c and 
              (col_en_i and Rd_i) = '1' then
---          DataOut_o <= color_reg;
+--          DataOut_s <= color_reg;
           case to_integer(unsigned(Adr_i(0 downto 0))) is
             when 0  =>
               -- 0xA0: FG Color
               if color_mode = '0' then
-                DataOut_o <= "0000" & color_reg(3 downto 0);
+                DataOut_s <= "0000" & color_reg(3 downto 0);
                else
-                DataOut_o <= color_reg(7 downto 0);
+                DataOut_s <= color_reg(7 downto 0);
                end if;
             when 1  =>
               -- 0xA1: BG Color
               if color_mode = '0' then
-               DataOut_o <= "0000" & color_reg(11 downto 8);
+               DataOut_s <= "0000" & color_reg(11 downto 8);
               else
-               DataOut_o <= color_reg(15 downto 8);
+               DataOut_s <= color_reg(15 downto 8);
               end if;
             when others => null;
           end case;
         elsif color_support_c and use_clut_c and 
              (clut_en_i and Rd_i) = '1' then
-          if Adr_i(1 downto 0) = "00" then
-            DataOut_o <= clut_addr(7 downto 0);
-          end if;
+          case to_integer(unsigned(Adr_i(1 downto 0))) is
+            when 0  =>
+              -- 0xA4: Address Register
+              DataOut_s <= clut_addr(7 downto 0);
+            when 1  =>
+              -- 0xA5: Data high
+              DataOut_s <= clut_rd_data(23 downto 16);
+            when 2 => 
+              -- 0xA6: Data low
+              DataOut_s <= clut_rd_data(7 downto 0);
+            when 3  =>
+              -- 0xA7: Data med
+              DataOut_s <= clut_rd_data(15 downto 8);
+            when others => null;
+          end case;
+          
         end if;
       end if;
     end if;
   end process;  
+  
+  DataOut_o <= DataOut_s;
 
 end rtl;

@@ -14,9 +14,9 @@ module video2hdmi (
           input [1:0]  vvmode,   // Video Mode
           input        vwide,    // request display on wide (16:9) screen
 
-	      input [2:0]  r,
-	      input [2:0]  g,
-	      input [2:0]  b,
+	      input [7:0]  r,
+	      input [7:0]  g,
+	      input [7:0]  b,
 
           // audio is encoded into the video
           //input [15:0] audio[2],
@@ -93,8 +93,8 @@ hdmi #(
   .wide(vwide),      // adopt to wide screen video
   .reset(vreset),    // signal to synchronize HDMI
 
-  // NKC outputs 3 bits per color. and HDMI expects 8 bits per color
-  .rgb( { r, 5'b00, g, 5'b00, b, 5'b00 } )
+  // NKC outputs 8 bits per color. and HDMI expects 8 bits per color
+  .rgb( { r, g, b} )
 );
 
 // differential output

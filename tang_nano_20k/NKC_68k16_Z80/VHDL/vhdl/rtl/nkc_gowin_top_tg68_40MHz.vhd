@@ -218,9 +218,9 @@ architecture rtl of nkc_gowin_top is
   signal pll_lock          : std_ulogic;
   signal pll_80m_lock      : std_ulogic;
 --  signal vpll_lock         : std_ulogic;
-  signal red               : std_ulogic_vector(2 downto 0);
-  signal green             : std_ulogic_vector(2 downto 0);
-  signal blue              : std_ulogic_vector(2 downto 0);
+  signal red               : std_ulogic_vector(7 downto 0);
+  signal green             : std_ulogic_vector(7 downto 0);
+  signal blue              : std_ulogic_vector(7 downto 0);
   signal vreset            : std_ulogic;
   signal sdram_addr        : std_logic_vector(12 downto 0);
   signal vvmode            : std_logic_vector(1 downto 0);

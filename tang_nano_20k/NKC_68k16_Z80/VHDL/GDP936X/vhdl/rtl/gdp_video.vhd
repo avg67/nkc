@@ -40,11 +40,12 @@ entity gdp_video is
        -----------------------------
        clut_we_i     : in  std_ulogic;
        clut_addr_i   : in  std_ulogic_vector(7 downto 0);
-       clut_data_i   : in  std_ulogic_vector(8 downto 0);
+       clut_data_i   : in  std_ulogic_vector(23 downto 0);
+       clut_data_o   : out std_ulogic_vector(23 downto 0);
        -----------------------------
-       pixel_red_o   : out std_ulogic_vector(2 downto 0);
-       pixel_green_o : out std_ulogic_vector(2 downto 0);
-       pixel_blue_o  : out std_ulogic_vector(2 downto 0);
+       pixel_red_o   : out std_ulogic_vector(7 downto 0);
+       pixel_green_o : out std_ulogic_vector(7 downto 0);
+       pixel_blue_o  : out std_ulogic_vector(7 downto 0);
        Hsync_o       : out std_ulogic;
        Vsync_o       : out std_ulogic;
        blank_o       : out std_ulogic;
@@ -104,11 +105,11 @@ architecture rtl of gdp_video is
   signal next_rd_req                    : std_ulogic;
   signal frame_start                    : std_ulogic;
   signal vreset,vreset_done             : std_ulogic;
-  signal rgb_pixel                      : std_ulogic_vector(8 downto 0);
+  signal rgb_pixel                      : std_ulogic_vector(23 downto 0);
   signal Hsync_s                        : std_ulogic;
   signal Vsync_s                        : std_ulogic;
   signal vreset_s                       : std_ulogic;
-  signal clut_q                         : std_ulogic_vector(8 downto 0);
+  signal clut_q                         : std_ulogic_vector(23 downto 0);
   --
   signal mem_rd_state,next_mem_rd_state : mem_rd_state_t;
   signal next_rd_address,rd_address     : unsigned(15 downto 0);
@@ -594,29 +595,29 @@ vid_fifo_inst: entity work.dual_video_fifo
   no_clut: if not use_clut_c or not color_support_c generate
     process(clk_i)
       function lookup(color : in std_ulogic_vector(3 downto 0)) return std_ulogic_vector is
-        variable tmp : std_ulogic_vector(8 downto 0);
+        variable tmp : std_ulogic_vector(23 downto 0);
       begin
         tmp := (others => '0'); 
 -- pragma translate_off
         if not is_x(color) then
 -- pragma translate_on      
           case to_integer(unsigned(color)) is
-            when 0  => tmp := "000000000"; -- 0  Schwarz        => 0   RGB 0,0,0
-            when 1  => tmp := "111111111"; -- 1  Weiß           => 15  RGB 255,255,255
-            when 2  => tmp := "111111000"; -- 2  Gelb           => 14  RGB 255,255,0
-            when 3  => tmp := "000111000"; -- 3  Grün           => 10  RGB 0,255,0
-            when 4  => tmp := "111000000"; -- 4  Rot            => 12  RGB 255,0,0
-            when 5  => tmp := "000000111"; -- 5  Blau           => 9   RGB 0,0,255
-            when 6  => tmp := "111000111"; -- 6  Violett        => 13  RGB 255,0,255
-            when 7  => tmp := "000111111"; -- 7  Zyan           => 11  RGB 0,255,255
-            when 8  => tmp := "001001001"; -- 8  Dunkelgrau     => 8   RGB 64,64,64
-            when 9  => tmp := "100100100"; -- 9  Hellgrau       => 7   RGB 128,128,128
-            when 10 => tmp := "011011000"; -- 10 Dunkelgelb     => 6   RGB 96,96,0
-            when 11 => tmp := "000011000"; -- 11 Dunkelgrün     => 2   RGB 0,96,0
-            when 12 => tmp := "011000000"; -- 12 Dunkelrot      => 4   RGB 96,0,0
-            when 13 => tmp := "000000011"; -- 13 Dunkelblau     => 1   RGB 0,0,96
-            when 14 => tmp := "011000011"; -- 14 Violett dunkel => 5   RGB 96,0,96
-            when 15 => tmp := "000011011"; -- 15 Zyan dunkel    => 3   RGB 0,96,96
+            when 0  => tmp := "000000000000000000000000"; -- 0  Schwarz        => 0   RGB 0,0,0
+            when 1  => tmp := "111111111111111111111111"; -- 1  Weiß           => 15  RGB 255,255,255
+            when 2  => tmp := "111111111111111100000000"; -- 2  Gelb           => 14  RGB 255,255,0
+            when 3  => tmp := "000000001111111100000000"; -- 3  Grün           => 10  RGB 0,255,0
+            when 4  => tmp := "111111110000000000000000"; -- 4  Rot            => 12  RGB 255,0,0
+            when 5  => tmp := "000000000000000011111111"; -- 5  Blau           => 9   RGB 0,0,255
+            when 6  => tmp := "100000000000000011111111"; -- 6  Violett        => 13  RGB 255,0,255
+            when 7  => tmp := "000000001111111111111111"; -- 7  Zyan           => 11  RGB 0,255,255
+            when 8  => tmp := "010000000100000001000000"; -- 8  Dunkelgrau     => 8   RGB 64,64,64
+            when 9  => tmp := "100000001000000010000000"; -- 9  Hellgrau       => 7   RGB 128,128,128
+            when 10 => tmp := "011000000110000000000000"; -- 10 Dunkelgelb     => 6   RGB 96,96,0
+            when 11 => tmp := "000000000110000000000000"; -- 11 Dunkelgrün     => 2   RGB 0,96,0
+            when 12 => tmp := "011000000000000000000000"; -- 12 Dunkelrot      => 4   RGB 96,0,0
+            when 13 => tmp := "000000000000000001100000"; -- 13 Dunkelblau     => 1   RGB 0,0,96
+            when 14 => tmp := "011000000000000001100000"; -- 14 Violett dunkel => 5   RGB 96,0,96
+            when 15 => tmp := "000000000110000001100000"; -- 15 Zyan dunkel    => 3   RGB 0,96,96
             when others => null;
           end case;
 -- pragma translate_off
@@ -631,7 +632,12 @@ vid_fifo_inst: entity work.dual_video_fifo
             if color_support_c and color_mode_reg = '0' then
                rgb_pixel <= lookup(Pixel(3 downto 0));
             elsif color_support_c then
-               rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 3) & Pixel(3) & Pixel(2 downto 0);
+               -- RGB332       R:8 downto 6          G:5 downto 3         B:2 downto 0
+               --rgb_pixel <= Pixel(7 downto 5) & Pixel(4 downto 2) & Pixel(1 downto 0) & Pixel(0);
+               rgb_pixel <= (others => '0');
+               rgb_pixel(23 downto 21) <= Pixel(7 downto 5); -- R
+               rgb_pixel(15 downto 13) <= Pixel(2 downto 2); -- G
+               rgb_pixel(7 downto 6)   <= Pixel(1 downto 0); -- B
             elsif not color_support_c then
                rgb_pixel <= (others => Pixel(0));
             end if;
@@ -671,22 +677,24 @@ vid_fifo_inst: entity work.dual_video_fifo
          end if;
       end process;
 
-   clut_inst : entity work.gdp_clut_256
+   clut_inst : entity work.gdp_clut_256_24
       port map(
-        reset_n_i   => reset_n_i,
-        clk_i       => clk_i,
-        clk_en_i    => clk_en_i,
-        WrAddress_i => clut_addr_i,
-        Data_i      => clut_data_i,
-        WE_i        => clut_we_i,
-        RdAddress_i => Pixel,
-        Data_o      => clut_q
+        reset_n_i    => reset_n_i,
+        clk_i        => clk_i,
+        clk_en_i     => clk_en_i,
+        WrAddress_i  => clut_addr_i,
+        Data_i       => clut_data_i,
+        WE_i         => clut_we_i,
+        RdAddress1_i => Pixel,
+        Data1_o      => clut_q,
+        RdAddress2_i => clut_addr_i,
+        Data2_o      => clut_data_o
       );
    end generate;  
   
-  pixel_red_o    <= rgb_pixel(8 downto 6);
-  pixel_green_o  <= rgb_pixel(5 downto 3);
-  pixel_blue_o   <= rgb_pixel(2 downto 0);
+  pixel_red_o    <= rgb_pixel(23 downto 16); --rgb_pixel(8 downto 6);
+  pixel_green_o  <= rgb_pixel(15 downto 8);  --rgb_pixel(5 downto 3);
+  pixel_blue_o   <= rgb_pixel(7 downto 0); -- rgb_pixel(2 downto 0);
   Hsync_o        <= Hsync_s;
   Vsync_o        <= Vsync_s;
   vreset_o       <= vreset_s;
@@ -698,9 +706,9 @@ vid_fifo_inst: entity work.dual_video_fifo
          reset_n_i     => reset_n_i,
          clk_en_i      => clk_en_i,
          clk_i         => clk_i,
-         pixel_red_i   => rgb_pixel(8 downto 6),
-         pixel_green_i => rgb_pixel(5 downto 3),
-         pixel_blue_i  => rgb_pixel(2 downto 0),
+         pixel_red_i   => rgb_pixel(23 downto 21), --rgb_pixel(8 downto 6),
+         pixel_green_i => rgb_pixel(15 downto 13), --rgb_pixel(5 downto 3),
+         pixel_blue_i  => rgb_pixel(7 downto 5), --rgb_pixel(2 downto 0),
          Hsync_i       => Hsync_s,
          Vsync_i       => Vsync_s,
          vid_en_i      => VidEn,
