@@ -17,10 +17,12 @@
    - Bus-Slave nur mit GDP64HS
      für PCB von UWE
 -  NKC_68k_FAST_PS2_KEYB_PCB.fs
-   - NKC preliminary SOC mit 40MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+   - NKC SOC mit 40MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
      sowie externen I/O-BUS (3 WS) für PCB von UWE
-     Achtung: Ext. Bus noch nicht 100% stabil (FLO2 läuft bei mir damit nicht stabil, alles andere schon)!
-
+- NKC_68020_PS2_KEYB_PCB.fs
+   - NKC SOC mit 40MHz 68020 (32 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+     sowie externen I/O-BUS (3 WS) für PCB von UWE
+     Achtung: Vorab-Test-Version, Instruction-set des 68020 nicht zu 100% implementiert (CALLM, RETM fehlen)
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM:
 
