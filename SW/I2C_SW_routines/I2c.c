@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include "i2c.h"
 
+#define SCL (1<<6)  // Bit 6
+#define SDA (1<<7)  // Bit 7
+
 void delayi2c(void) {
 	asm("moveq #20,d0
 dly1:   nop 
