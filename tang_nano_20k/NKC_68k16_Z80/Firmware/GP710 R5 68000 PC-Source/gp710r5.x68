@@ -726,6 +726,8 @@ traptab:
  DC.l setchar                   * Befehl 165
  DC.l settrans                  * Befehl 166
  DC.l gettrans                  * Befehl 167
+ DC.l colorcopy                 * Befehl 168
+
 
 
 
@@ -23267,9 +23269,48 @@ wait3:                          * Warten bis GDP fertig
 
 ende:                           * Endemarkierung für Längenberechnung
 
+; D0...p_src 
+; D1...p_dest
+; D2...nr of pixels 
+
+colorcopy:
+  movem.l d3-d5/a0-a1,-(a7)
+  movea.l d0,a0
+  movea.l d1,a1
+  move.l d3,d7
+  clr.l d6
+;  lsr.l #1,d7   ; nr of DWORDS
+;  lsl.l #1,d6   ; Preserve Carry
+  
+cc_loop:  
+  move.l (a0)+,d3 
+  bfextu d3{#0:#3}, d4      ; R 31:29
+  bfins d4, d5{#24:#3}      ; D5[7:5] = D4
+  bfextu d3{#5:#3}, d4      ; G 26:24
+  bfins d4, d5{#27:#3}      ; D5[4:2] = D4
+  bfextu d3{#12:#2}, d4     ; B 12:11
+  bfins d4, d5{#30:#2}      ; D5[1:0] = D4
+  move.b d5,(a1)+
+  subq.l #1,d2
+  beq.s cc_done
+  bfextu d3{#0+16:#3}, d4   ; R 16:14
+  bfins d4, d5{#24:#3}      ; D5[7:5] = R
+  bfextu d3{#5+16:#3}, d4   ; G 10:8
+  bfins d4, d5{#27:#3}      ; D5[4:2] = G
+  bfextu d3{#12+16:#2}, d4  ; B 4:3
+  bfins d4, d5{#30:#2}      ; D5[1:0] = B
+  move.b d5,(a1)+
+  subq.l #1,d2
+  bne.s cc_loop
+cc_done:
+
+  movem.l (a7)+,d3-d5/a0-a1
+  rts
+
 ; DCB.b 1024*64-*,$ff              * Rest der 64 Kbyte mit $FF füllen
 
  END
+
 
 
 
