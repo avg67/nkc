@@ -23,6 +23,13 @@
    - NKC SOC mit 40MHz 68020 (32 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
      sowie externen I/O-BUS (3 WS) für PCB von UWE
      Achtung: Vorab-Test-Version, Instruction-set des 68020 nicht zu 100% implementiert (CALLM, RETM fehlen)
+- NKC_68020_I2C_PS2_KEYB_PCB.fs
+   - NKC SOC mit 40MHz 68020 (32 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+     sowie externen I/O-BUS (3 WS) für PCB von UWE
+     Weiters ist ein I2C-Master am PS2 Port der Maus angeschlossen. Diese wird ausgeschaltet wenn das I2C interface eingeschaltet wird.
+     
+     Dokumentation des I2C siehe https://github.com/avg67/nkc/blob/main/tang_nano_20k/doc/i2c.pdf
+     
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM:
 
