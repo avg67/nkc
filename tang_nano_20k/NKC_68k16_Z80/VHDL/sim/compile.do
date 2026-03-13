@@ -7,7 +7,8 @@ vlog -work work ../fx68k/fx68kAlu.sv \
                 ../../Firmware/gp710r5.v
 
 vlog -work work ../vhdl/rtl/FPGA/sdram.v \
-                ../GDP936X/vhdl/tb/sdram_sim_model_64Mb_16bit.v
+                ../GDP936X/vhdl/tb/sdram_sim_model_64Mb_16bit.v \
+                ../vhdl/rtl/i2c/i2c_slave_model.v
 
 vlog -work work ../vhdl/rtl/hdmi/hdmi/audio_clock_regeneration_packet_sim.sv \
                 ../vhdl/rtl/hdmi/hdmi/audio_info_frame.sv \
@@ -23,7 +24,14 @@ vlog -work work ../vhdl/rtl/hdmi/hdmi/audio_clock_regeneration_packet_sim.sv \
                 ../vhdl/rtl/hdmi/gowin_rpll_200/gowin_rpll/pll_200m.v \
                 ../vhdl/rtl/hdmi/gowin_clkdiv/gowin_clkdiv.v \
                 ../vhdl/rtl/FPGA/gowin_rpll/gowin_rpll_40.v \
-                ../vhdl/rtl/FPGA/gowin_rpll_80/pll_80m.v
+                ../vhdl/rtl/FPGA/gowin_rpll_80/pll_80m.v \
+		../vhdl/rtl/sound/jt49_div.v \
+		../vhdl/rtl/sound/jt49_eg.v \
+		../vhdl/rtl/sound/jt49_exp.v \
+		../vhdl/rtl/sound/jt49_cen.v \
+		../vhdl/rtl/sound/jt49.v \
+		../vhdl/rtl/sound/jt49_noise.v \
+		../vhdl/rtl/sound/jt49_bus.v
 
 vcom -2008  ../GDP936X/vhdl/tb/gdp_bitmap-p.vhd \
             ../vhdl/rtl/src/UART_pkg.vhd \
@@ -43,7 +51,7 @@ vcom -93                  ../GDP936X/vhdl/rtl/Dffdecl-p.vhd \
                           ../GDP936X/vhdl/rtl/gdp_vram.vhd \
                           ../GDP936X/vhdl/rtl/gdp_kernel.vhd \
                           ../GDP936X/vhdl/rtl/gdp_clut.vhd \
-                          ../GDP936X/vhdl/rtl/gdp_clut_256.vhd \
+                          ../GDP936X/vhdl/rtl/gdp_clut_256_24.vhd \
                           ../GDP936X/vhdl/rtl/FPGA/fifo_sc_hs/video_fifo.vho \
                           ../GDP936X/vhdl/rtl/FPGA/dual_video_fifo/dual_video_fifo.vho \
                           ../GDP936X/vhdl/rtl/gdp_video.vhd \
@@ -59,6 +67,10 @@ vcom -93                  ../GDP936X/vhdl/rtl/Dffdecl-p.vhd \
                           ../vhdl/rtl/SPI_Vdip.vhd \
                           ../vhdl/rtl/Timer.vhd \
                           ../vhdl/rtl/GPIO_Interface.vhd \
+                          ../vhdl/rtl/i2c/i2c_master_bit_ctrl.vhd \
+                          ../vhdl/rtl/i2c/i2c_master_byte_ctrl.vhd \
+                          ../vhdl/rtl/i2c/i2c_master_top.vhd \
+                          ../vhdl/rtl/i2c/i2c_master-rtl-ea.vhd \
                           ../vhdl/rtl/src/UART_pkg.vhd \
                           ../vhdl/rtl/src/TB_Receiver.vhd \
                           ../vhdl/rtl/src/TB_Sender.vhd \
@@ -74,6 +86,8 @@ vsim -t ps -L gw2a -voptargs=+acc nkc_gowin_tb gw2a.GSR
 
 onerror {resume}
 add wave -group {TB} -noupdate -radix hex /*
+add wave -group {I2C_Slave} -noupdate -radix hex /i2c_slave/*
+add wave -group {SDCARD} -noupdate -radix hex /sdmodel_1/*
 add wave -group {TB_Sender} -noupdate -radix hex /tx/*
 add wave -group {sdram} -noupdate -radix hex /dram_1/*
 add wave -group {Top} -noupdate -radix hex /dut/*
@@ -100,6 +114,12 @@ add wave -group {GDP_Top} -noupdate -radix hex /dut/gdp/*
 add wave -noupdate -divider
 add wave -group {Ser1} -noupdate -radix hex /dut/impl_key1/Ser_key/*
 add wave -group {SPI} -noupdate -radix hex /dut/impl_spi/spi/*
+add wave -group {PS2_if} -noupdate -radix hex /dut/impl_key2/kbd/PS2if/*
+add wave -group {PS2_Decoder} -noupdate -radix hex /dut/impl_key2/kbd/PS2dec/*
+add wave -group {Mouse} -noupdate  -radix hex /dut/impl_mouse/mouse/*
+add wave -group {Mouse} -noupdate  -radix hex /dut/impl_mouse/mouse/nkc_mouse/*
+add wave -group {I2C_Top} -noupdate  -radix hex /dut/impl_i2c/i2c/*
+add wave -group {I2C_Master} -noupdate  -radix hex /dut/impl_i2c/i2c/i2c_master_top/*
 
 
 TreeUpdate [SetDefaultTree]
