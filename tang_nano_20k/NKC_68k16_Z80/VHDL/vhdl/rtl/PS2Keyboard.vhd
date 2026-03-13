@@ -67,16 +67,21 @@ architecture rtl of PS2Keyboard is
 --  end component;
   component PS2_Interface
     port(
-      reset_n_i    : in  std_ulogic;
-      clk_i        : in  std_ulogic;
-      Ps2Clk_io    : inout std_logic;
-      Ps2Dat_io    : inout std_logic;
-      data_o       : out std_ulogic_vector(7 downto 0);
-      data_stb_o   : out std_ulogic;
-      ack_o        : out std_ulogic;
-      error_stb_o  : out std_ulogic;
-      data_i       : in  std_ulogic_vector(7 downto 0);
-      data_stb_i   : in  std_ulogic
+      reset_n_i       : in  std_ulogic;
+      clk_i           : in  std_ulogic;
+      Ps2Clk_pad_i    : in  std_logic;
+      Ps2Clk_pad_o    : out std_logic;
+      Ps2Clk_padoen_o : out std_logic;
+      Ps2Dat_pad_i    : in  std_logic;
+      Ps2Dat_pad_o    : out std_logic;
+      Ps2Dat_padoen_o : out std_logic;
+      enable_i        : in std_ulogic;
+      data_o          : out std_ulogic_vector(7 downto 0);
+      data_stb_o      : out std_ulogic;
+      ack_o           : out std_ulogic;
+      error_stb_o     : out std_ulogic;
+      data_i          : in  std_ulogic_vector(7 downto 0);
+      data_stb_i      : in  std_ulogic
     );
   end component;
   
@@ -174,6 +179,10 @@ architecture rtl of PS2Keyboard is
   signal kbd_init_state,next_kbd_init_state: kbd_init_state_t;
   signal kbd_send_state,next_kbd_send_state: kbd_send_state_t;
   signal init_cnt,next_init_cnt            : natural range 0 to Kbd_Init_ARRAY_c'high;
+  signal Ps2Clk_pado    : std_logic;
+  signal Ps2Clk_padoen  : std_logic;
+  signal Ps2Dat_pado    : std_logic;
+  signal Ps2Dat_padoen  : std_logic;
          
 --  Function CalcParity(Data : in std_ulogic_vector) return std_ulogic is
 --    variable p: std_ulogic:='1';
@@ -346,8 +355,15 @@ begin
       port map (
         reset_n_i   => reset_n_i,
         clk_i       => clk_i,    
-        Ps2Clk_io   => Ps2Clk_io,
-        Ps2Dat_io   => Ps2Dat_io,
+        --Ps2Clk_io   => Ps2Clk_io,
+        --Ps2Dat_io   => Ps2Dat_io,
+        Ps2Clk_pad_i   => Ps2Clk_io,   
+        Ps2Clk_pad_o   => Ps2Clk_pado,   
+        Ps2Clk_padoen_o=> Ps2Clk_padoen,
+        Ps2Dat_pad_i   => Ps2Dat_io,   
+        Ps2Dat_pad_o   => Ps2Dat_pado,   
+        Ps2Dat_padoen_o=> Ps2Dat_padoen,
+        enable_i    => '1',
         data_o      => DataReg(7 downto 0),
         data_stb_o  => DataReg(8),
         ack_o       => open,
@@ -522,6 +538,11 @@ begin
 --      end if;
     end if;
   end process;
+  
+  Ps2Clk_io <= Ps2Clk_pado when Ps2Clk_padoen='1' else
+               'Z';
+  Ps2Dat_io <= Ps2Dat_pado when Ps2Dat_padoen='1' else
+               'Z';
   
   monitoring_o(8 downto 0) <= DataReg;
   monitoring_o(9)          <= decoder_enable;
