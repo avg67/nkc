@@ -144,7 +144,9 @@ begin  -- architecture rtl
   process(clk_i) is
   begin
     if rising_edge(clk_i) then
+      if (en_i and Rd_i) = '1'  then
       DataOut_o <= std_ulogic_vector(data_out);
+      end if;
     end if;
   end process;
 

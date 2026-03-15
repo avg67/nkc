@@ -1,6 +1,6 @@
 setadr equ $60000               * Zieladresse des Programms
                                 * Anpassung muß an eigenes Ram erfolgen
-
+* GP7.11 for TG68-020 - NOT optimized!
 *******************************************************************************
 *                      68000/68010 Grundprogramm varequ                       *
 *                         (C) 1991 Ralph Dombrowski                           *
@@ -23310,6 +23310,7 @@ cc_done:
 ; DCB.b 1024*64-*,$ff              * Rest der 64 Kbyte mit $FF füllen
 
  END
+
 
 
 
