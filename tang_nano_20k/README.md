@@ -2,7 +2,7 @@
 
 ## FPGA-Files:
 - NKC_68k_PS2_KEYB_PCB.fs
-   - NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+   - NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser, I2C
      sowie externen I/O-BUS (3 WS) für PCB von UWE
 - NKC_Z80_PS2_KEYB_PCB.fs
    - NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SDIO SD-Card Interface, Ser

@@ -13360,8 +13360,8 @@ sdtst02e:
  move.b (a2)+, (a6)+
  bne.s sdtst02e
  subq.l #1, a6                          * auf die Null
- cmp #512, d0
- bne.s sdtster                          * nicht unterstützte Blockgrösse
+* cmp #512, d0                           * AV patched
+* bne.s sdtster                          * nicht unterstützte Blockgrösse
  clr.l d0
  lea spicmd10(pc), a2                   * CID Kommando
  move #16, d0                           * 16 Byte
@@ -13400,8 +13400,12 @@ sd1tst01:
  lea sd2geo(a5), a6
 sd1tst02:
  movea.l a6, a1                         * Adresse der Ausgabedaten sichern
+ moveq #10,d1                           * 10 Retries
+sd1_retry:
  bsr sd1init
  tst.b d0
+* bmi sd1tster                           * Fehler SD-Card nicht gefunden
+ dbpl d1,sd1_retry                           
  bmi sd1tster                           * Fehler SD-Card nicht gefunden
  lea idebuff(a5), a0
  lea spicmd9(pc), a2                    * CSD Kommando
@@ -13432,8 +13436,8 @@ sd1tst2e:
  move.b (a2)+, (a6)+
  bne.s sd1tst2e
  subq.l #1, a6                          * auf die Null
- cmp #512, d0                          ;; AV patched ;;
- bne.s sd1tster                         * nicht unterstützte Blockgrösse
+* cmp #512, d0                          ;; AV patched ;;
+* bne.s sd1tster                         * nicht unterstützte Blockgrösse
  clr.l d0
  lea spicmd10(pc), a2                   * CID Kommando
  move #16, d0                           * 16 Byte
@@ -13483,7 +13487,8 @@ sdcsize:
  moveq.l #1, d1
  asl.l d0, d1
  move d1, d0
- move.w d0, sdbpblk(a6)                 * Bytes pro Block abspeichern
+* move.w d0, sdbpblk(a6)                 * Bytes pro Block abspeichern
+ move.w #512,sdbpblk(a6)                * AV patched
   rts
 
 
@@ -13542,11 +13547,14 @@ sdinitex:
 
 
 sd1init:                        * Initialisieren der SD-Card
- movem.l d3/a0/a2, -(a7)
+ movem.l d1/d3/a0/a2, -(a7)
                                         * min. 74 Clocks an SD
  moveq #16, d3                          * Anzahl 136 Clocks
  bclr d5, d2                          * CS auf high
- move.b d2, spictrl.w
+* move.b d2, spictrl.w
+ move.b d2,d0
+ or.b #7,d0
+ move.b d0, spictrl.w                   * AV Patched
  move.b #$ff, d0                        * dummy Daten
 sd1init2:
  bsr sd1wrbyte                          * ein Byte schreiben
@@ -13575,7 +13583,7 @@ sd1init6:
 sd1initx:
  bclr d5, d2                          * SD Disablen
  move.b d2, spictrl.w
- movem.l (a7)+, d3/a0/a2
+ movem.l (a7)+, d1/d3/a0/a2
   rts
 
 sddiski:                       * interne SD IO-Routine
