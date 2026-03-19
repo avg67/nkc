@@ -123,7 +123,7 @@ architecture rtl of nkc_gowin_top is
 
   constant use_ser_key_c   : boolean := false;
   constant use_ps2_key_c   : boolean := true;
-  constant use_ps2_mouse_c : boolean := true;
+  constant use_ps2_mouse_c : boolean := false;
   constant use_ser1_c      : boolean := true;
   constant use_sound_c     : boolean := true;
   constant use_spi_c       : boolean := false;
