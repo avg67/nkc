@@ -54,6 +54,10 @@
         <File path="../../../vhdl/rtl/Ser1.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/Ser_key.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/Timer.vhd" type="file.vhdl" enable="1"/>
+	<File path="../../../vhdl/rtl/i2c/i2c_master-rtl-ea.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../vhdl/rtl/i2c/i2c_master_bit_ctrl.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../vhdl/rtl/i2c/i2c_master_byte_ctrl.vhd" type="file.vhdl" enable="1"/>
+        <File path="../../../vhdl/rtl/i2c/i2c_master_top.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/nkc_z80_top.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/sound/dac.vhd" type="file.vhdl" enable="1"/>
         <File path="../../../vhdl/rtl/sound/wf2149ip_pkg.vhd" type="file.vhdl" enable="0"/>
