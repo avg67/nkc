@@ -2,7 +2,7 @@
 
 ## FPGA-Files:
 - NKC_68k_PS2_KEYB_PCB.fs
-   - NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser, I2C
+   - NKC SOC mit 10MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser, I2C, Reset-Info
      sowie externen I/O-BUS (3 WS) für PCB von UWE
 - NKC_Z80_PS2_KEYB_PCB.fs
    - NKC SOC mit 8MHz Z80 CPU, GDP64HS, Timer, PS/2-Keyboard, I2C, Sound, SDIO SD-Card Interface, Ser
@@ -24,7 +24,7 @@
      sowie externen I/O-BUS (3 WS) für PCB von UWE
      Achtung: Vorab-Test-Version, Instruction-set des 68020 nicht zu 100% implementiert (CALLM, RETM fehlen)
 - NKC_68020_I2C_PS2_KEYB_PCB.fs
-   - NKC SOC mit 40MHz 68020 (32 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+   - NKC SOC mit 40MHz 68020 (32 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser, Reset-Info
      sowie externen I/O-BUS (3 WS) für PCB von UWE
      Weiters ist ein I2C-Master am PS2 Port der Maus angeschlossen. Diese wird ausgeschaltet wenn das I2C interface eingeschaltet wird.
      
