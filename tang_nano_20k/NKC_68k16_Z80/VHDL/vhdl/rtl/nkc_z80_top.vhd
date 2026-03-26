@@ -663,11 +663,11 @@ begin
   
   Ps2MouseClk_io <= Ps2MouseClk_pado when (mouse_enabled and Ps2MouseClk_padoen)='1' else
                     scl_pad_o        when (i2c_is_enabled and not scl_padoen)='1' and not swap_i2c_c else
-                    sda_pad_o        when (i2c_is_enabled and not scl_padoen)='1' and     swap_i2c_c else
+                    sda_pad_o        when (i2c_is_enabled and not sda_padoen)='1' and     swap_i2c_c else
                     'Z';
   Ps2MouseDat_io <= Ps2MouseDat_pado when (mouse_enabled and Ps2MouseDat_padoen)='1' else
                     sda_pad_o        when (i2c_is_enabled and not sda_padoen)='1'  and not swap_i2c_c else
-                    scl_pad_o        when (i2c_is_enabled and not sda_padoen)='1'  and     swap_i2c_c else
+                    scl_pad_o        when (i2c_is_enabled and not scl_padoen)='1'  and     swap_i2c_c else
                     'Z';
   
   impl_rst_info : if use_rst_info_c generate
