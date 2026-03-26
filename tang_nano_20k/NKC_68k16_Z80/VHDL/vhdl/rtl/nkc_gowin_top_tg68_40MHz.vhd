@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- Project     : Single Chip NDR Computer
--- Module      : NKC - Toplevel for Gowin FPGA
+-- Module      : NKC 68k SOC - Toplevel for Gowin FPGA with TG68 CPU
 -- File        : nkc_gowin_top.vhd
 -- Description :
 --------------------------------------------------------------------------------
@@ -131,6 +131,8 @@ architecture rtl of nkc_gowin_top is
   constant use_vdip_c      : boolean := false;
   constant use_gpio_c      : boolean := false;
   constant use_i2c_c       : boolean := true;
+  constant swap_i2c_c      : boolean := false; -- Swap SCL /SDA if true -> compatiblity with HDMI-I2C
+  constant use_rst_info_c  : boolean := true;   -- Reset-Info Register (PON_Reset or not)
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
 --  constant dipswitches1_c : std_logic_vector(7 downto 0) := X"01";
   constant Reset_Cycles_c  : natural := 400000; -- 10ms @40MHz
@@ -149,6 +151,7 @@ architecture rtl of nkc_gowin_top is
   constant VDIP_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"20"; -- r/w 
   constant GPIO_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"04"; -- r/w 
   constant I2C_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"08"; -- r/w 
+  constant RST_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"ff"; -- r/w
 --  constant GDP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"50"; -- r/w
 --  constant SFR_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"40"; -- w
 --  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
@@ -161,6 +164,9 @@ architecture rtl of nkc_gowin_top is
    signal pixel_clk,clk_80 : std_ulogic;
   signal reset_n           : std_ulogic:='0';
   signal reset_n_int       : std_ulogic:='0';
+  signal reset_n_int_d     : std_ulogic:='0';
+  signal reset_init        : std_ulogic:='0';
+  signal pon_reset         : std_ulogic:='0';
   signal pll_80m_reset     : std_ulogic;
   signal GDP_DataOut       : std_ulogic_vector(7 downto 0);
   signal gdp_Rd,gdp_Wr     : std_ulogic;
@@ -175,7 +181,7 @@ architecture rtl of nkc_gowin_top is
   signal Addr              : std_ulogic_vector(7 downto 0);
   signal data_in           : std_ulogic_vector(7 downto 0);
   signal fpga_en           : std_ulogic;
-  signal output_en         : std_ulogic_vector(10 downto 0);
+  signal output_en         : std_ulogic_vector(11 downto 0);
   signal key_cs,dip_cs     : std_ulogic;
   signal mouse_cs          : std_ulogic;
   
@@ -263,6 +269,10 @@ architecture rtl of nkc_gowin_top is
   signal Ps2MouseDat_padi  : std_logic;
   signal Ps2MouseDat_pado  : std_logic;
   signal Ps2MouseDat_padoen: std_logic;
+  signal rst_info_cs       : std_ulogic;
+  signal rst_info_clr      : std_ulogic;
+  signal mem_init_reg      : std_ulogic:='0';
+  signal mem_init_ack      : std_ulogic;
 
 begin
   logic_1     <= '1';
@@ -289,12 +299,30 @@ begin
       if rising_edge(pixel_clk) then
         reset_n_int  <= tmp_v(1);
         tmp_v(1)     := tmp_v(0);
-        tmp_v(0)     := (not reset_i) and pll_80m_lock;
+        tmp_v(0)     := (not (reset_i or internal_reset)) and pll_80m_lock;
+        reset_n_int_d <= reset_n_int;
+        if (not reset_n_int_d and reset_n_int)='1' then
+            -- rising edge of reset
+            
+            if reset_init='0' then
+               reset_init   <= '1';
+               pon_reset    <= '1';
+               mem_init_reg <= '1';
+            else
+               pon_reset  <= '0';
+            end if;
+        end if;
+        if rst_info_clr='1'  then
+          pon_reset  <= '0';
+        end if;
+        if mem_init_ack='1' then
+          mem_init_reg <= '0';
+        end if;
       end if;
    end process reset_sync;
     
-   reset_n <= reset_n_int when internal_reset='0' else
-              '0';
+   reset_n <= reset_n_int; -- when internal_reset='0' else
+              --'0';
               
    process(pixel_clk)
    begin
@@ -405,7 +433,7 @@ begin
 --                '1';
 
   fpga_en      <= gdp_cs or key_cs or dip_cs or mouse_cs or ser_cs or 
-                  snd_cs or spi_cs or t1_cs or vdip_cs or gpio_cs or i2c_cs;
+                  snd_cs or spi_cs or t1_cs or vdip_cs or gpio_cs or i2c_cs or rst_info_cs;
 --  driver_nEN_o <= not reset_n; --not(output_en and (not nkc_nWR_i or not nkc_nRD_i)); 
 --
 --  driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
@@ -418,8 +446,8 @@ begin
     elsif rising_edge(pixel_clk) then
       output_en <= (others => '0');
       if (fpga_en and gdp_Rd)='1' then
-         --            10        9       8        7         6         5         4       3        2        1       0
-         output_en <= i2c_cs & gdp_cs & key_cs & dip_cs & mouse_cs & ser_cs & snd_cs & spi_cs & t1_cs & vdip_cs & gpio_cs;
+         --           11            10        9       8        7         6         5         4       3        2        1       0
+         output_en <= rst_info_cs & i2c_cs & gdp_cs & key_cs & dip_cs & mouse_cs & ser_cs & snd_cs & spi_cs & t1_cs & vdip_cs & gpio_cs;
        end if;
     end if;
   end process;
@@ -427,7 +455,8 @@ begin
   
   
                    
-  nkc_DB_in <=     std_logic_vector(i2c_data)    when (output_en(10))='1' else
+  nkc_DB_in <=     "0000000" & pon_reset         when (output_en(11))='1' else
+                   std_logic_vector(i2c_data)    when (output_en(10))='1' else
                    std_logic_vector(GDP_DataOut) when (output_en(9))='1' else
                    std_logic_vector(key_data)    when (output_en(8))='1' else
 	                dipsw                         when (output_en(7))='1' else
@@ -460,6 +489,9 @@ begin
       Rd_i        => gdp_Rd,
       Wr_i        => gdp_Wr,
       DataOut_o   => GDP_DataOut,
+      --
+      mem_init_i     => mem_init_reg,
+      mem_init_ack_o => mem_init_ack,
       --
       cpu_req_i     => cpu_sdram_req,
       cpu_wr_i      => cpu_wr,
@@ -641,11 +673,25 @@ begin
                       '1';
   
   Ps2MouseClk_io <= Ps2MouseClk_pado when (mouse_enabled and Ps2MouseClk_padoen)='1' else
-                    scl_pad_o        when (i2c_is_enabled and not scl_padoen)='1' else
+                    scl_pad_o        when (i2c_is_enabled and not scl_padoen)='1' and not swap_i2c_c else
+                    sda_pad_o        when (i2c_is_enabled and not scl_padoen)='1' and     swap_i2c_c else
                     'Z';
   Ps2MouseDat_io <= Ps2MouseDat_pado when (mouse_enabled and Ps2MouseDat_padoen)='1' else
-                    sda_pad_o        when (i2c_is_enabled and not sda_padoen)='1' else
+                    sda_pad_o        when (i2c_is_enabled and not sda_padoen)='1'  and not swap_i2c_c else
+                    scl_pad_o        when (i2c_is_enabled and not sda_padoen)='1'  and     swap_i2c_c else
                     'Z';
+  
+  impl_rst_info : if use_rst_info_c generate
+     rst_info_cs <= IORQ when Addr(7 downto 0)=RST_BASE_ADDR_c(7 downto 0) else -- 0xFF
+                    '0';
+     rst_info_clr <= rst_info_cs and gdp_Wr when data_in = X"01" else
+                     '0';
+     
+  end generate;
+  no_rst_info : if not use_rst_info_c generate
+      rst_info_cs  <= '0';
+      rst_info_clr <= '0';
+  end generate;
   
   impl_ser1: if not use_ser_key_c and use_ser1_c generate 
 --    ser_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3

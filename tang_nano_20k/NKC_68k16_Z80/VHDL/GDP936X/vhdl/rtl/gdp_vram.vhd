@@ -30,6 +30,10 @@ entity gdp_vram is
     sdctrl_clk_i      : in  std_ulogic;   -- needs to be synch to clk_o
     --sdram_clk_i       : in  std_ulogic;   -- same fraquency as sdctrl_clk_i but maybe phase shifted
     reset_n_i         : in  std_ulogic;
+    -- Global port
+    mem_init_i        : in  std_ulogic;
+    mem_init_ack_o    : out std_ulogic;
+    
     -- kernel port (read & write)
     kernel_clk_en_i   : in  std_ulogic;
     kernel_req_i      : in  std_ulogic;
@@ -77,7 +81,11 @@ architecture rtl of gdp_vram is
   constant round_robin_c                    : boolean := true; -- Kernel and CPU has same prio if true
   constant comb_cpu_data_read_c             : boolean := false; -- use with care, CPU access is one cycle faster if true but 80MHz path to CPU
   constant Refresh_time_c                   : natural := 600; -- 4096 times every 64ms -> every 15 us
-  type state_t is(init_e,idle_e,kernel_write_e,kernel_read_e,dram_busy_e,vid_read_e,vid_busy_e, refresh_e, cpu_write_e,cpu_read_e, dram_cpu_busy_e);
+  constant RAM_CLEAR_END_c                  : unsigned(23 downto 0) := X"200000";
+  type state_t is(init_e,idle_e,kernel_write_e,kernel_read_e,dram_busy_e,
+                  vid_read_e,vid_busy_e, refresh_e, 
+                  cpu_write_e,cpu_read_e, dram_cpu_busy_e,
+                  dram_clear_e, dram_clear_busy_e);
   signal wr_data                            : std_ulogic_vector(7 downto 0);
   signal kernel_data, next_kernel_data      : std_ulogic_vector(7 downto 0);
   signal set_kernel_data                    : std_ulogic;
@@ -119,6 +127,7 @@ architecture rtl of gdp_vram is
   signal next_cpu_req                       : std_ulogic;
   signal next_cache_hit                     : std_ulogic;
   signal cpu_req_almost_done                : std_ulogic;
+  signal next_mem_init_ack                   : std_ulogic;
 begin
 
 
@@ -165,7 +174,8 @@ begin
   process(state,ram_address, kernel_addr_i,kernel_wr_i,rd_addr_i,wr_data,ram_wren, ram_en, ram_refresh,
           kernel_req_i,kernel_req_pend,rd_req_i,rd_pend,kernel_data,kernel_clk_en_i,do_refresh,
           sdrc_o_data,sdrc_dqm,srdc_cmd_ready,sdrc_init_done,sdrc_read_burst,sdrc_rd_valid,sdram_rd_data_valid,
-          next_cpu_req,cpu_req_pend,cpu_wr_i,cpu_addr_i,cpu_data_bv_i,cpu_prio,is_cpu_acc, prio
+          next_cpu_req,cpu_req_pend,cpu_wr_i,cpu_addr_i,cpu_data_bv_i,cpu_prio,is_cpu_acc, prio,
+          mem_init_i
          )
     variable cpu_req_v, kernel_req_v : std_ulogic;
     procedure do_kernel_acc_p is
@@ -244,6 +254,27 @@ begin
       next_ram_refresh     <= '1';
       next_is_cpu_acc      <= '0';
     end procedure;
+    procedure do_init_p(init: std_ulogic) is
+    begin
+      next_ram_wren        <= '1';
+      next_sdrc_dqm        <= (others => '1');
+      next_sdrc_read_burst <= '0';
+      set_ram_address      <= '1';
+      if init='1' then
+         next_ram_address     <= (others => '0');
+-- pragma translate_off
+--         next_ram_address     <= std_ulogic_vector(RAM_CLEAR_END_c(22 downto 2) - X"8000"); -- in RTL-Sim last 128 kB
+         next_ram_address     <= std_ulogic_vector(RAM_CLEAR_END_c(22 downto 2) - X"1000"); -- in RTL-Sim last 16 kB
+-- pragma translate_on
+      else
+         next_ram_address     <= std_ulogic_vector(unsigned(ram_address) + 1);
+      end if;
+      next_ram_en          <= '1';
+      next_state           <= dram_clear_e;
+      next_is_cpu_acc      <= '0';
+    end procedure;
+    
+    
   begin
     next_state      <= state;
     next_kernel_ack <= '0';
@@ -265,8 +296,10 @@ begin
     refresh_done         <= '0';
     next_is_cpu_acc      <= is_cpu_acc;
     cpu_req_almost_done  <= '0';
-    cpu_req_v            := next_cpu_req or cpu_req_pend;
-    kernel_req_v         := (kernel_clk_en_i and kernel_req_i) or kernel_req_pend;
+    next_mem_init_ack     <= '0';
+    -- only execute CPU and Kernel Requests if Memory-init is done
+    cpu_req_v            := (next_cpu_req or cpu_req_pend) and not mem_init_i;
+    kernel_req_v         := ((kernel_clk_en_i and kernel_req_i) or kernel_req_pend) and not mem_init_i;
     if round_robin_c then
       next_prio            <= prio;
     end if;
@@ -287,6 +320,8 @@ begin
                do_vid_rd_p;
             elsif do_refresh ='1' then
                do_refresh_p;
+            elsif mem_init_i='1' then
+               do_init_p('1');
             elsif (not round_robin_c and cpu_req_v='1') or 
                   (round_robin_c and ((cpu_req_v and not  kernel_req_v) or (cpu_req_v and prio))='1') then -- todo: round robin arbitration needed here between CPU and Kernel
                if round_robin_c and kernel_req_v='1' then
@@ -305,7 +340,7 @@ begin
       when vid_read_e =>
         if srdc_cmd_ready='0' then
           next_state   <= vid_busy_e;
-            next_ram_en  <= '0'; -- !!! Terminate CS early
+          next_ram_en  <= '0'; -- !!! Terminate CS early
         end if;
         
       when vid_busy_e =>
@@ -371,7 +406,7 @@ begin
       when kernel_write_e =>
          -- wait until command execution starts
          if srdc_cmd_ready='0' then
-	    next_state       <= idle_e;
+            next_state       <= idle_e;
             next_ram_en      <= '0'; -- !!! Terminate CS early
             next_kernel_ack  <= '1';   -- !!! early kernel ack
          end if;
@@ -400,6 +435,24 @@ begin
                next_cpu_ack <= '1';
             end if;
          end if;
+--      when dram_clear_init_e =>
+--         next_ram_address     <= (others => '0');
+--         next_state           <= dram_clear_e;
+      when dram_clear_e =>
+         if srdc_cmd_ready='0' then
+            next_state  <= dram_clear_busy_e;
+            next_ram_en <= '0';
+         end if;
+
+      when dram_clear_busy_e =>
+         if srdc_cmd_ready='1' then
+            if unsigned(ram_address) < RAM_CLEAR_END_c(22 downto 2) then
+               do_init_p('0');
+            else
+               next_state          <= idle_e;
+               next_mem_init_ack   <= '1';
+            end if;
+          end if;
       when refresh_e =>
          refresh_done <= '1';
          next_ram_en  <= '0';
@@ -518,6 +571,7 @@ begin
   rd_data_valid_o <= rd_data_valid; 
   kernel_data_o   <= kernel_data;
   cpu_ack_tgl_o   <= cpu_ack_tgl;
+  mem_init_ack_o  <= next_mem_init_ack;
   
   
   CPU_RD: block

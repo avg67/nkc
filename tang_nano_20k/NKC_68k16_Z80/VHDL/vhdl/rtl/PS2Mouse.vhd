@@ -105,7 +105,7 @@ architecture rtl of PS2Mouse is
   type mouse_state_t  is (IDLE_e, RESET_MOUSE_e, READ_ID_e, INIT_e);
   type mouse_send_state_t  is (IDLE_e, WAIT_ACK_e);
   
-   constant trace_en_c : boolean :=true;
+   constant trace_en_c : boolean :=false;
   ------------------------------
   -- Host to mouse commands
 

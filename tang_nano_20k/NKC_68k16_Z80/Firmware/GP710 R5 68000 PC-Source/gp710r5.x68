@@ -14,7 +14,7 @@ ram equ $10000                  * Relativer Abstand Variable-Basis
 
 rsreset                         * Counter vorsichtshalber auf Null setzen
 
-vekdest:   DS.b 0               * INIT-Start für Transport
+vekdest:   DS.b 0               * init-Start für Transport
 
 intlv2:    DS.b 6               * Auto-Interrupt LV2 (nmi)
 intlv5:    DS.b 6               * Auto-Interrupt LV5 (int)
@@ -345,6 +345,7 @@ transmod:  DS.b 1               * Transparent-Modus der GDP-FPGA
 
 * dummy:     DS.b 1               * Wird benötigt um auf Word-Grenze zu kommen
 
+* pon_flag:  DS.b 1
                                 * Folgende Variable ist frei nach hinten
                                 * verschiebbar. Deshalb ist hier Platz für neue
                                 * Variablen.
@@ -483,6 +484,8 @@ hardcclr  equ $ffffff8e*cpu     * Zähler löschen
 cluta      equ $ffffffa4*cpu    * FPGA-CLUT Adresse
 cluth      equ $ffffffa5*cpu    * FPGA-CLUT Daten high
 clutl      equ $ffffffa6*cpu    * FPGA-CLUT Daten low
+
+rst_info   equ $ffffffff*cpu    * Reset-Info Register (PON-Reset or not)
 
 
 ******************************** Ende EQU-Anweisungen **************************
@@ -6502,6 +6505,16 @@ start02:
  lea basis(pc),a5
  adda.l ramstart(pc),a5         * a5 als Zeiger auf Variablen setzen
  lea stack(a5),a7               * Dummy Stack
+ 
+; move.b rst_info.w,d1           * =1 -> PON-Reset
+; cmp.b #$01,d1
+; bne.s wst1
+; ; Es war ein PON-Reset
+; move.b d1,rst_info.w
+; clr.l bootflag(a5)
+; clr.l poweron(a5)
+;wst1:
+
  bsr init                       * Variablen init / Copyright ausgeben
  movea.l d0,a7                  * Stack festlegen (Wurde in d0 zurückgegeben)
 warmstart:
@@ -23318,6 +23331,7 @@ cc_done:
 ; DCB.b 1024*64-*,$ff              * Rest der 64 Kbyte mit $FF füllen
 
  END
+
 
 
 

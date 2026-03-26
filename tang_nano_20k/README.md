@@ -30,6 +30,9 @@
      
      Dokumentation des I2C siehe https://github.com/avg67/nkc/blob/main/tang_nano_20k/doc/i2c.pdf
      
+Auf I/O-Addresse 0xFF (0xFFFFFFFF*2 beim 68k) gibt es nun das Reset-Info Register.
+- Bit 0=1: Letzter Reset war ein Power-On Reset. Dieses Bit kann durch schreiben von 0x01 auf dieses Register gelöscht werden.
+
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM:
 

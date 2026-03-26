@@ -44,6 +44,10 @@ entity gdp_top is
        Wr_i      : in  std_ulogic;
        DataOut_o : out std_ulogic_vector(7 downto 0);
        --
+       -- Global port
+       mem_init_i        : in  std_ulogic;
+       mem_init_ack_o    : out std_ulogic;
+       --
        cpu_req_i         : in  std_ulogic;
        cpu_wr_i          : in  std_ulogic;
        cpu_addr_i        : in  std_ulogic_vector(21 downto 0);
@@ -110,6 +114,7 @@ architecture rtl of gdp_top is
   signal page_reg        : std_ulogic_vector(4 downto 0);
   signal scroll_reg      : std_ulogic_vector(6 downto 0);
   signal vid_enable      : std_ulogic;
+  signal vid_enable1     : std_ulogic;
   signal dma_data        : std_ulogic_vector(7 downto 0);
   signal kernel_DataOut  : std_ulogic_vector(7 downto 0);
   signal vsync,hsync     : std_ulogic;
@@ -153,7 +158,7 @@ begin
     -----------------------------
     scroll_i      => scroll_reg,
     color_mode_i  => color_mode,
-    enable_i      => vid_enable,
+    enable_i      => vid_enable1,
     -----------------------------
     clut_we_i     => clut_we,
     clut_addr_i   => clut_addr,
@@ -188,6 +193,7 @@ begin
   pixel_green_o <= pixel_green;
   pixel_blue_o  <= pixel_blue;
 
+  vid_enable1  <= vid_enable and not mem_init_i;
 --  vid_rd_addr <= page_reg(2 downto 1) & vid_rd_addr1(13 downto 0) when color_support_c and color_mode = '0' else
 --                 vid_rd_addr1 when color_support_c and color_mode = '1' else
 --                 "00" & page_reg(2 downto 1) & vid_rd_addr1(11 downto 0);
@@ -274,6 +280,8 @@ begin
       kernel_data_o   => kernel_rd_data,
       kernel_busy_o   => kernel_busy,
       kernel_ack_o    => open, --kernel_ack,
+      mem_init_i      => mem_init_i,
+      mem_init_ack_o  => mem_init_ack_o,
       cpu_req_i       => cpu_req_i,
       cpu_wr_i        => cpu_wr_i,
       cpu_addr_i      => cpu_addr_i,
