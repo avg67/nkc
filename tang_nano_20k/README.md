@@ -29,7 +29,11 @@
      Weiters ist ein I2C-Master am PS2 Port der Maus angeschlossen. Diese wird ausgeschaltet wenn das I2C interface eingeschaltet wird.
      
      Dokumentation des I2C siehe https://github.com/avg67/nkc/blob/main/tang_nano_20k/doc/i2c.pdf
-     
+- NKC_68020_I2C_EDID_PS2_KEYB_PCB.fs
+   - Wie NKC_68020_I2C_PS2_KEYB_PCB.fs aber mit dem Unterschied dass beim I2C-Interface (Mouse PS/2-Port) die SDA/SCL-Pins vertauscht sind.
+     Dadurch kann das HDMI-EDID (Electronic Display Information Data) abgefragt werden (https://ez.analog.com/video/w/documents/18368/edid-extended-display-identification-data).
+     Aus dem EDID-Interface (welches eigentlich ein I2C-Interface ist) kann man herauslesen welcher Bildschirm mit welchen Auflösungen und Wiederholfrequenzen etc. angeschlossen ist.
+     Das ist eigentlich der Weg mit dem jeder PC den angeschlossenen Bildschirm identifiziert und sich darauf einstellt.
 Auf I/O-Addresse 0xFF (0xFFFFFFFF*2 beim 68k) gibt es nun das Reset-Info Register.
 - Bit 0=1: Letzter Reset war ein Power-On Reset. Dieses Bit kann durch schreiben von 0x01 auf dieses Register gelöscht werden.
 
