@@ -131,7 +131,7 @@ architecture rtl of nkc_gowin_top is
   constant use_vdip_c      : boolean := false;
   constant use_gpio_c      : boolean := false;
   constant use_i2c_c       : boolean := true;
-  constant swap_i2c_c      : boolean := false; -- Swap SCL /SDA if true -> compatiblity with HDMI-I2C
+  constant swap_i2c_c      : boolean := true; -- Swap SCL /SDA if true -> compatiblity with HDMI-I2C
   constant use_rst_info_c  : boolean := true;   -- Reset-Info Register (PON_Reset or not)
   constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
 --  constant dipswitches1_c : std_logic_vector(7 downto 0) := X"01";

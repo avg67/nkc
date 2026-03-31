@@ -17,8 +17,10 @@
    - Bus-Slave nur mit GDP64HS
      für PCB von UWE
 -  NKC_68k_FAST_PS2_KEYB_PCB.fs
-   - NKC SOC mit 40MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
+   - NKC SOC mit 40MHz 68000 (16 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser, Reset-Info
      sowie externen I/O-BUS (3 WS) für PCB von UWE
+     Weiters ist ein I2C-Master am PS2 Port der Maus angeschlossen. Diese wird ausgeschaltet wenn das I2C interface eingeschaltet wird.
+     Achtung: SDA/SCL-Pins sind vertauscht um Kompatiblität mit EDID herzustellen.
 - NKC_68020_PS2_KEYB_PCB.fs
    - NKC SOC mit 40MHz 68020 (32 bit) CPU, GDP64HS, Timer, PS/2-Keyboard und Maus, Sound, SPI (SD-Card), Ser
      sowie externen I/O-BUS (3 WS) für PCB von UWE
