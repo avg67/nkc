@@ -40,7 +40,8 @@ end ser_key;
 
 architecture rtl of ser_key is
   
-  constant BAUD_c : natural := CLK_FREQ_c / (9600*16);
+  --constant BAUD_c : natural := CLK_FREQ_c / (9600*16);
+  constant BAUD_c : natural := CLK_FREQ_c / (115200*16);
 
   constant baud_cnt_bits_c : natural := 14;
 --  type tx_state_t is (IDLE_e, SHIFTING_e, STOP_BIT_e);

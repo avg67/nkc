@@ -593,7 +593,7 @@ begin
       port map (
         clk_i      => pixel_clk,
         reset_n_i  => reset_n,
-        RxD_i      => RxD_i,
+        RxD_i      => Ps2Dat_io, --RxD_i,
         KeyCS_i    => key_cs,
         DipCS_i    => dip_cs,
         Rd_i       => gdp_Rd,
@@ -693,7 +693,8 @@ begin
       rst_info_clr <= '0';
   end generate;
   
-  impl_ser1: if not use_ser_key_c and use_ser1_c generate 
+  --impl_ser1: if not use_ser_key_c and use_ser1_c generate 
+  impl_ser1: if use_ser1_c generate 
 --    ser_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
     ser_cs <= IORQ when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
               '0';
@@ -716,7 +717,7 @@ begin
         Intr_o      => ser_int
       );
   end generate;
-  no_ser1: if not use_ser1_c or use_ser_key_c generate
+  no_ser1: if not use_ser1_c generate --or use_ser_key_c generate
     ser_data       <= (others =>'0');
     ser_cs         <= '0';
 --    RTS_o          <= CTS_i;
