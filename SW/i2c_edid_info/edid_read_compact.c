@@ -303,6 +303,21 @@ static void print_dt(uint8_t col, uint8_t row, uint8_t idx,
     SET_LABEL();
 }
 
+ /* -----------------------------------------------------------------------
+ * putchar_clipped – safe single-character output.
+ * Reads the current cursor X position and silently drops the character
+ * if it would land on column 79 or beyond (last safe column is 78).
+ * This prevents line-wrap when dynamic content is longer than expected.
+ * ----------------------------------------------------------------------- */
+static void putchar_clipped(int c)
+{
+    uint8_t cx = 0u, cy = 0u;
+    gp_getcurxy(&cx, &cy);
+    if (cx < (MAX_COL - 1u))   /* MAX_COL=79, so allow up to col 78 */
+    {
+        putchar(c);
+    }
+}
 /* -----------------------------------------------------------------------
  * Render the 80x23 EDID summary
  * ----------------------------------------------------------------------- */
@@ -546,22 +561,67 @@ static void render_edid_summary(const uint8_t  *base,
     SET_LABEL();
     iprintf("StdTim:");
     uint8_t col = 8u;
+    //for (uint8_t i = 0u; i < 8u; i++) {
+    //    uint8_t b0 = base[OFF_STD_TIMINGS + i * 2u];
+    //    uint8_t b1 = base[OFF_STD_TIMINGS + i * 2u + 1u];
+    //    if (b0 == 0x01u && b1 == 0x01u) continue;
+    //
+    //    uint16_t hr  = (uint16_t)((b0 + 31u) * 8u);
+    //    uint8_t  rfr = (b1 & 0x3Fu) + 60u;
+    //
+    //    /* Compute width of this entry: " HHHHx?@RR"
+    //     * h_chars: 640=3, 800=3, 832=3, 1024=4, 1152=4,
+    //     *          1280=4, 1400=4, 1600=4, 1680=4, 1920=4
+    //     * r_chars: refresh is always 2 digits (60-99)
+    //     * total  = 1(space) + h_chars + 3("x?@") + 2(refresh) */
+    //    uint8_t h_chars = (hr >= 1000u) ? 4u : 3u;
+    //    uint8_t entry_w = (uint8_t)(1u + h_chars + 3u + 2u); /* e.g. 10 */
+    //
+    //    if ((col + entry_w) >= MAX_COL) break;
+    //
+    //    gp_setcurxy(col, ROW_STD_TIM);
+    //    SET_COL(COL_VALUE);
+    //    iprintf(" %ux?", (unsigned)hr);
+    //    SET_LABEL();
+    //    iprintf("@");
+    //    SET_COL(COL_TIMING);
+    //    iprintf("%u", (unsigned)rfr);
+    //    SET_LABEL();
+    //
+    //    col = (uint8_t)(col + entry_w);
+    //}
     for (uint8_t i = 0u; i < 8u; i++) {
         uint8_t b0 = base[OFF_STD_TIMINGS + i * 2u];
         uint8_t b1 = base[OFF_STD_TIMINGS + i * 2u + 1u];
         if (b0 == 0x01u && b1 == 0x01u) continue;
-        if (col >= 71u) break;
+
         uint16_t hr  = (uint16_t)((b0 + 31u) * 8u);
         uint8_t  rfr = (b1 & 0x3Fu) + 60u;
+
+        /* Actual width: 1(space) + digits(hr) + 3("x?@") + 2(refresh) */
+        uint8_t h_chars  = (hr >= 1000u) ? 4u : 3u;
+        uint8_t entry_w  = (uint8_t)(1u + h_chars + 3u + 2u);
+
+        /* Always start the entry – putchar_clipped truncates at col 78 */
         gp_setcurxy(col, ROW_STD_TIM);
         SET_COL(COL_VALUE);
         iprintf(" %ux?", (unsigned)hr);
         SET_LABEL();
-        iprintf("@");
+        putchar_clipped('@');
         SET_COL(COL_TIMING);
-        iprintf("%u", (unsigned)rfr);
+        char bfr[6]={0};
+        siprintf(bfr,"%u", (unsigned)rfr);
+        for (const char *p = bfr; *p != '\0'; p++) {
+            putchar_clipped((int)(uint8_t)*p);
+        }
+        ///* Print each digit of refresh individually so clipping works */
+        //putchar_clipped((int)('0' + rfr / 10u));
+        //putchar_clipped((int)('0' + rfr % 10u));
+
         SET_LABEL();
-        col = (uint8_t)(col + 9u);
+
+        col = (uint8_t)(col + entry_w);
+        if (col >= MAX_COL) break;   /* no more room for any entry */
     }
     clear_to_eol(col, ROW_STD_TIM);
 
@@ -582,7 +642,7 @@ static void render_edid_summary(const uint8_t  *base,
     SET_LABEL();
     iprintf("EstTim:");
     col = 8u;
-    for (uint8_t i = 0u; i < 17u; i++) {
+    /*for (uint8_t i = 0u; i < 17u; i++) {
         if (!(ebits & (1UL << (23u - i)))) continue;
         uint8_t len = (uint8_t)strlen(en[i]);
         if ((col + 1u + len) >= MAX_COL) break;
@@ -590,6 +650,19 @@ static void render_edid_summary(const uint8_t  *base,
         SET_COL(COL_VALUE);
         iprintf(" %s", en[i]);
         col = (uint8_t)(col + 1u + len);
+    }*/
+
+    for (uint8_t i = 0u; i < 17u; i++) {
+        if (!(ebits & (1UL << (23u - i)))) continue;
+        if (col >= (MAX_COL - 1u)) break;   /* no room even for a space */
+
+        gp_setcurxy(col, ROW_EST_TIM);
+        SET_COL(COL_VALUE);
+        putchar_clipped(' ');
+        for (const char *p = en[i]; *p != '\0'; p++) {
+            putchar_clipped((int)(uint8_t)*p);
+        }
+        col = (uint8_t)(col + 1u + (uint8_t)strlen(en[i]));
     }
     SET_LABEL();
     clear_to_eol(col, ROW_EST_TIM);
