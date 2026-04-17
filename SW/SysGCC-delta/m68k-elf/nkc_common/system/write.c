@@ -22,27 +22,27 @@ int write(int fd, const void *bfr, size_t n)
     }
     passoc = pp->assoc < _NPATH ? _path + pp->assoc : NULL;
     for(i = 0; i < n;){
-        if(passoc && !(passoc->flag & RAW)){
-retry:
-            if((j = (passoc->devp->p_read)(passoc->devp->devnum, &c)) != NO_CHAR){
-/* save receive errors ? */
-                passoc->status |= j;
-/* check for soft handshake */
-                if(passoc->flag & ALL_XON) pp->status &= ~BLOCKED; 
-                if(passoc->chars.tc_startc == c) pp->status &= ~BLOCKED; 
-                else if(passoc->chars.tc_stopc == c) pp->status |= BLOCKED;
-                else if(passoc->chars.tc_intrc == c) raise(SIGINT);     
-                else if(passoc->chars.tc_quitc == c) raise(SIGTERM);
-/* save character if there is enought space */
-                else if(passoc->cnt < SIZE_OF_READBUF){
-                    passoc->cnt++;
-                    if(passoc->wi >= SIZE_OF_READBUF) passoc->wi = 0;
-                    passoc->readbuf[passoc->wi++] = c;
-                }
-            }
-            if(pp->status & BLOCKED)
-                 goto retry;
-        }
+//        if(passoc && !(passoc->flag & RAW)){
+//retry:
+//            if((j = (passoc->devp->p_read)(passoc->devp->devnum, &c)) != NO_CHAR){
+///* save receive errors ? */
+//                passoc->status |= j;
+///* check for soft handshake */
+//                if(passoc->flag & ALL_XON) pp->status &= ~BLOCKED;
+//                if(passoc->chars.tc_startc == c) pp->status &= ~BLOCKED;
+//                else if(passoc->chars.tc_stopc == c) pp->status |= BLOCKED;
+//                else if(passoc->chars.tc_intrc == c) raise(SIGINT);
+//                else if(passoc->chars.tc_quitc == c) raise(SIGTERM);
+///* save character if there is enought space */
+//                else if(passoc->cnt < SIZE_OF_READBUF){
+//                    passoc->cnt++;
+//                    if(passoc->wi >= SIZE_OF_READBUF) passoc->wi = 0;
+//                    passoc->readbuf[passoc->wi++] = c;
+//                }
+//            }
+//            if(pp->status & BLOCKED)
+//                 goto retry;
+//        }
         c = buffer[i];
         if(c == LF && !(pp->flag & RAW) && pp->flag & CRMOD) {
             if(!flg){ 

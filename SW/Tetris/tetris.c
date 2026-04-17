@@ -205,7 +205,7 @@ static inline __attribute__((always_inline)) void GDP_setpixel1(const uint16_t x
 }
 
 void delay_ms(const uint16_t ms) {
-   clock_t ticks = ((clock_t)ms*200u)/1000u;
+   clock_t ticks = ((clock_t)ms*CLOCKS_PER_SEC)/1000u;
    clock_t start = _clock(NULL);
    while((_clock(NULL)-start)<ticks) {};
 }
@@ -276,9 +276,9 @@ static inline __attribute__((always_inline)) uint8_t get_offset(const uint8_t ro
 }
 
 
-static inline __attribute__((always_inline)) uint16_t min(uint16_t a, uint16_t b) {
-   return (a<b)?a:b;
-}
+//static inline __attribute__((always_inline)) uint16_t min(uint16_t a, uint16_t b) {
+//   return (a<b)?a:b;
+//}
 
 
 void get_stone(const Stone_t* const p_stone, const uint8_t orientation, Stone_t* const p_out) {
