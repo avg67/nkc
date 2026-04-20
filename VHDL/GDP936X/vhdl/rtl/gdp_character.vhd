@@ -179,6 +179,7 @@ begin
       rom_data   <= rom_data_i;
     end generate;
 
+    -- latch rom_page_i to allow change during running char drawing
     process(symbol_i,xpcnt,rom_page_i,char_rom_addr_i,char_rom_we_i)
       variable tmp_v : unsigned(rom_addr'high-1 downto 0);
     begin

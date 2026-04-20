@@ -83,11 +83,12 @@ entity gdp_lattice_top is
        SD_nCS_o  : out std_ulogic_vector(1 downto 0);
        SD_MOSI_o : out std_ulogic;
        SD_MISO_i : in  std_ulogic;
+       SD_pwr_on_o : out std_ulogic;
        --
-       ETH_SCK_o  : out std_ulogic;
-       ETH_nCS_o  : out std_ulogic;
-       ETH_MOSI_o : out std_ulogic;
-       ETH_MISO_i : in  std_ulogic;
+       --ETH_SCK_o  : out std_ulogic;
+       --ETH_nCS_o  : out std_ulogic;
+       --ETH_MOSI_o : out std_ulogic;
+       --ETH_MISO_i : in  std_ulogic;
        --------------------------
        -- VDIP-SPI-Signals
        --------------------------
@@ -218,8 +219,13 @@ architecture rtl of gdp_lattice_top is
   port(
     reset_n_i    : in  std_logic;
     clk_i        : in  std_logic;
-    Ps2Clk_io    : inout std_logic;
-    Ps2Dat_io    : inout std_logic;
+    Ps2Clk_pad_i    : in  std_logic;
+    Ps2Clk_pad_o    : out std_logic;
+    Ps2Clk_padoen_o : out std_logic;
+    Ps2Dat_pad_i    : in  std_logic;
+    Ps2Dat_pad_o    : out std_logic;
+    Ps2Dat_padoen_o : out std_logic;
+    enable_i        : in std_ulogic;
     Adr_i        : in  std_ulogic_vector(2 downto 0);
     en_i         : in  std_ulogic;
     DataIn_i     : in  std_ulogic_vector(7 downto 0);
@@ -348,11 +354,13 @@ architecture rtl of gdp_lattice_top is
   constant use_ps2_mouse_c : boolean := true;
   constant use_ser1_c      : boolean := true;
   constant use_sound_c     : boolean := true;
-  constant use_spi_c       : boolean := true;
+  constant use_spi_c       : boolean := true;   -- use for 68k SDCard-interface
+  constant use_sdio_c      : boolean := false;  -- use for Z80 SDCard-interface. Don't enable both!
   constant use_timer_c     : boolean := true;
   constant use_vdip_c      : boolean := false;
   constant use_gpio_c      : boolean := true;
-  constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
+  constant use_i2c_c       : boolean := true;
+--  constant dipswitches_c   : std_logic_vector(7 downto 0) := X"49";
 --  constant dipswitches1_c : std_logic_vector(7 downto 0) := X"01";
   
   constant GDP_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"70"; -- r/w
@@ -366,8 +374,9 @@ architecture rtl of gdp_lattice_top is
   constant SOUND_BASE_ADDR_c  : std_ulogic_vector(7 downto 0) := X"50"; -- r/w  
   constant SPI_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"00"; -- r/w 
   constant T1_BASE_ADDR_c     : std_ulogic_vector(7 downto 0) := X"F4"; -- r/w 
-  constant VDIP_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"20"; -- r/w 
+  constant SDIO_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"20"; -- r/w 
   constant GPIO_BASE_ADDR_c   : std_ulogic_vector(7 downto 0) := X"04"; -- r/w 
+  constant I2C_BASE_ADDR_c    : std_ulogic_vector(7 downto 0) := X"08"; -- r/w 
 --  constant GDP_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"50"; -- r/w
 --  constant SFR_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"40"; -- w
 --  constant KEY_BASE_ADDR1_c  : std_ulogic_vector(7 downto 0) := X"48"; -- r
@@ -425,10 +434,26 @@ architecture rtl of gdp_lattice_top is
   
   signal t1_cs,t1_irq      : std_ulogic;
   signal t1_data           : std_ulogic_vector(7 downto 0);
+  signal i2c_cs,i2c_irq    : std_ulogic;
+  signal i2c_data          : std_ulogic_vector(7 downto 0);
   SIGNAL SD_SCK_s          : std_ulogic; 
   SIGNAL SD_nCS_s          : std_ulogic_vector(2 downto 0);
   SIGNAL SD_MOSI_s         : std_ulogic;
   SIGNAL SD_MISO_s         : std_ulogic;
+  signal scl_pad_i         : std_logic:='1';       -- i2c clock line input
+  signal scl_pad_o         : std_logic;       -- i2c clock line output
+  signal scl_padoen        : std_logic;  -- i2c clock line output enable, active low
+  signal sda_pad_i         : std_logic:='1';       -- i2c data line input
+  signal sda_pad_o         : std_logic;       -- i2c data line output
+  signal sda_padoen        : std_logic;   -- i2c data line output enable, active low
+  signal i2c_is_enabled    : std_logic;
+  signal mouse_enabled     : std_logic;
+  signal Ps2MouseClk_padi  : std_logic;
+  signal Ps2MouseClk_pado  : std_logic;
+  signal Ps2MouseClk_padoen: std_logic;
+  signal Ps2MouseDat_padi  : std_logic;
+  signal Ps2MouseDat_pado  : std_logic;
+  signal Ps2MouseDat_padoen: std_logic;
 begin
 
   dipsw <= dipswitches_c;-- when addr_sel_i = '1' else
@@ -570,7 +595,7 @@ begin
 
 
   fpga_en      <= gdp_cs or key_cs or dip_cs or mouse_cs or ser_cs or 
-                  snd_cs or spi_cs or t1_cs or vdip_cs or gpio_cs;
+                  snd_cs or spi_cs or t1_cs or vdip_cs or gpio_cs or i2c_cs;
   driver_nEN_o <= not reset_n; --not(output_en and (not nkc_nWR_i or not nkc_nRD_i)); 
   driver_DIR_o <= '0' when (fpga_en and not nkc_nRD_i)='1' else
                   '1';
@@ -633,6 +658,7 @@ begin
 	                std_logic_vector(t1_data)     when (output_en and t1_cs    and not nkc_nRD_i)='1' else
 	                std_logic_vector(vdip_data)   when (output_en and vdip_cs  and not nkc_nRD_i)='1' else
 	                std_logic_vector(gpio_data)   when (output_en and gpio_cs  and not nkc_nRD_i)='1' else
+			std_logic_vector(i2c_data)    when (output_en and i2c_cs   and not nkc_nRD_i)='1' else
                   (others => 'Z') after 1 ns;
   
       
@@ -761,7 +787,13 @@ begin
         monitoring_o=> open --debug_o
      );
    end generate;
+  no_key2: if not use_ps2_key_c generate
+    Ps2Clk_io <= 'Z';
+    Ps2Dat_io <= 'Z';
+  end generate;
 
+  mouse_enabled <= not i2c_is_enabled;  -- disable Mouse when I2C is enabled
+  
   impl_mouse: if use_ps2_mouse_c generate 
 --    mouse_cs <= (not nIORQ and not nIORQ_d and addr_sel_i) when Addr(7 downto 3)=MOUSE_BASE_ADDR_c(7 downto 3) else
 --    mouse_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 3)=MOUSE_BASE_ADDR_c(7 downto 3) else
@@ -771,14 +803,21 @@ begin
       port map (
         reset_n_i    => reset_n,
         clk_i        => clk_i,
-        Ps2Clk_io    => Ps2MouseClk_io,
-        Ps2Dat_io    => Ps2MouseDat_io,
+        --Ps2Clk_io    => Ps2MouseClk_io,
+        --Ps2Dat_io    => Ps2MouseDat_io,
+        Ps2Clk_pad_i    => Ps2MouseClk_padi,
+        Ps2Clk_pad_o    => Ps2MouseClk_pado,
+        Ps2Clk_padoen_o => Ps2MouseClk_padoen,
+        Ps2Dat_pad_i    => Ps2MouseDat_padi,
+        Ps2Dat_pad_o    => Ps2MouseDat_pado,
+        Ps2Dat_padoen_o => Ps2MouseDat_padoen,
         Adr_i        => Addr(2 downto 0),
         en_i         => mouse_cs,
         DataIn_i     => data_in,
         Rd_i         => gdp_Rd,
         Wr_i         => gdp_Wr,
         DataOut_o    => mouse_data,
+        enable_i        => mouse_enabled,
         monitoring_o => open  --debug_o
       );
   end generate;
@@ -786,10 +825,24 @@ begin
   no_mouse: if not use_ps2_mouse_c generate
     mouse_data     <= (others =>'0');
     mouse_cs       <= '0';
-    Ps2MouseClk_io <= 'Z';
-    Ps2MouseDat_io <= 'Z';
+    --Ps2MouseClk_io <= 'Z';
+    --Ps2MouseDat_io <= 'Z';
+    Ps2MouseClk_pado <= '0';
+    Ps2MouseDat_pado <= '0';
+    Ps2MouseClk_padoen <= '0';
+    Ps2MouseDat_padoen <= '0';
   end generate;
+  Ps2MouseClk_padi <= Ps2MouseClk_io when mouse_enabled='1' else
+                      '1';
+  Ps2MouseDat_padi <= Ps2MouseDat_io when mouse_enabled='1' else
+                      '1';
   
+  Ps2MouseClk_io <= Ps2MouseClk_pado when (mouse_enabled and Ps2MouseClk_padoen)='1' else
+                    scl_pad_o        when (i2c_is_enabled and not scl_padoen)='1' else
+                    'Z';
+  Ps2MouseDat_io <= Ps2MouseDat_pado when (mouse_enabled and Ps2MouseDat_padoen)='1' else
+                    sda_pad_o        when (i2c_is_enabled and not sda_padoen)='1' else
+                    'Z';
   impl_ser1: if use_ser1_c generate 
 --    ser_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
     ser_cs <= IORQ when Addr(7 downto 2)=SER_BASE_ADDR_c(7 downto 2) else -- 0xF0 - 0xF3
@@ -903,23 +956,66 @@ begin
       SD_SCK_o <= SD_SCK_s;
       SD_nCS_o <= SD_nCS_s(1 downto 0);
       SD_MOSI_o <= SD_MOSI_s;
-      SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
-                   SD_MISO_i;
+      SD_MISO_s   <= SD_MISO_i;
+      SD_pwr_on_o <= '0';
+      --SD_MISO_s <= ETH_MISO_i when SD_nCS_s(2)='0' else
+      --             SD_MISO_i;
       --SD_MISO_s <= SD_MISO_i;
       -- duplicate SPI pins to decouple SD-cards and Ethernet controller electrically
-      ETH_SCK_o  <= SD_SCK_s;
-      ETH_nCS_o  <= SD_nCS_s(2);
-      ETH_MOSI_o <= SD_MOSI_s;
+      --ETH_SCK_o  <= SD_SCK_s;
+      --ETH_nCS_o  <= SD_nCS_s(2);
+      --ETH_MOSI_o <= SD_MOSI_s;
   end generate;
-  no_spi: if not use_spi_c generate
+ -- no_spi: if not use_spi_c generate
+ --   spi_data       <= (others =>'0');
+ --   spi_cs         <= '0';
+ --   SD_SCK_o       <= '0';
+ --   SD_nCS_o       <= (others => '1');
+ --   SD_MOSI_o      <= SD_MISO_i;
+ --   --ETH_SCK_o      <= SD_SCK_s;
+ --   --ETH_nCS_o      <= '1';
+ --   --ETH_MOSI_o     <= ETH_MISO_i;
+ -- end generate;
+   impl_SDIO: if use_sdio_c generate 
+    spi_cs <= IORQ when Addr(7 downto 1)=SDIO_BASE_ADDR_c(7 downto 1) else -- 0x20 - 0x21
+              '0';
+    
+    SDIO : entity work.SDIO_Interface
+      port map (
+        reset_n_i   => reset_n,
+        clk_i       => clk_i,
+        SD_SCK_o    => SD_SCK_s,
+        SD_nCS_o(1 downto 0)   => SD_nCS_s(1 downto 0),
+        SD_MOSI_o   => SD_MOSI_s,
+        SD_MISO_i   => SD_MISO_s,
+        SD_pwr_on_o => SD_pwr_on_o,
+        Adr_i       => Addr(0 downto 0),
+        en_i        => spi_cs,
+        DataIn_i    => data_in,
+        Rd_i        => gdp_Rd,
+        Wr_i        => gdp_Wr,
+        DataOut_o   => spi_data
+      );
+      SD_SCK_o   <= SD_SCK_s;
+      --SD1_SCK_o  <= SD_SCK_s;
+      SD_nCS_o   <= SD_nCS_s(1 downto 0);
+      SD_MOSI_o  <= SD_MOSI_s;
+      --SD1_MOSI_o <= SD_MOSI_s;
+      --SD_MISO_s  <= SD1_MISO_i when SD_nCS_s(1)='0' else
+      --              SD_MISO_i;
+      SD_MISO_s <= SD_MISO_i;
+  end generate;
+  no_spi_no_sdio: if not use_spi_c and not use_sdio_c generate
     spi_data       <= (others =>'0');
     spi_cs         <= '0';
     SD_SCK_o       <= '0';
-    SD_nCS_o       <= (others => '1');
+    SD_nCS_o       <= (others => '1'); --(others => '1');
     SD_MOSI_o      <= SD_MISO_i;
-    ETH_SCK_o      <= SD_SCK_s;
-    ETH_nCS_o      <= '1';
-    ETH_MOSI_o     <= ETH_MISO_i;
+    SD_pwr_on_o    <= '0';
+    --SD1_MOSI_o     <= SD1_MISO_i;
+    --ETH_SCK_o      <= SD_SCK_s;
+    --ETH_nCS_o      <= '1';
+    --ETH_MOSI_o     <= ETH_MISO_i;
   end generate;
   
   impl_T1: if use_timer_c generate 
@@ -946,6 +1042,45 @@ begin
     t1_irq       <= '0';
   end generate;
   
+  impl_I2C: if use_i2c_c generate 
+    i2c_cs <= IORQ when Addr(7 downto 3)=I2C_BASE_ADDR_c(7 downto 3) else -- 0x08 - 0x0F
+              '0';
+    I2C : entity work.i2c_interface
+      port map (
+        reset_n_i   => reset_n,
+        clk_i       => clk_i,
+        Intr_o      => i2c_irq,
+        Adr_i       => Addr(2 downto 0),
+        en_i        => i2c_cs,
+        DataIn_i    => data_in,
+        Rd_i        => gdp_Rd,
+        Wr_i        => gdp_Wr,
+        DataOut_o   => i2c_data,
+        --
+        core_en_o   => i2c_is_enabled,
+        --
+        scl_pad_i   => scl_pad_i,
+        scl_pad_o   => scl_pad_o,
+        scl_padoen_o=> scl_padoen,
+        sda_pad_i   => sda_pad_i,
+        sda_pad_o   => sda_pad_o,
+        sda_padoen_o=> sda_padoen
+      );
+  end generate;
+  no_I2C: if not use_i2c_c generate
+    i2c_data      <= (others =>'0');
+    i2c_cs        <= '0';
+    i2c_irq       <= '0';
+    i2c_is_enabled<= '0';
+    scl_pad_o     <= '0';
+    scl_padoen    <= '0';
+    sda_pad_o     <= '0';
+    sda_padoen    <= '0';
+  end generate;
+  scl_pad_i <= To_X01Z(Ps2MouseClk_io) when i2c_is_enabled='1' else
+                '1';
+  sda_pad_i <= To_X01Z(Ps2MouseDat_io) when i2c_is_enabled='1' else
+                '1';
 --  impl_VDIP: if use_vdip_c generate 
 ----    vdip_cs <= (not nIORQ and not nIORQ_d) when Addr(7 downto 2)=VDIP_BASE_ADDR_c(7 downto 2) else -- 0x20 - 0x23
 --    vdip_cs <= IORQ when Addr(7 downto 2)=VDIP_BASE_ADDR_c(7 downto 2) else -- 0x20 - 0x23
@@ -1022,7 +1157,7 @@ begin
 --  Green_o <= (others => VGA_pixel);
 --  Blue_o  <= (others => VGA_pixel);
 
-  nIRQ_o <= '0' when (t1_irq or ser_int)='1' else
+  nIRQ_o <= '0' when (t1_irq or ser_int or i2c_irq)='1' else
             'Z';
 --  sample_clk_o  <= clk_i;
 end rtl;

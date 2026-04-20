@@ -196,6 +196,7 @@ begin
     
 --    x2s <= std_ulogic_vector(signed(x1_i) + to_integer(signed(dx_i)) - xincr);
 --    y2s <= std_ulogic_vector(signed(y1_i) + to_integer(signed(dy_i)) - yincr);
+    -- maybe store x2s,y2s in line setup to allow next update during running bresenham
     x2s <= std_ulogic_vector(signed(x1_i) + to_integer(signed(dx_i)));
     y2s <= std_ulogic_vector(signed(y1_i) + to_integer(signed(dy_i)));
     
@@ -209,7 +210,7 @@ begin
                        wr_ack_i, x1_i,y1_i, 
                        enable_i,wr_req)
       variable dx_v, dy_v          : delta_t;
-      variable slopex_v,slopey_v   : signed(1 downto 0);
+      variable slopex_v,slopey_v   : signed(1 downto 0):=(others =>'0');
     begin
     
       -- default assignments
@@ -236,6 +237,8 @@ begin
 --      next_last_wr         <= inactivated_c;
       dx_v                 := std_ulogic_vector(abs(signed(dx_i)));
       dy_v                 := std_ulogic_vector(abs(signed(dy_i)));
+      slopex_v             := (others => '0');
+      slopey_v             := (others => '0');
       
       case state is
         -----------------------------------------------------------------------

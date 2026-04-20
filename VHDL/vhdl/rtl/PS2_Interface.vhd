@@ -34,9 +34,19 @@ entity PS2_Interface is
     --------------------------
     -- PS/2 clock line. Bidirectional (resolved!) for Inhibit bus state on
     -- PS/2 bus. In all other cases an input would be sufficient.
-    Ps2Clk_io    : inout std_logic;
-    -- PS/2 data line. Bidirectional for reading and writing data.
-    Ps2Dat_io    : inout std_logic;
+    --Ps2Clk_io    : inout std_logic;
+    ---- PS/2 data line. Bidirectional for reading and writing data.
+    --Ps2Dat_io    : inout std_logic;
+    -- PS/2 clock line. 
+    Ps2Clk_pad_i    : in  std_logic;
+    Ps2Clk_pad_o    : out std_logic;
+    Ps2Clk_padoen_o : out std_logic;
+    -- PS/2 data line. 
+    Ps2Dat_pad_i    : in  std_logic;
+    Ps2Dat_pad_o    : out std_logic;
+    Ps2Dat_padoen_o : out std_logic;
+    --
+    enable_i     : in std_ulogic:='1';
     ----------------------------------
     -- Data Interface
     ----------------------------------
@@ -96,7 +106,7 @@ architecture rtl of PS2_Interface is
 begin
    
   -- Needed for simulation with 'H' value instead of '1'.
-  Ps2ClockHtranslate1 <= To_X01Z(Ps2Clk_io);
+  Ps2ClockHtranslate1 <= To_X01Z(Ps2Clk_pad_i);
   
   IS1 : InputSync
    generic map (
@@ -109,10 +119,14 @@ begin
      q     => Ps2Clk);
 
 
-  Ps2Dat_io <= '0' when Ps2DataOut = '0' else
-               'Z';
-  Ps2Clk_io <= '0' when Ps2ClockOut = '0' else
-               'Z';
+  Ps2Dat_pad_o <= '0';
+  --Ps2Dat_io <= '0' when Ps2DataOut = '0' else
+  Ps2Dat_padoen_o <= '1' when Ps2DataOut = '0' else
+                     '0';
+  Ps2Clk_pad_o <= '0';
+  --Ps2Clk_io <= '0' when Ps2ClockOut = '0' else
+  Ps2Clk_padoen_o <= '1' when Ps2ClockOut = '0' else
+                     '0';
 
   ps2ClkEdge <= RISING  when (    Ps2Clk and not Ps2ClkOld)='1' else
                 FALLING when (not Ps2Clk and     Ps2ClkOld)='1' else
@@ -163,8 +177,8 @@ begin
 
   -- Sequential Process
   seq: process (Clk_i, reset_n_i) is
-  begin  -- process
-    if reset_n_i = ResetActive_c then
+    procedure do_reset_p is
+    begin
       state        <= IDLE;
       Ps2Direction <= FromDevice;
       
@@ -179,7 +193,12 @@ begin
 --      RcvOv       <= '0';
       ackReceived  <= '0';
       ParityError  <= '0';
+    end do_reset_p;
+  begin  -- process
+    if reset_n_i = ResetActive_c then
+      do_reset_p;
     elsif Clk_i'event and Clk_i='1' then
+      if enable_i='1' then
       Ps2ClkOld    <= Ps2Clk;
       state        <= nextstate;
       Ps2Direction <= NextPs2Direction;
@@ -218,7 +237,7 @@ begin
             when FromDevice =>
               Ps2DataOut <= '1';
               if ps2ClkEdge = RISING then
-                sReg <= Ps2Dat_io & sReg(8 downto 1);
+                   sReg <= Ps2Dat_pad_i & sReg(8 downto 1);
                 q<=std_ulogic_vector(unsigned(q) + 1);
               end if;
             end case;
@@ -227,7 +246,7 @@ begin
             case Ps2Direction is
             when ToDevice =>
               if ps2ClkEdge = RISING then    
-                ackReceived <= not Ps2Dat_io;
+                   ackReceived <= not Ps2Dat_pad_i;
               end if;
             when FromDevice =>
               if ps2ClkEdge = RISING then
@@ -247,6 +266,9 @@ begin
       
       if data_stb_i = '1' then
         CmdReg <= "1" & data_i;
+         end if;
+      else
+         do_reset_p;
       end if;
     end if;
   end process seq;

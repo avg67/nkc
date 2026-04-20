@@ -32,8 +32,13 @@ vcom -93                  ../vhdl/rtl/Dffdecl-p.vhd \
                           ../../vhdl/rtl/Ser1.vhd \
                           ../../vhdl/rtl/SPI_Interface.vhd \
                           ../../vhdl/rtl/SPI_Vdip.vhd \
+                          ../../vhdl/rtl/SDIO_Interface.vhd \
                           ../../vhdl/rtl/Timer.vhd \
                           ../../vhdl/rtl/GPIO_Interface.vhd \
+                          ../../vhdl/rtl/i2c/i2c_master_bit_ctrl.vhd \
+                          ../../vhdl/rtl/i2c/i2c_master_byte_ctrl.vhd \
+                          ../../vhdl/rtl/i2c/i2c_master_top.vhd \
+                          ../../vhdl/rtl/i2c/i2c_master-rtl-ea.vhd \
                           ../../vhdl/rtl/src/UART_pkg.vhd \
                           ../../vhdl/rtl/src/TB_Receiver.vhd \
                           ../../vhdl/rtl/src/TB_Sender.vhd \
@@ -73,6 +78,7 @@ add wave -group {Mouse_PS2_IF} -noupdate -radix hex /dut/impl_mouse/mouse/PS2if/
 add wave -noupdate -divider
 #add wave -noupdate -divider SPI
 add wave -group {SPI} -noupdate -radix hex /dut/impl_spi/spi/*
+add wave -group {SDIO} -noupdate -radix hex /dut/impl_SDIO/sdio/*
 #add wave -noupdate -divider VDIP
 #add wave -group {VDIP} -noupdate -radix hex /dut/impl_vdip/vdip/*
 add wave -group {GPIO} -noupdate -radix hex /dut/impl_GPIO/GPIO/*
@@ -103,6 +109,8 @@ add wave -group {Sound_Wave} -noupdate -radix hex /dut/impl_sound/sound_inst/i_p
 add wave -noupdate -divider
 #add wave -noupdate -divider Timer1
 add wave -group {Timer1} -noupdate -radix hex /dut/impl_t1/t1/*
+add wave -group {I2C_Top} -noupdate  -radix hex /dut/impl_i2c/i2c/*
+add wave -group {I2C_Master} -noupdate  -radix hex /dut/impl_i2c/i2c/i2c_master_top/*
 #add wave -noupdate -divider EMU-TOP
 #add wave -noupdate -radix hex /dut/floppy/floemu/*
 #add wave -noupdate -divider EMU-CC

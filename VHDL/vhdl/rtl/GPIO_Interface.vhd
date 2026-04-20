@@ -65,7 +65,8 @@ architecture rtl of GPIO_Interface is
 
   
 begin
-    
+    -- IO-Addr 4 : GPIO-Data Reg
+	-- IO-Addr 5 : GPIO-Direction Reg (0=Eingabe, 1=Ausgabe)
     with Adr_i(0) select
       DataOut   <=  data_in_reg     when '0',
                     ddr_reg         when others;

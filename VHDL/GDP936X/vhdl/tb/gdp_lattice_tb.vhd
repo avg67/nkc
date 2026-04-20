@@ -664,42 +664,42 @@ begin  -- beh
     wait;
   end process PS2_Proc;
 
-  PS2_Mouse: process
-    procedure sendbit(b : in std_logic) is
-    begin
-      Ps2MouseDat <= b;
-      Ps2MouseClk <= '0';
-      wait for 25 us;
-      Ps2MouseClk <= '1';
-      wait for 25 us;
-    end sendbit;
-    procedure sendmouse(data : in std_logic_vector(7 downto 0)) is
-      variable parity : std_logic :='1';
-    begin
-      sendbit('0');
-      for i in 0 to 7 loop
-        sendbit(data(i));
-        parity := parity xor data(i);
-      end loop;
-      sendbit(parity);
-      sendbit('1');
-      Ps2MouseClk <= 'Z';
-      Ps2MouseDat <= 'Z';
-    end sendmouse;
-  begin
-
-    Ps2MouseClk <= 'Z';
-    Ps2MouseDat <= 'Z';
-    wait for 100 us;
-    sendmouse(X"08"); 
-    sendmouse(X"05");
-    sendmouse(X"05");
-    wait for 1 ms;
-    sendmouse(X"38"); 
-    sendmouse(X"FB");
-    sendmouse(X"FB");
-    wait;
-  end process PS2_Mouse;
+--  PS2_Mouse: process
+--    procedure sendbit(b : in std_logic) is
+--    begin
+--      Ps2MouseDat <= b;
+--      Ps2MouseClk <= '0';
+--      wait for 25 us;
+--      Ps2MouseClk <= '1';
+--      wait for 25 us;
+--    end sendbit;
+--    procedure sendmouse(data : in std_logic_vector(7 downto 0)) is
+--      variable parity : std_logic :='1';
+--    begin
+--      sendbit('0');
+--      for i in 0 to 7 loop
+--        sendbit(data(i));
+--        parity := parity xor data(i);
+--      end loop;
+--      sendbit(parity);
+--      sendbit('1');
+--      Ps2MouseClk <= 'Z';
+--      Ps2MouseDat <= 'Z';
+--    end sendmouse;
+--  begin
+--
+--    Ps2MouseClk <= 'Z';
+--    Ps2MouseDat <= 'Z';
+--    wait for 100 us;
+--    sendmouse(X"08"); 
+--    sendmouse(X"05");
+--    sendmouse(X"05");
+--    wait for 1 ms;
+--    sendmouse(X"38"); 
+--    sendmouse(X"FB");
+--    sendmouse(X"FB");
+--    wait;
+--  end process PS2_Mouse;
 
 end beh;
 

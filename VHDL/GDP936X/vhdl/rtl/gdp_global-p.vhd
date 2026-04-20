@@ -17,7 +17,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 package gdp_global is
-  
+  constant CLK_FREQ_c      : natural := 40e6;
   constant nr_mon_sigs_c   : natural := 16;
   constant color_support_c : boolean :=true;
   constant use_clut_c      : boolean :=true;
