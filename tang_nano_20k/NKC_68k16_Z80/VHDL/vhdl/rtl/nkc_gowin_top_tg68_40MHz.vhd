@@ -1319,7 +1319,7 @@ begin
         test_rom: entity work.test
           port map (
              clock   => pixel_clk,
-             address => eab(9 downto 1),
+             address => eab(7 downto 1),
              q       => rom_dout
           );
       end generate;

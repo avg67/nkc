@@ -15,17 +15,18 @@ SDBOOTSTRAP=sdbootstrap.elf
 SDBOOTSTRAPVHD=test_ROM.vhd
 
 #ROMGENDIR = ../../romgen
-#ROMGENDIR = ../romgen
-ROMGENDIR = /c/working/_Tang_nano/gdp_fpga/romgen
+ROMGENDIR = ../romgen
+#ROMGENDIR = /c/working/_Tang_nano/gdp_fpga/romgen
 ROMGEN = $(ROMGENDIR)/romgen
 
 CFLAGS=-m$(ARCH) -O6
 
-all:  $(SDBOOTSTRAPVHD) test.v
+#all:  $(SDBOOTSTRAPVHD) test.v
+all:  test.v
 #all:  sdbootstrap.mif
 
 clean:
-	rm -f $(SDBOOTSTRAPVHD) *.bin
+	rm -f $(SDBOOTSTRAPVHD) *.bin test.v
 
 test_ROM.vhd: test.bin $(ROMGEN)
 	sed 's/soc_firmware/test_ROM/' >test_ROM.vhd <$(ROMGENDIR)/rom_prologue.vhd
@@ -37,7 +38,7 @@ test.bin: test.S68
 	$(SRECCAT) $< -Output $@ -Binary
 
 test.v: test.bin
-	python $(TOOLS)/hex2mem/hex2mem.py test.bin test.v
+	python $(TOOLS)/hex2mem/hex2mem.py -w 4 test.bin test.v
 #test.mem: test.S68
 #	$(SRECCAT) $< -Output $@ −Lattice_Memory_Initialization_Format 16
 
