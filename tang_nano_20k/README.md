@@ -42,8 +42,10 @@
 - NKC_68020_CACHE_I2C_EDID_PS2_KEYB_PCB.fs
    - Wie NKC_68020_I2C_EDID_PS2_KEYB_PCB jedoch mit einem 2 kByte 2-fach assoziativen unified cache
      Dadurch signifikant höhere Geschwindigkeit der CPU (>90%)
-     
-
+-  NKC_68k_CACHE_FAST_PS2_KEYB_PCB.fs
+   - Wie NKC_68020_PS2_KEYB_PCB jedoch mit einem 2 kByte 2-fach assoziativen unified cache
+     Dadurch signifikant höhere Geschwindigkeit der CPU (>90%)
+   
 *****************************
 ## CPU-Zugriff auf GDP-Video-RAM:
 
