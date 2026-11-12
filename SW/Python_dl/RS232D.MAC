@@ -26,1110 +26,1112 @@
 ;   7 Schreibfehler (Disk voll)         8 Fehler beim Schliessen
 ;***********************************************************************
 
-        .Z80
-        ASEG
-        ORG     100H
+    .Z80
+    ASEG
+    ORG  100H
 
-BDOS    EQU     5
-CMDLN   EQU     80H             ; CP/M Kommandozeile
+BDOS EQU  5
+CMDLN EQU  80H ; CP/M Kommandozeile
 
 ; 6551 ACIA (SER-Karte)
-SERB    EQU     0F0H
-SDATA   EQU     SERB
-SSTAT   EQU     SERB+1
-SCMD    EQU     SERB+2
-SCTRL   EQU     SERB+3
+SERB EQU  0F0H
+SDATA EQU  SERB
+SSTAT EQU  SERB+1
+SCMD EQU  SERB+2
+SCTRL EQU  SERB+3
 
-BR96    EQU     1EH             ; 9600,n,8,1
-BR192   EQU     1FH             ; 19200,n,8,1 (max. original SER)
-BR384   EQU     15H             ; GDP-FPGA only
-BR576   EQU     14H             ; GDP-FPGA only
-BR1152  EQU     13H             ; GDP-FPGA only
-CMDV    EQU     0BH             ; keine Paritaet, kein Echo, DTR/RTS aktiv
+BR96 EQU  1EH ; 9600,n,8,1
+BR192 EQU  1FH ; 19200,n,8,1 (max. original SER)
+BR384 EQU  15H ; GDP-FPGA only
+BR576 EQU  14H ; GDP-FPGA only
+BR1152 EQU  13H ; GDP-FPGA only
+CMDV EQU  0BH ; keine Paritaet, kein Echo, DTR/RTS aktiv
 
-POLY    EQU     1021H           ; CCITT CRC16 Polynom
-MAXBS   EQU     4               ; max. Blockgroesse in 256 Byte (1024)
-MAXHDR  EQU     27              ; max. Laenge Header-Frame
-MINHDR  EQU     11              ; min. Laenge Header-Frame
-RETRY   EQU     6               ; Versuche pro Frame (wie dbra #5)
-EOFCH   EQU     1AH             ; CP/M Textende ^Z
+POLY EQU  1021H ; CCITT CRC16 Polynom
+MAXBS EQU  4 ; max. Blockgroesse in 256 Byte (1024)
+MAXHDR EQU  27 ; max. Laenge Header-Frame
+MINHDR EQU  11 ; min. Laenge Header-Frame
+RETRY EQU  6 ; Versuche pro Frame (wie dbra #5)
+EOFCH EQU  1AH ; CP/M Textende ^Z
 
 ;-----------------------------------------------------------------------
-START:  LD      (OLDSP),SP      ; CCP-Stack fuer Rueckkehr sichern
-        LD      SP,STACK
+START: LD   (OLDSP),SP ; CCP-Stack fuer Rueckkehr sichern
+    LD   SP,STACK
 ; Baudrate aus Kommandozeile suchen
-        LD      HL,CMDLN
-        LD      B,(HL)
-        INC     HL
-SKPSP:  LD      A,B
-        OR      A
-        JR      Z,BRDEF
-        LD      A,(HL)
-        CP      ' '
-        JR      NZ,GOTARG
-        INC     HL
-        DEC     B
-        JR      SKPSP
-GOTARG: LD      C,0             ; C = Tokenlaenge
-        PUSH    HL
-TOKLN:  LD      A,B
-        OR      A
-        JR      Z,TOKE
-        LD      A,(HL)
-        CP      ' '
-        JR      Z,TOKE
-        INC     HL
-        INC     C
-        DEC     B
-        JR      TOKLN
-TOKE:   POP     HL
-        LD      IX,BRTAB
-BRSRCH: LD      E,(IX+0)
-        LD      D,(IX+1)
-        LD      A,D
-        OR      E
-        JR      Z,BRDEF         ; nicht gefunden -> Default
-        PUSH    HL
-        PUSH    BC
-        CALL    STRCMP
-        POP     BC
-        POP     HL
-        JR      Z,SERINI
-        INC     IX
-        INC     IX
-        INC     IX
-        JR      BRSRCH
-BRDEF:  LD      IX,BRDFLT
-SERINI: LD      A,(IX+2)
-        OUT     (SCTRL),A
-        LD      A,CMDV
-        OUT     (SCMD),A
-        CALL    INICRC
+    LD   HL,CMDLN
+    LD   B,(HL)
+    INC  HL
+SKPSP: LD   A,B
+    OR   A
+    JR   Z,BRDEF
+    LD   A,(HL)
+    CP   ' '
+    JR   NZ,GOTARG
+    INC  HL
+    DEC  B
+    JR   SKPSP
+GOTARG: LD   C,0 ; C = Tokenlaenge
+    PUSH HL
+TOKLN: LD   A,B
+    OR   A
+    JR   Z,TOKE
+    LD   A,(HL)
+    CP   ' '
+    JR   Z,TOKE
+    INC  HL
+    INC  C
+    DEC  B
+    JR   TOKLN
+TOKE: POP  HL
+    LD   IX,BRTAB
+BRSRCH: LD   E,(IX+0)
+    LD   D,(IX+1)
+    LD   A,D
+    OR   E
+    JR   Z,BRDEF ; nicht gefunden -> Default
+    PUSH HL
+    PUSH BC
+    CALL STRCMP
+    POP  BC
+    POP  HL
+    JR   Z,SERINI
+    INC  IX
+    INC  IX
+    INC  IX
+    JR   BRSRCH
+BRDEF: LD   IX,BRDFLT
+SERINI: LD   A,(IX+2)
+    OUT  (SCTRL),A
+    LD   A,CMDV
+    OUT  (SCMD),A
+    CALL INICRC
 
-        LD      HL,WELMSG
-        CALL    PRSTR
-        LD      L,(IX+0)
-        LD      H,(IX+1)
-        CALL    PRSTR           ; Baudrate
-        LD      HL,PART2
-        CALL    PRSTR
-        XOR     A
-        LD      (CONST),A
+    LD   HL,WELMSG
+    CALL PRSTR
+    LD   L,(IX+0)
+    LD   H,(IX+1)
+    CALL PRSTR ; Baudrate
+    LD   HL,PART2
+    CALL PRSTR
+    XOR  A
+    LD   (CONST),A
 
 ;-----------------------------------------------------------------------
 ; Hauptschleife: '?' senden, auf Kommando warten
-WAITC:  LD      SP,STACK
-        LD      A,'?'
-        CALL    SEROUT
-M2:     LD      C,6             ; direkte Konsole: Status/Eingabe
-        LD      E,0FFH
-        CALL    BDOS
-        OR      A
-        JR      Z,NOCHR
-        CP      'x'
-        JP      Z,EXIT
-        CP      'X'
-        JP      Z,EXIT
-NOCHR:  IN      A,(SSTAT)
-        AND     08H             ; Byte empfangen?
-        JR      Z,M2
-        IN      A,(SDATA)
-        CP      'U'
-        JP      Z,TX
-        CP      'D'
-        JR      NZ,WAITC
-        JP      RX
+WAITC: LD   SP,STACK
+    LD   A,'?'
+    CALL SEROUT
+M2: LD   C,6 ; direkte Konsole: Status/Eingabe
+    LD   E,0FFH
+    CALL BDOS
+    OR   A
+    JR   Z,NOCHR
+    CP   'x'
+    JP   Z,EXIT
+    CP   'X'
+    JP   Z,EXIT
+NOCHR: IN   A,(SSTAT)
+    AND  08H ; Byte empfangen?
+    JR   Z,M2
+    IN   A,(SDATA)
+    CP   'U'
+    JP   Z,TX
+    CP   'D'
+    JR   NZ,WAITC
+    JP   RX
 
-EXIT:   LD      SP,(OLDSP)
-        RET                     ; zurueck zum CCP (ohne Warmstart)
+EXIT: LD   SP,(OLDSP)
+    RET ; zurueck zum CCP (ohne Warmstart)
 
-CHKCON: LD      A,(CONST)
-        OR      A
-        RET     NZ
-        DEC     A
-        LD      (CONST),A
-        LD      HL,CONMSG
-        JP      PRSTR
+CHKCON: LD   A,(CONST)
+    OR   A
+    RET  NZ
+    DEC  A
+    LD   (CONST),A
+    LD   HL,CONMSG
+    JP   PRSTR
 
 ;***********************************************************************
 ; Datei vom PC empfangen (Kommando 'D')
-RX:     CALL    CHKCON
-        LD      A,'O'
-        CALL    SEROUT
-        CALL    RXHDR           ; A=0 OK, 1 Fehler, 2 Overflow
-        OR      A
-        JR      Z,RXH1
-        CALL    PRERR
-        LD      A,1
-        CALL    ACKNAK
-        JP      WAITC
+RX: CALL CHKCON
+    LD   A,'O'
+    CALL SEROUT
+    CALL RXHDR ; A=0 OK, 1 Fehler, 2 Overflow
+    OR   A
+    JR   Z,RXH1
+    CALL PRERR
+    LD   A,1
+    CALL ACKNAK
+    JP   WAITC
 
-RXH1:   CALL    MKFCB
-        LD      B,1
-        JR      NZ,RXFE
-        LD      DE,FCB
-        LD      C,19            ; vorhandene Datei loeschen
-        CALL    BDOS
-        CALL    MKFCB
-        LD      DE,FCB
-        LD      C,22            ; Datei anlegen
-        CALL    BDOS
-        INC     A
-        LD      B,2
-        JR      NZ,RXH2
-RXFE:   LD      A,1             ; NACK
-        CALL    ACKNAK
-        JP      FERR
+RXH1: CALL MKFCB
+    LD   B,1
+    JR   NZ,RXFE
+    LD   DE,FCB
+    LD   C,19 ; vorhandene Datei loeschen
+    CALL BDOS
+    CALL MKFCB
+    LD   DE,FCB
+    LD   C,22 ; Datei anlegen
+    CALL BDOS
+    INC  A
+    LD   B,2
+    JR   NZ,RXH2
+RXFE: LD   A,1 ; NACK
+    CALL ACKNAK
+    JP   FERR
 
-RXH2:   LD      HL,RXMSG
-        CALL    PRINFO
-        CALL    CRLF1
-        XOR     A
-        CALL    ACKNAK          ; Header OK
+RXH2: LD   HL,RXMSG
+    CALL PRINFO
+    CALL CRLF1
+    XOR  A
+    CALL ACKNAK ; Header OK
 
-        CALL    LDREM           ; REM = Dateigroesse
-        LD      HL,BUF
-        LD      (WPTR),HL
-        LD      A,0FFH
-        LD      (PRGON),A
+    CALL LDREM ; REM = Dateigroesse
+    LD   HL,BUF
+    LD   (WPTR),HL
+    LD   A,0FFH
+    LD   (PRGON),A
 
-RXLOOP: CALL    REMZ
-        JR      Z,RXDONE
-        CALL    RXFRM           ; BC = Anzahl Bytes
-        OR      A
-        JR      Z,RXL1
+RXLOOP: CALL REMZ
+    JR   Z,RXDONE
+    CALL RXFRM ; BC = Anzahl Bytes
+    OR   A
+    JR   Z,RXL1
 ; Uebertragung abgebrochen -> Datei verwerfen
-        PUSH    AF
-        LD      DE,FCB
-        LD      C,16
-        CALL    BDOS
-        LD      DE,FCB
-        LD      C,19
-        CALL    BDOS
-        POP     AF
-        CALL    PRERR
-        LD      A,1
-        CALL    ACKNAK
-        JP      WAITC
+    PUSH AF
+    LD   DE,FCB
+    LD   C,16
+    CALL BDOS
+    LD   DE,FCB
+    LD   C,19
+    CALL BDOS
+    POP  AF
+    CALL PRERR
+    LD   A,1
+    CALL ACKNAK
+    JP   WAITC
 
-RXL1:   LD      HL,(WPTR)       ; Datenende
-        ADD     HL,BC
-        CALL    REMHI           ; REM >= 64K ?
-        JR      NZ,RXL2
-        PUSH    HL
-        LD      HL,(REM)
-        OR      A
-        SBC     HL,BC
-        POP     HL
-        JR      NC,RXL2
+RXL1: LD   HL,(WPTR) ; Datenende
+    ADD  HL,BC
+    CALL REMHI ; REM >= 64K ?
+    JR   NZ,RXL2
+    PUSH HL
+    LD   HL,(REM)
+    OR   A
+    SBC  HL,BC
+    POP  HL
+    JR   NC,RXL2
 ; mehr Daten als angekuendigt -> abschneiden
-        LD      BC,(REM)
-        LD      HL,(WPTR)
-        ADD     HL,BC
-RXL2:   LD      (WPTR),HL
-        CALL    SUBREM          ; REM -= BC
-        CALL    REMZ
-        JR      NZ,RXL3
+    LD   BC,(REM)
+    LD   HL,(WPTR)
+    ADD  HL,BC
+RXL2: LD   (WPTR),HL
+    CALL SUBREM ; REM -= BC
+    CALL REMZ
+    JR   NZ,RXL3
 ; letzter Block: bei Textdatei abschliessendes 0-Byte -> ^Z
-        CALL    ISTXT
-        JR      NZ,RXL3
-        LD      HL,(WPTR)
-        LD      DE,BUF
-        OR      A
-        SBC     HL,DE
-        JR      Z,RXL3
-        LD      HL,(WPTR)
-        DEC     HL
-        LD      A,(HL)
-        OR      A
-        JR      NZ,RXL3
-        LD      (WPTR),HL       ; 0-Byte entfernen
-RXL3:   CALL    WRREC           ; volle Records schreiben
-        JR      NZ,RXWE
-        XOR     A
-        CALL    ACKNAK          ; erst nach dem Schreiben bestaetigen
-        JR      RXLOOP
+    CALL ISTXT
+    JR   NZ,RXL3
+    LD   HL,(WPTR)
+    LD   DE,BUF
+    OR   A
+    SBC  HL,DE
+    JR   Z,RXL3
+    LD   HL,(WPTR)
+    DEC  HL
+    LD   A,(HL)
+    OR   A
+    JR   NZ,RXL3
+    LD   (WPTR),HL ; 0-Byte entfernen
+RXL3: CALL WRREC ; volle Records schreiben
+    JR   NZ,RXWE
+    XOR  A
+    CALL ACKNAK ; erst nach dem Schreiben bestaetigen
+    JR   RXLOOP
 
-RXDONE: LD      HL,(WPTR)       ; Rest mit ^Z auffuellen
-        LD      DE,BUF
-        OR      A
-        SBC     HL,DE
-        JR      Z,RXD2
-        LD      HL,(WPTR)
-RXD1:   LD      (HL),EOFCH
-        INC     HL
-        LD      A,L
-        CP      LOW (BUF+128)
-        JR      NZ,RXD1
-        LD      (WPTR),HL
-        CALL    WRREC
-        LD      B,7
-        JP      NZ,FERR
-RXD2:   LD      DE,FCB
-        LD      C,16            ; Datei schliessen
-        CALL    BDOS
-        INC     A
-        LD      B,8
-        JP      Z,FERR
-DONE:   LD      HL,DONMSG
-        CALL    PRSTR
-        JP      WAITC
+RXDONE: LD   HL,(WPTR) ; Rest mit ^Z auffuellen
+    LD   DE,BUF
+    OR   A
+    SBC  HL,DE
+    JR   Z,RXD2
+    LD   HL,(WPTR)
+RXD1: LD   (HL),EOFCH
+    INC  HL
+    LD   A,L
+    CP   LOW (BUF+128)
+    JR   NZ,RXD1
+    LD   (WPTR),HL
+    CALL WRREC
+    LD   B,7
+    JP   NZ,FERR
+RXD2: LD   DE,FCB
+    LD   C,16 ; Datei schliessen
+    CALL BDOS
+    INC  A
+    LD   B,8
+    JP   Z,FERR
+DONE: LD   HL,DONMSG
+    CALL PRSTR
+    JP   WAITC
 
-RXWE:   LD      A,1             ; Schreibfehler: NACK
-        CALL    ACKNAK
-        LD      B,7
-        JP      FERR
+RXWE: LD   A,1 ; Schreibfehler: NACK
+    CALL ACKNAK
+    LD   B,7
+    JP   FERR
 
 ; Alle vollen 128-Byte Records aus BUF..WPTR schreiben,
 ; Rest an den Pufferanfang schieben. NZ bei Schreibfehler.
-WRREC:  LD      HL,BUF
-WR1:    PUSH    HL
-        EX      DE,HL
-        LD      HL,(WPTR)
-        OR      A
-        SBC     HL,DE           ; HL = verbleibende Bytes
-        LD      A,H
-        OR      A
-        JR      NZ,WR2
-        LD      A,L
-        CP      128
-        JR      C,WR3
-WR2:    CALL    SETDMA          ; DE = Record
-        LD      DE,FCB
-        LD      C,21            ; sequentiell schreiben
-        CALL    BDOS
-        POP     HL
-        OR      A
-        RET     NZ
-        LD      DE,128
-        ADD     HL,DE
-        JR      WR1
-WR3:    LD      B,H             ; BC = Restlaenge
-        LD      C,L
-        POP     HL              ; HL = Rest-Quelle
-        LD      DE,BUF
-        LD      A,B
-        OR      C
-        JR      Z,WR4
-        LDIR
-WR4:    LD      (WPTR),DE
-        XOR     A
-        RET
+WRREC: LD   HL,BUF
+WR1: PUSH HL
+    EX   DE,HL
+    LD   HL,(WPTR)
+    OR   A
+    SBC  HL,DE ; HL = verbleibende Bytes
+    LD   A,H
+    OR   A
+    JR   NZ,WR2
+    LD   A,L
+    CP   128
+    JR   C,WR3
+WR2: CALL SETDMA ; DE = Record
+    LD   DE,FCB
+    LD   C,21 ; sequentiell schreiben
+    CALL BDOS
+    POP  HL
+    OR   A
+    RET  NZ
+    LD   DE,128
+    ADD  HL,DE
+    JR   WR1
+WR3: LD   B,H ; BC = Restlaenge
+    LD   C,L
+    POP  HL ; HL = Rest-Quelle
+    LD   DE,BUF
+    LD   A,B
+    OR   C
+    JR   Z,WR4
+    LDIR
+WR4: LD   (WPTR),DE
+    XOR  A
+    RET
 
 ;***********************************************************************
 ; Datei zum PC senden (Kommando 'U')
-TXFAIL: CALL    PRERR
-        JP      WAITC
+TXFAIL: CALL PRERR
+    JP   WAITC
 
-TX:     CALL    CHKCON
-        LD      A,'O'
-        CALL    SEROUT
-        CALL    RXHDR
-        OR      A
-        JR      Z,TXH1
-        PUSH    AF
-        LD      A,1
-        CALL    ACKNAK
-        POP     AF
-        JR      TXFAIL
-TXH1:   XOR     A
-        CALL    ACKNAK
+TX: CALL CHKCON
+    LD   A,'O'
+    CALL SEROUT
+    CALL RXHDR
+    OR   A
+    JR   Z,TXH1
+    PUSH AF
+    LD   A,1
+    CALL ACKNAK
+    POP  AF
+    JR   TXFAIL
+TXH1: XOR  A
+    CALL ACKNAK
 
-        CALL    MKFCB
-        LD      B,3
-        JR      NZ,TXNF
-        CALL    OPENF
-        LD      B,4
-        JR      Z,TXNF
-        LD      DE,FCB
-        LD      C,35            ; Dateigroesse in Records
-        CALL    BDOS
-        CALL    SZCALC          ; SIZEL = Records*128
-        CALL    ISTXT
-        JR      NZ,TXSZ
-        CALL    SZZ
-        JR      Z,TXSZ
+    CALL MKFCB
+    LD   B,3
+    JR   NZ,TXNF
+    CALL OPENF
+    LD   B,4
+    JR   Z,TXNF
+    LD   DE,FCB
+    LD   C,35 ; Dateigroesse in Records
+    CALL BDOS
+    CALL SZCALC ; SIZEL = Records*128
+    CALL ISTXT
+    JR   NZ,TXSZ
+    CALL SZZ
+    JR   Z,TXSZ
 ; Textdatei: letzten Record lesen und bis ^Z kuerzen
-        LD      HL,FCB+33
-        LD      A,(HL)
-        SUB     1
-        LD      (HL),A
-        INC     HL
-        LD      A,(HL)
-        SBC     A,0
-        LD      (HL),A
-        INC     HL
-        LD      A,(HL)
-        SBC     A,0
-        LD      (HL),A
-        LD      DE,BUF
-        CALL    SETDMA
-        LD      DE,FCB
-        LD      C,33            ; random read
-        CALL    BDOS
-        OR      A
-        LD      B,5
-        JR      NZ,TXNF
-        CALL    SZCALC
-        LD      HL,BUF
-        LD      BC,128
-        LD      A,EOFCH
-        CPIR
-        JR      NZ,TXT1
-        LD      A,127           ; Position von ^Z
-        SUB     C
-        JR      TXT2
-TXT1:   LD      A,128
-TXT2:   LD      HL,SIZEL
-        ADD     A,(HL)
-        LD      (HL),A
-        LD      B,3
-TXT3:   INC     HL
-        LD      A,(HL)
-        ADC     A,0
-        LD      (HL),A
-        DJNZ    TXT3
-        CALL    MKFCB           ; wieder an den Dateianfang
-        CALL    OPENF
-        LD      B,4
-        JR      Z,TXNF
-TXSZ:   LD      B,6             ; Fehlernummer falls leer
-        JR      TXS1
-TXNF:   LD      HL,0
-        LD      (SIZEL),HL
-        LD      (SIZEL+2),HL
+    LD   HL,FCB+33
+    LD   A,(HL)
+    SUB  1
+    LD   (HL),A
+    INC  HL
+    LD   A,(HL)
+    SBC  A,0
+    LD   (HL),A
+    INC  HL
+    LD   A,(HL)
+    SBC  A,0
+    LD   (HL),A
+    LD   DE,BUF
+    CALL SETDMA
+    LD   DE,FCB
+    LD   C,33 ; random read
+    CALL BDOS
+    OR   A
+    LD   B,5
+    JR   NZ,TXNF
+    CALL SZCALC
+    LD   HL,BUF
+    LD   BC,128
+    LD   A,EOFCH
+    CPIR
+    JR   NZ,TXT1
+    LD   A,127 ; Position von ^Z
+    SUB  C
+    JR   TXT2
+TXT1: LD   A,128
+TXT2: LD   HL,SIZEL
+    ADD  A,(HL)
+    LD   (HL),A
+    LD   B,3
+TXT3: INC  HL
+    LD   A,(HL)
+    ADC  A,0
+    LD   (HL),A
+    DJNZ TXT3
+    CALL MKFCB ; wieder an den Dateianfang
+    CALL OPENF
+    LD   B,4
+    JR   Z,TXNF
+TXSZ: LD   B,6 ; Fehlernummer falls leer
+    JR   TXS1
+TXNF: LD   HL,0
+    LD   (SIZEL),HL
+    LD   (SIZEL+2),HL
 ; Frame mit Dateigroesse (32 Bit, Big Endian) senden
-TXS1:   PUSH    BC
-        LD      HL,SIZEL+3
-        LD      DE,HFS
-        LD      B,4
-TXS2:   LD      A,(HL)
-        LD      (DE),A
-        DEC     HL
-        INC     DE
-        DJNZ    TXS2
-        XOR     A
-        LD      (PRGON),A       ; keine Fortschrittsanzeige
-        LD      HL,HFS
-        LD      BC,4
-        CALL    TXFRM
-        POP     BC
-        OR      A
-        JP      NZ,TXFAIL
-        CALL    SZZ
-        JP      Z,FERR          ; Datei nicht gefunden / leer
+TXS1: PUSH BC
+    LD   HL,SIZEL+3
+    LD   DE,HFS
+    LD   B,4
+TXS2: LD   A,(HL)
+    LD   (DE),A
+    DEC  HL
+    INC  DE
+    DJNZ TXS2
+    XOR  A
+    LD   (PRGON),A ; keine Fortschrittsanzeige
+    LD   HL,HFS
+    LD   BC,4
+    CALL TXFRM
+    POP  BC
+    OR   A
+    JP   NZ,TXFAIL
+    CALL SZZ
+    JP   Z,FERR ; Datei nicht gefunden / leer
 
-        LD      HL,TXMSG
-        CALL    PRINFO
-        CALL    CRLF1
+    LD   HL,TXMSG
+    CALL PRINFO
+    CALL CRLF1
 
-        CALL    LDREM
-        LD      A,0FFH
-        LD      (PRGON),A
-TXLOOP: LD      A,(HBS)         ; BC = min(Blockgroesse, REM)
-        LD      B,A
-        LD      C,0
-        CALL    REMHI
-        JR      NZ,TXL1
-        LD      HL,(REM)
-        OR      A
-        SBC     HL,BC
-        JR      NC,TXL1
-        LD      BC,(REM)
-TXL1:   PUSH    BC
-        LD      H,B             ; Records = (BC+127)/128
-        LD      L,C
-        LD      DE,127
-        ADD     HL,DE
-        ADD     HL,HL
-        LD      B,H
-        LD      DE,BUF
-TXL2:   PUSH    BC
-        PUSH    DE
-        CALL    SETDMA
-        LD      DE,FCB
-        LD      C,20            ; sequentiell lesen
-        CALL    BDOS
-        POP     DE
-        POP     BC
-        OR      A
-        JR      Z,TXL3
-        POP     BC
-        LD      B,5
-        JP      FERR
-TXL3:   LD      HL,128
-        ADD     HL,DE
-        EX      DE,HL
-        DJNZ    TXL2
-        POP     BC
-        PUSH    BC
-        LD      HL,BUF
-        CALL    TXFRM
-        POP     BC
-        OR      A
-        JP      NZ,TXFAIL       ; nicht behebbarer Fehler
-        CALL    SUBREM
-        CALL    REMZ
-        JR      NZ,TXLOOP
-        CALL    CRLF1
-        JP      DONE
+    CALL LDREM
+    LD   A,0FFH
+    LD   (PRGON),A
+TXLOOP: LD   A,(HBS) ; BC = min(Blockgroesse, REM)
+    LD   B,A
+    LD   C,0
+    CALL REMHI
+    JR   NZ,TXL1
+    LD   HL,(REM)
+    OR   A
+    SBC  HL,BC
+    JR   NC,TXL1
+    LD   BC,(REM)
+TXL1: PUSH BC
+    LD   H,B ; Records = (BC+127)/128
+    LD   L,C
+    LD   DE,127
+    ADD  HL,DE
+    ADD  HL,HL
+    LD   B,H
+    LD   DE,BUF
+TXL2: PUSH BC
+    PUSH DE
+    CALL SETDMA
+    LD   DE,FCB
+    LD   C,20 ; sequentiell lesen
+    CALL BDOS
+    POP  DE
+    POP  BC
+    OR   A
+    JR   Z,TXL3
+    POP  BC
+    LD   B,5
+    JP   FERR
+TXL3: LD   HL,128
+    ADD  HL,DE
+    EX   DE,HL
+    DJNZ TXL2
+    POP  BC
+    PUSH BC
+    LD   HL,BUF
+    CALL TXFRM
+    POP  BC
+    OR   A
+    JP   NZ,TXFAIL ; nicht behebbarer Fehler
+    CALL SUBREM
+    CALL REMZ
+    JR   NZ,TXLOOP
+    CALL CRLF1
+    JP   DONE
 
 ;***********************************************************************
 ; Header-Frame empfangen
 ; <len:2><'H'><bs:1><fs:4><fn..0><crc:2>
 ; Rueckgabe A=0 OK, 1 Fehler, 2 Overflow
-RXHDR:  LD      HL,HDR
-        LD      DE,0FFFFH       ; CRC init
-        CALL    SERINC
-        JR      C,ERR2
-        LD      (HL),A
-        INC     HL
-        CALL    UPDCRC
-        CALL    SERINC
-        JR      C,ERR2
-        LD      (HL),A
-        INC     HL
-        CALL    UPDCRC
-        LD      A,(HLEN)
-        OR      A
-        JR      NZ,ERR1
-        LD      A,(HLEN+1)
-        CP      MAXHDR+1
-        JR      NC,ERR1
-        CP      MINHDR
-        JR      C,ERR1
-        SUB     3
-        LD      B,A             ; Bytes nach 'H' inkl. CRC
-        CALL    SERINC
-        JR      C,ERR2
-        LD      (HL),A
-        INC     HL
-        CALL    UPDCRC
-        LD      A,(HCODE)
-        CP      'H'
-        JR      NZ,ERR1
-RXH3:   CALL    SERINC
-        JR      C,ERR2
-        LD      (HL),A
-        INC     HL
-        CALL    UPDCRC
-        DJNZ    RXH3
-        LD      A,D
-        OR      E
-        JR      NZ,ERR1         ; CRC Fehler
-        DEC     HL
-        DEC     HL
-        LD      (HL),0          ; Dateiname sicher terminieren
-        LD      A,(HBS)
-        OR      A
-        JR      Z,ERR1
-        CP      MAXBS+1
-        JR      NC,ERR1
-        LD      HL,HFN
-        CALL    UPCASE
-        XOR     A
-        RET
-ERR1:   LD      A,1
-        RET
-ERR2:   LD      A,2
-        RET
+RXHDR: LD   HL,HDR
+    LD   DE,0FFFFH ; CRC init
+    CALL SERINC
+    JR   C,ERR2
+    LD   (HL),A
+    INC  HL
+    CALL UPDCRC
+    CALL SERINC
+    JR   C,ERR2
+    LD   (HL),A
+    INC  HL
+    CALL UPDCRC
+    LD   A,(HLEN)
+    OR   A
+    JR   NZ,ERR1
+    LD   A,(HLEN+1)
+    CP   MAXHDR+1
+    JR   NC,ERR1
+    CP   MINHDR
+    JR   C,ERR1
+    SUB  3
+    LD   B,A ; Bytes nach 'H' inkl. CRC
+    CALL SERINC
+    JR   C,ERR2
+    LD   (HL),A
+    INC  HL
+    CALL UPDCRC
+    LD   A,(HCODE)
+    CP   'H'
+    JR   NZ,ERR1
+RXH3: CALL SERINC
+    JR   C,ERR2
+    LD   (HL),A
+    INC  HL
+    CALL UPDCRC
+    DJNZ RXH3
+    LD   A,D
+    OR   E
+    JR   NZ,ERR1 ; CRC Fehler
+    DEC  HL
+    DEC  HL
+    LD   (HL),0 ; Dateiname sicher terminieren
+    LD   A,(HBS)
+    OR   A
+    JR   Z,ERR1
+    CP   MAXBS+1
+    JR   NC,ERR1
+    LD   HL,HFN
+    CALL UPCASE
+    XOR  A
+    RET
+ERR1: LD   A,1
+    RET
+ERR2: LD   A,2
+    RET
 
 ; Daten-Frame empfangen nach (WPTR). Bei CRC-Fehler NACK und
 ; Wiederholung. Bei Erfolg KEIN ACK (Aufrufer bestaetigt).
 ; Rueckgabe A=0 OK und BC=Nutzdatenlaenge, sonst A=1/2
-RXFRM:  LD      A,RETRY
-        LD      (RETRYC),A
-RF2:    LD      HL,(WPTR)
-        LD      DE,0FFFFH
-        CALL    SERINC
-        JR      C,ERR2
-        LD      B,A
-        CALL    UPDCRC
-        CALL    SERINC
-        JR      C,ERR2
-        LD      C,A
-        CALL    UPDCRC
-        PUSH    HL
-        LD      H,B
-        LD      L,C
-        LD      BC,4            ; - Laenge - CRC
-        OR      A
-        SBC     HL,BC
-        JR      C,RFBAD
-        LD      B,H
-        LD      C,L
-        LD      A,(HBS)         ; gegen Blockgroesse pruefen
-        CP      B
-        JR      C,RFBAD
-        JR      NZ,RF3
-        LD      A,C
-        OR      A
-        JR      NZ,RFBAD
-RF3:    POP     HL
-        LD      (FRLEN),BC
-        LD      A,B
-        OR      C
-        JR      Z,RF5
-RF4:    CALL    SERINC
-        JR      C,ERR2
-        LD      (HL),A
-        INC     HL
-        CALL    UPDCRC
-        DEC     BC
-        LD      A,B
-        OR      C
-        JR      NZ,RF4
-RF5:    CALL    SERINC          ; 2 Byte CRC
-        JR      C,ERR2
-        CALL    UPDCRC
-        CALL    SERINC
-        JR      C,ERR2
-        CALL    UPDCRC
-        LD      A,D
-        OR      E               ; CRC muss jetzt 0 sein
-        JR      Z,RFOK
-        LD      A,'!'
-        CALL    PROGR
-        LD      A,1
-        CALL    ACKNAK
-        LD      HL,RETRYC
-        DEC     (HL)
-        JR      NZ,RF2
-        LD      A,1
-        RET
-RFOK:   LD      A,'.'
-        CALL    PROGR
-        LD      BC,(FRLEN)
-        XOR     A
-        RET
-RFBAD:  POP     HL
-        LD      A,1
-        CALL    ACKNAK
-        LD      A,1
-        RET
+RXFRM: LD   A,RETRY
+    LD   (RETRYC),A
+RF2: LD   HL,(WPTR)
+    LD   DE,0FFFFH
+    CALL SERINC
+    JR   C,ERR2
+    LD   B,A
+    CALL UPDCRC
+    CALL SERINC
+    JR   C,ERR2
+    LD   C,A
+    CALL UPDCRC
+    PUSH HL
+    LD   H,B
+    LD   L,C
+    LD   BC,4 ; - Laenge - CRC
+    OR   A
+    SBC  HL,BC
+    JR   C,RFBAD
+    LD   B,H
+    LD   C,L
+    LD   A,(HBS) ; gegen Blockgroesse pruefen
+    CP   B
+    JR   C,RFBAD
+    JR   NZ,RF3
+    LD   A,C
+    OR   A
+    JR   NZ,RFBAD
+RF3: POP  HL
+    LD   (FRLEN),BC
+    LD   A,B
+    OR   C
+    JR   Z,RF5
+RF4: CALL SERINC
+    JR   C,ERR2
+    LD   (HL),A
+    INC  HL
+    CALL UPDCRC
+    DEC  BC
+    LD   A,B
+    OR   C
+    JR   NZ,RF4
+RF5: CALL SERINC ; 2 Byte CRC
+    JR   C,ERR2
+    CALL UPDCRC
+    CALL SERINC
+    JR   C,ERR2
+    CALL UPDCRC
+    LD   A,D
+    OR   E ; CRC muss jetzt 0 sein
+    JR   Z,RFOK
+    LD   A,'!'
+    CALL PROGR
+    LD   A,1
+    CALL ACKNAK
+    LD   HL,RETRYC
+    DEC  (HL)
+    JR   NZ,RF2
+    LD   A,1
+    RET
+RFOK: LD   A,'.'
+    CALL PROGR
+    LD   BC,(FRLEN)
+    XOR  A
+    RET
+RFBAD: POP  HL
+    LD   A,1
+    CALL ACKNAK
+    LD   A,1
+    RET
 
 ; Frame senden: HL=Daten, BC=Laenge. Wartet auf ACK, Wiederholung
 ; bei NACK. Rueckgabe A=0 OK, 1 Fehler
-TXFRM:  LD      (TXBUF),HL
-        LD      (FRLEN),BC
-        LD      A,RETRY
-        LD      (RETRYC),A
-TF2:    LD      HL,(FRLEN)
-        LD      BC,4
-        ADD     HL,BC
-        LD      DE,0FFFFH
-        LD      A,H
-        CALL    SEROUT
-        CALL    UPDCRC
-        LD      A,L
-        CALL    SEROUT
-        CALL    UPDCRC
-        LD      HL,(TXBUF)
-        LD      BC,(FRLEN)
-        LD      A,B
-        OR      C
-        JR      Z,TF4
-TF3:    LD      A,(HL)
-        INC     HL
-        CALL    SEROUT
-        CALL    UPDCRC
-        DEC     BC
-        LD      A,B
-        OR      C
-        JR      NZ,TF3
-TF4:    LD      A,D
-        CALL    SEROUT
-        LD      A,E
-        CALL    SEROUT
-        CALL    SERIN           ; auf ACK warten
-        CP      'O'
-        JR      Z,TFOK
-        LD      A,'!'
-        CALL    TXSTAT
-        LD      HL,RETRYC
-        DEC     (HL)
-        JR      NZ,TF2
-        LD      A,1
-        RET
-TFOK:   LD      A,'.'
-        CALL    TXSTAT
-        XOR     A
-        RET
+TXFRM: LD   (TXBUF),HL
+    LD   (FRLEN),BC
+    LD   A,RETRY
+    LD   (RETRYC),A
+TF2: LD   HL,(FRLEN)
+    LD   BC,4
+    ADD  HL,BC
+    LD   DE,0FFFFH
+    LD   A,H
+    CALL SEROUT
+    CALL UPDCRC
+    LD   A,L
+    CALL SEROUT
+    CALL UPDCRC
+    LD   HL,(TXBUF)
+    LD   BC,(FRLEN)
+    LD   A,B
+    OR   C
+    JR   Z,TF4
+TF3: LD   A,(HL)
+    INC  HL
+    CALL SEROUT
+    CALL UPDCRC
+    DEC  BC
+    LD   A,B
+    OR   C
+    JR   NZ,TF3
+TF4: LD   A,D
+    CALL SEROUT
+    LD   A,E
+    CALL SEROUT
+    CALL SERIN ; auf ACK warten
+    CP   'O'
+    JR   Z,TFOK
+    LD   A,'!'
+    CALL TXSTAT
+    LD   HL,RETRYC
+    DEC  (HL)
+    JR   NZ,TF2
+    LD   A,1
+    RET
+TFOK: LD   A,'.'
+    CALL TXSTAT
+    XOR  A
+    RET
 
-TXSTAT: LD      C,A
-        LD      A,(PRGON)
-        OR      A
-        RET     Z
-        LD      A,C
-        JP      PROGR
+TXSTAT: LD   C,A
+    LD   A,(PRGON)
+    OR   A
+    RET  Z
+    LD   A,C
+    JP   PROGR
 
 ;***********************************************************************
 ; Serielle Schnittstelle
-SEROUT: PUSH    AF              ; A senden, A bleibt erhalten
-SO1:    IN      A,(SSTAT)
-        AND     10H
-        JR      Z,SO1
-        POP     AF
-        OUT     (SDATA),A
-        RET
+SEROUT: PUSH AF ; A senden, A bleibt erhalten
+SO1: IN   A,(SSTAT)
+    AND  10H
+    JR   Z,SO1
+    POP  AF
+    OUT  (SDATA),A
+    RET
 
-SERIN:  IN      A,(SSTAT)
-        AND     08H
-        JR      Z,SERIN
-        IN      A,(SDATA)
-        RET
+SERIN: IN   A,(SSTAT)
+    AND  08H
+    JR   Z,SERIN
+    IN   A,(SDATA)
+    RET
 
 ; wie SERIN, aber CY=1 bei Overrun
-SERINC: IN      A,(SSTAT)
-        BIT     2,A
-        SCF
-        RET     NZ
-        AND     08H
-        JR      Z,SERINC
-        IN      A,(SDATA)
-        RET
+SERINC: IN   A,(SSTAT)
+    BIT  2,A
+    SCF
+    RET  NZ
+    AND  08H
+    JR   Z,SERINC
+    IN   A,(SDATA)
+    RET
 
 ; A=0 -> ACK ('O'), sonst NACK ('N')
-ACKNAK: OR      A
-        LD      A,'O'
-        JR      Z,AN1
-        LD      A,'N'
-AN1:    JP      SEROUT
+ACKNAK: OR   A
+    LD   A,'O'
+    JR   Z,AN1
+    LD   A,'N'
+AN1: JP   SEROUT
 
 ;***********************************************************************
 ; CRC16-CCITT, Tabellen CRCHI/CRCLO (page-aligned)
-INICRC: LD      HL,CRCHI
-IC1:    LD      D,L
-        LD      E,0
-        LD      B,8
-IC2:    SLA     E
-        RL      D
-        JR      NC,IC3
-        LD      A,D
-        XOR     HIGH POLY
-        LD      D,A
-        LD      A,E
-        XOR     LOW POLY
-        LD      E,A
-IC3:    DJNZ    IC2
-        LD      (HL),D
-        INC     H
-        LD      (HL),E
-        DEC     H
-        INC     L
-        JR      NZ,IC1
-        RET
+INICRC: LD   HL,CRCHI
+IC1: LD   D,L
+    LD   E,0
+    LD   B,8
+IC2: SLA  E
+    RL   D
+    JR   NC,IC3
+    LD   A,D
+    XOR  HIGH POLY
+    LD   D,A
+    LD   A,E
+    XOR  LOW POLY
+    LD   E,A
+IC3: DJNZ IC2
+    LD   (HL),D
+    INC  H
+    LD   (HL),E
+    DEC  H
+    INC  L
+    JR   NZ,IC1
+    RET
 
 ; A=Byte, DE=CRC. Zerstoert A.
-UPDCRC: PUSH    HL
-        XOR     D
-        LD      L,A
-        LD      H,HIGH CRCHI
-        LD      A,(HL)
-        XOR     E
-        LD      D,A
-        INC     H
-        LD      E,(HL)
-        POP     HL
-        RET
+UPDCRC: PUSH HL
+    XOR  D
+    LD   L,A
+    LD   H,HIGH CRCHI
+    LD   A,(HL)
+    XOR  E
+    LD   D,A
+    INC  H
+    LD   E,(HL)
+    POP  HL
+    RET
 
 ;***********************************************************************
 ; Dateiname HFN -> FCB. NZ wenn ungueltig.
-MKFCB:  LD      HL,FCB
-        LD      B,36
-MK0:    LD      (HL),0
-        INC     HL
-        DJNZ    MK0
-        LD      HL,FCB+1
-        LD      B,11
-MK1:    LD      (HL),' '
-        INC     HL
-        DJNZ    MK1
-        LD      HL,HFN
-        INC     HL
-        LD      A,(HL)
-        DEC     HL
-        CP      ':'
-        JR      NZ,MF1
-        LD      A,(HL)
-        SUB     'A'
-        CP      16
-        JR      NC,MFERR
-        INC     A
-        LD      (FCB),A
-        INC     HL
-        INC     HL
-MF1:    LD      DE,FCB+1
-        LD      B,9
-MF2:    LD      A,(HL)
-        OR      A
-        JR      Z,MFEND
-        CP      '.'
-        JR      Z,MFEXT
-        DEC     B
-        JR      Z,MFERR
-        CALL    VALCH
-        JR      C,MFERR
-        LD      (DE),A
-        INC     DE
-        INC     HL
-        JR      MF2
-MFEXT:  LD      A,B
-        CP      9
-        JR      Z,MFERR
-        INC     HL
-        LD      DE,FCB+9
-        LD      B,4
-MF3:    LD      A,(HL)
-        OR      A
-        JR      Z,MFOK
-        DEC     B
-        JR      Z,MFERR
-        CALL    VALCH
-        JR      C,MFERR
-        LD      (DE),A
-        INC     DE
-        INC     HL
-        JR      MF3
-MFEND:  LD      A,B
-        CP      9
-        JR      Z,MFERR
-MFOK:   XOR     A
-        RET
-MFERR:  LD      A,1
-        OR      A
-        RET
+MKFCB: LD   HL,FCB
+    LD   B,36
+MK0: LD   (HL),0
+    INC  HL
+    DJNZ MK0
+    LD   HL,FCB+1
+    LD   B,11
+MK1: LD   (HL),' '
+    INC  HL
+    DJNZ MK1
+    LD   HL,HFN
+    INC  HL
+    LD   A,(HL)
+    DEC  HL
+    CP   ':'
+    JR   NZ,MF1
+    LD   A,(HL)
+    SUB  'A'
+    CP   16
+    JR   NC,MFERR
+    INC  A
+    LD   (FCB),A
+    INC  HL
+    INC  HL
+MF1: LD   DE,FCB+1
+    LD   B,9
+MF2: LD   A,(HL)
+    OR   A
+    JR   Z,MFEND
+    CP   '.'
+    JR   Z,MFEXT
+    DEC  B
+    JR   Z,MFERR
+    CALL VALCH
+    JR   C,MFERR
+    LD   (DE),A
+    INC  DE
+    INC  HL
+    JR   MF2
+MFEXT: LD   A,B
+    CP   9
+    JR   Z,MFERR
+    INC  HL
+    LD   DE,FCB+9
+    LD   B,4
+MF3: LD   A,(HL)
+    OR   A
+    JR   Z,MFOK
+    DEC  B
+    JR   Z,MFERR
+    CALL VALCH
+    JR   C,MFERR
+    LD   (DE),A
+    INC  DE
+    INC  HL
+    JR   MF3
+MFEND: LD   A,B
+    CP   9
+    JR   Z,MFERR
+MFOK: XOR  A
+    RET
+MFERR: LD   A,1
+    OR   A
+    RET
 
 ; CY=1 wenn A kein gueltiges Dateinamenzeichen ist
-VALCH:  CP      21H
-        RET     C
-        CP      7FH
-        CCF
-        RET     C
-        PUSH    HL
-        PUSH    BC
-        LD      HL,BADCH
-        LD      B,NBAD
-VC1:    CP      (HL)
-        JR      Z,VC2
-        INC     HL
-        DJNZ    VC1
-        POP     BC
-        POP     HL
-        OR      A
-        RET
-VC2:    POP     BC
-        POP     HL
-        SCF
-        RET
+VALCH: CP   21H
+    RET  C
+    CP   7FH
+    CCF
+    RET  C
+    PUSH HL
+    PUSH BC
+    LD   HL,BADCH
+    LD   B,NBAD
+VC1: CP   (HL)
+    JR   Z,VC2
+    INC  HL
+    DJNZ VC1
+    POP  BC
+    POP  HL
+    OR   A
+    RET
+VC2: POP  BC
+    POP  HL
+    SCF
+    RET
 
 ; Datei oeffnen, Z wenn nicht gefunden
-OPENF:  LD      DE,FCB
-        LD      C,15
-        CALL    BDOS
-        INC     A
-        RET
+OPENF: LD   DE,FCB
+    LD   C,15
+    CALL BDOS
+    INC  A
+    RET
 
 ; Z wenn Extension ASM oder TXT
-ISTXT:  LD      DE,SASM
-        CALL    CMPEXT
-        RET     Z
-        LD      DE,STXT
-CMPEXT: LD      HL,FCB+9
-        LD      B,3
-CE1:    LD      A,(HL)
-        AND     7FH
-        LD      C,A
-        LD      A,(DE)
-        CP      C
-        RET     NZ
-        INC     HL
-        INC     DE
-        DJNZ    CE1
-        RET
+ISTXT: LD   DE,SASM
+    CALL CMPEXT
+    RET  Z
+    LD   DE,STXT
+CMPEXT: LD   HL,FCB+9
+    LD   B,3
+CE1: LD   A,(HL)
+    AND  7FH
+    LD   C,A
+    LD   A,(DE)
+    CP   C
+    RET  NZ
+    INC  HL
+    INC  DE
+    DJNZ CE1
+    RET
 
-SETDMA: PUSH    HL              ; DE = DMA-Adresse
-        LD      C,26
-        CALL    BDOS
-        POP     HL
-        RET
+SETDMA: PUSH HL ; DE = DMA-Adresse
+    LD   C,26
+    CALL BDOS
+    POP  HL
+    RET
 
 ;***********************************************************************
 ; 32-Bit Hilfsroutinen (Little Endian)
 ; SIZEL = (r2:r1:r0 aus FCB) * 128
-SZCALC: LD      HL,(FCB+33)
-        LD      (SIZEL),HL
-        LD      A,(FCB+35)
-        LD      (SIZEL+2),A
-        XOR     A
-        LD      (SIZEL+3),A
-        LD      B,7
-SZC1:   LD      HL,SIZEL
-        SLA     (HL)
-        INC     HL
-        RL      (HL)
-        INC     HL
-        RL      (HL)
-        INC     HL
-        RL      (HL)
-        DJNZ    SZC1
-        RET
+SZCALC: LD   HL,(FCB+33)
+    LD   (SIZEL),HL
+    LD   A,(FCB+35)
+    LD   (SIZEL+2),A
+    XOR  A
+    LD   (SIZEL+3),A
+    LD   B,7
+SZC1: LD   HL,SIZEL
+    SLA  (HL)
+    INC  HL
+    RL   (HL)
+    INC  HL
+    RL   (HL)
+    INC  HL
+    RL   (HL)
+    DJNZ SZC1
+    RET
 
 ; Z wenn SIZEL == 0
-SZZ:    LD      HL,(SIZEL)
-        LD      A,H
-        OR      L
-        LD      HL,(SIZEL+2)
-        OR      H
-        OR      L
-        RET
+SZZ: LD   HL,(SIZEL)
+    LD   A,H
+    OR   L
+    LD   HL,(SIZEL+2)
+    OR   H
+    OR   L
+    RET
 
 ; REM = HFS (Big Endian -> Little Endian)
-LDREM:  LD      HL,HFS+3
-        LD      DE,REM
-        LD      B,4
-LR1:    LD      A,(HL)
-        LD      (DE),A
-        DEC     HL
-        INC     DE
-        DJNZ    LR1
-        RET
+LDREM: LD   HL,HFS+3
+    LD   DE,REM
+    LD   B,4
+LR1: LD   A,(HL)
+    LD   (DE),A
+    DEC  HL
+    INC  DE
+    DJNZ LR1
+    RET
 
 ; Z wenn REM == 0
-REMZ:   LD      HL,(REM)
-        LD      A,H
-        OR      L
-        RET     NZ
+REMZ: LD   HL,(REM)
+    LD   A,H
+    OR   L
+    RET  NZ
 ; Z wenn REM < 64K
-REMHI:  PUSH    HL
-        LD      HL,(REM+2)
-        LD      A,H
-        OR      L
-        POP     HL
-        RET
+REMHI: PUSH HL
+    LD   HL,(REM+2)
+    LD   A,H
+    OR   L
+    POP  HL
+    RET
 
 ; REM -= BC
-SUBREM: LD      HL,(REM)
-        OR      A
-        SBC     HL,BC
-        LD      (REM),HL
-        LD      HL,(REM+2)
-        LD      BC,0
-        SBC     HL,BC
-        LD      (REM+2),HL
-        RET
+SUBREM: LD   HL,(REM)
+    OR   A
+    SBC  HL,BC
+    LD   (REM),HL
+    LD   HL,(REM+2)
+    LD   BC,0
+    SBC  HL,BC
+    LD   (REM+2),HL
+    RET
 
 ; NUM /= 10, A = Rest
-DIV10:  LD      B,32
-        XOR     A
-D1:     LD      HL,NUM
-        SLA     (HL)
-        INC     HL
-        RL      (HL)
-        INC     HL
-        RL      (HL)
-        INC     HL
-        RL      (HL)
-        RLA
-        CP      10
-        JR      C,D2
-        SUB     10
-        LD      HL,NUM
-        INC     (HL)
-D2:     DJNZ    D1
-        RET
+DIV10: LD   B,32
+    XOR  A
+D1: LD   HL,NUM
+    SLA  (HL)
+    INC  HL
+    RL   (HL)
+    INC  HL
+    RL   (HL)
+    INC  HL
+    RL   (HL)
+    RLA
+    CP   10
+    JR   C,D2
+    SUB  10
+    LD   HL,NUM
+    INC  (HL)
+D2: DJNZ D1
+    RET
 
 ; NUM dezimal ausgeben
-PRDEC:  LD      C,0
-PD1:    PUSH    BC
-        CALL    DIV10
-        POP     BC
-        ADD     A,'0'
-        PUSH    AF
-        INC     C
-        LD      HL,(NUM)
-        LD      A,H
-        OR      L
-        LD      HL,(NUM+2)
-        OR      H
-        OR      L
-        JR      NZ,PD1
-PD2:    POP     AF
-        CALL    PRCH
-        DEC     C
-        JR      NZ,PD2
-        RET
+PRDEC: LD   C,0
+PD1: PUSH BC
+    CALL DIV10
+    POP  BC
+    ADD  A,'0'
+    PUSH AF
+    INC  C
+    LD   HL,(NUM)
+    LD   A,H
+    OR   L
+    LD   HL,(NUM+2)
+    OR   H
+    OR   L
+    JR   NZ,PD1
+PD2: POP  AF
+    CALL PRCH
+    DEC  C
+    JR   NZ,PD2
+    RET
 
 ;***********************************************************************
 ; Ausgabe
-PRCH:   PUSH    HL              ; A ausgeben, HL/DE/BC bleiben erhalten
-        PUSH    DE
-        PUSH    BC
-        LD      E,A
-        LD      C,2
-        CALL    BDOS
-        POP     BC
-        POP     DE
-        POP     HL
-        RET
+PRCH: PUSH HL ; A ausgeben, HL/DE/BC bleiben erhalten
+    PUSH DE
+    PUSH BC
+    LD   E,A
+    LD   C,2
+    CALL BDOS
+    POP  BC
+    POP  DE
+    POP  HL
+    RET
 
 ; Fortschrittszeichen, alle Register bleiben erhalten
-PROGR:  PUSH    AF
-        CALL    PRCH
-        POP     AF
-        RET
+PROGR: PUSH AF
+    CALL PRCH
+    POP  AF
+    RET
 
-PRSTR:  LD      A,(HL)
-        OR      A
-        RET     Z
-        CALL    PRCH
-        INC     HL
-        JR      PRSTR
+PRSTR: LD   A,(HL)
+    OR   A
+    RET  Z
+    CALL PRCH
+    INC  HL
+    JR   PRSTR
 
-CRLF1:  LD      HL,CRLF+1
-        JR      PRSTR
+CRLF1: LD   HL,CRLF+1
+    JR   PRSTR
 
 ; HL=Meldung, dann Dateiname und Groesse (HFS)
-PRINFO: CALL    PRSTR
-        LD      HL,HFN
-        CALL    PRSTR
-        LD      HL,DELMSG
-        CALL    PRSTR
-        LD      HL,HFS+3
-        LD      DE,NUM
-        LD      B,4
-PI1:    LD      A,(HL)
-        LD      (DE),A
-        DEC     HL
-        INC     DE
-        DJNZ    PI1
-        CALL    PRDEC
-        LD      HL,BYTMSG
-        JR      PRSTR
+PRINFO: CALL PRSTR
+    LD   HL,HFN
+    CALL PRSTR
+    LD   HL,DELMSG
+    CALL PRSTR
+    LD   HL,HFS+3
+    LD   DE,NUM
+    LD   B,4
+PI1: LD   A,(HL)
+    LD   (DE),A
+    DEC  HL
+    INC  DE
+    DJNZ PI1
+    CALL PRDEC
+    LD   HL,BYTMSG
+    JR   PRSTR
 
 ; A = Fehlercode 1/2
-PRERR:  CP      2
-        LD      HL,OVFMSG
-        JR      Z,PRSTR
-        LD      HL,RXEMSG
-        JR      PRSTR
+PRERR: CP   2
+    LD   HL,OVFMSG
+    JR   Z,PRSTR
+    LD   HL,RXEMSG
+    JR   PRSTR
 
 ; Dateifehler, B = Fehlernummer
-FERR:   PUSH    BC
-        LD      HL,ERRMSG
-        CALL    PRSTR
-        POP     BC
-        LD      L,B
-        LD      H,0
-        LD      (NUM),HL
-        LD      L,H
-        LD      (NUM+2),HL
-        CALL    PRDEC
-        LD      HL,FNEMSG
-        CALL    PRSTR
-        LD      HL,HFN
-        CALL    PRSTR
-        LD      HL,CRLF
-        CALL    PRSTR
-        JP      WAITC
+FERR: PUSH BC
+    LD   HL,ERRMSG
+    CALL PRSTR
+    POP  BC
+    LD   L,B
+    LD   H,0
+    LD   (NUM),HL
+    LD   L,H
+    LD   (NUM+2),HL
+    CALL PRDEC
+    LD   HL,FNEMSG
+    CALL PRSTR
+    LD   HL,HFN
+    CALL PRSTR
+    LD   HL,CRLF
+    CALL PRSTR
+    JP   WAITC
 
-UPCASE: LD      A,(HL)
-        OR      A
-        RET     Z
-        CP      'a'
-        JR      C,UC1
-        CP      'z'+1
-        JR      NC,UC1
-        SUB     20H
-        LD      (HL),A
-UC1:    INC     HL
-        JR      UPCASE
+UPCASE: LD   A,(HL)
+    OR   A
+    RET  Z
+    CP   'a'
+    JR   C,UC1
+    CP   'z'+1
+    JR   NC,UC1
+    SUB  20H
+    LD   (HL),A
+UC1: INC  HL
+    JR   UPCASE
 
 ; HL=Token, C=Laenge, DE=0-terminierter String. Z wenn gleich.
-STRCMP: LD      A,(DE)
-        OR      A
-        JR      Z,SC1
-        LD      B,A
-        LD      A,C
-        OR      A
-        JR      Z,SC2
-        LD      A,(HL)
-        CP      B
-        RET     NZ
-        INC     HL
-        INC     DE
-        DEC     C
-        JR      STRCMP
-SC1:    LD      A,C
-        OR      A
-        RET
-SC2:    OR      1
-        RET
+STRCMP: LD   A,(DE)
+    OR   A
+    JR   Z,SC1
+    LD   B,A
+    LD   A,C
+    OR   A
+    JR   Z,SC2
+    LD   A,(HL)
+    CP   B
+    RET  NZ
+    INC  HL
+    INC  DE
+    DEC  C
+    JR   STRCMP
+SC1: LD   A,C
+    OR   A
+    RET
+SC2: OR   1
+    RET
 
 ;***********************************************************************
 ; Daten
-S9600:  DB      '9600',0
-S19200: DB      '19200',0
-S38400: DB      '38400',0
-S57600: DB      '57600',0
-S1152:  DB      '115200',0
+S9600: DB   '9600',0
+S19200: DB   '19200',0
+S38400: DB   '38400',0
+S57600: DB   '57600',0
+S1152: DB   '115200',0
 
-BRTAB:  DW      S9600
-        DB      BR96
-BRDFLT: DW      S19200          ; Default 19200 (max. original SER)
-        DB      BR192
-        DW      S38400
-        DB      BR384
-        DW      S57600
-        DB      BR576
-        DW      S1152
-        DB      BR1152
-        DW      0
+BRTAB: DW   S9600
+    DB   BR96
+BRDFLT: DW   S19200 ; Default 19200 (max. original SER)
+    DB   BR192
+    DW   S38400
+    DB   BR384
+    DW   S57600
+    DB   BR576
+    DW   S1152
+    DB   BR1152
+    DW   0
 
-BADCH:  DB      '<>.,;:=?*[]'
-NBAD    EQU     $-BADCH
-SASM:   DB      'ASM'
-STXT:   DB      'TXT'
+BADCH: DB   '<>.,;:=?*[]'
+NBAD EQU  $-BADCH
+SASM: DB   'ASM'
+STXT: DB   'TXT'
 
-WELMSG: DB      0DH,0AH,'RS232-Up/Downloader (Z80/CP/M)',0DH,0AH
-        DB      'Baudrate: ',0
-PART2:  DB      0DH,0AH,'Press x to abort',0DH,0AH,0
-CONMSG: DB      'Connected',0DH,0AH,0
-RXMSG:  DB      'Receiving: ',0
-TXMSG:  DB      'Transmitting: ',0
-BYTMSG: DB      ' Bytes',0DH,0
-OVFMSG: DB      0DH,0AH,'Overflow!',0DH,0AH,0
-DONMSG: DB      0DH,0AH,'Done. CRC OK',0DH,0AH,0
-ERRMSG: DB      0DH,0AH,'Error ',0
-FNEMSG: DB      ' Invalid Filename "',0
-RXEMSG: DB      0DH,0AH,'RX Error!',0DH,0AH,0
-DELMSG: DB      ',  ',0
-CRLF:   DB      '"',0DH,0AH,0
+WELMSG: DB   0DH,0AH,'RS232-Up/Downloader (Z80/CP/M)',0DH,0AH
+    DB   'Baudrate: ',0
+PART2: DB   0DH,0AH,'Press x to abort',0DH,0AH,0
+CONMSG: DB   'Connected',0DH,0AH,0
+RXMSG: DB   'Receiving: ',0
+TXMSG: DB   'Transmitting: ',0
+BYTMSG: DB   ' Bytes',0DH,0
+OVFMSG: DB   0DH,0AH,'Overflow!',0DH,0AH,0
+DONMSG: DB   0DH,0AH,'Done. CRC OK',0DH,0AH,0
+ERRMSG: DB   0DH,0AH,'Error ',0
+FNEMSG: DB   ' Invalid Filename "',0
+RXEMSG: DB   0DH,0AH,'RX Error!',0DH,0AH,0
+DELMSG: DB   ',  ',0
+CRLF: DB   '"',0DH,0AH,0
 
 ;***********************************************************************
 ; Nicht initialisierte Daten hinter dem Programm (nicht in der .COM)
-PEND    EQU     $
-CRCHI   EQU     (PEND+255) AND 0FF00H   ; CRC Tabelle High-Bytes
-CRCLO   EQU     CRCHI+100H              ; CRC Tabelle Low-Bytes
-HDR     EQU     CRCLO+100H
-HLEN    EQU     HDR                     ; 2  Frame-Laenge
-HCODE   EQU     HDR+2                   ; 1  'H'
-HBS     EQU     HDR+3                   ; 1  Blockgroesse/256
-HFS     EQU     HDR+4                   ; 4  Dateigroesse (BE)
-HFN     EQU     HDR+8                   ; 16 Dateiname + CRC
-FCB     EQU     HDR+32                  ; 36
-NUM     EQU     FCB+36                  ; 4
-REM     EQU     NUM+4                   ; 4
-SIZEL   EQU     REM+4                   ; 4
-WPTR    EQU     SIZEL+4                 ; 2
-FRLEN   EQU     WPTR+2                  ; 2
-TXBUF   EQU     FRLEN+2                 ; 2
-CONST   EQU     TXBUF+2                 ; 1
-RETRYC  EQU     CONST+1                 ; 1
-PRGON   EQU     RETRYC+1                ; 1
-OLDSP   EQU     PRGON+1                 ; 2  SP des CCP
-BUF     EQU     HDR+128                 ; 128-Byte aligned
-BUFEND  EQU     BUF+MAXBS*256+128
-STACK   EQU     BUFEND+128
+PEND EQU  $
+CRCHI EQU  (PEND+255) AND 0FF00H ; CRC Tabelle High-Bytes
+CRCLO EQU  CRCHI+100H ; CRC Tabelle Low-Bytes
+HDR EQU  CRCLO+100H
+HLEN EQU  HDR ; 2  Frame-Laenge
+HCODE EQU  HDR+2 ; 1  'H'
+HBS EQU  HDR+3 ; 1  Blockgroesse/256
+HFS EQU  HDR+4 ; 4  Dateigroesse (BE)
+HFN EQU  HDR+8 ; 16 Dateiname + CRC
+FCB EQU  HDR+32 ; 36
+NUM EQU  FCB+36 ; 4
+REM EQU  NUM+4 ; 4
+SIZEL EQU  REM+4 ; 4
+WPTR EQU  SIZEL+4 ; 2
+FRLEN EQU  WPTR+2 ; 2
+TXBUF EQU  FRLEN+2 ; 2
+CONST EQU  TXBUF+2 ; 1
+RETRYC EQU  CONST+1 ; 1
+PRGON EQU  RETRYC+1 ; 1
+OLDSP EQU  PRGON+1 ; 2  SP des CCP
+BUF EQU  HDR+128 ; 128-Byte aligned
+BUFEND EQU  BUF+MAXBS*256+128
+STACK EQU  BUFEND+128
 
-        END     START
+    END  START
+
+
